@@ -83,10 +83,14 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background gradient glow */}
+      <div className="fixed inset-0 gradient-glow pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      
       <Header />
       
-      <main className="pb-24">
+      <main className="pb-24 relative z-10">
         {/* Search */}
         <div className="px-4 py-4">
           <SearchBar 

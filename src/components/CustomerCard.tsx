@@ -20,17 +20,19 @@ export function CustomerCard({ customer, onClick, className, style }: CustomerCa
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left p-4 rounded-xl bg-card border border-border/40 shadow-card",
-        "transition-all duration-200 hover:shadow-elevated hover:border-primary/20",
-        "active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/30",
-        "animate-slide-up",
+        "w-full text-left p-4 rounded-xl glass border border-border/30",
+        "gradient-card shadow-card",
+        "transition-all duration-300 hover:shadow-elevated hover:border-primary/40",
+        "hover:scale-[1.01] active:scale-[0.99]",
+        "focus:outline-none focus:ring-2 focus:ring-primary/30",
+        "animate-slide-up group",
         className
       )}
       style={style}
     >
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="flex-shrink-0 w-12 h-12 rounded-full gradient-primary flex items-center justify-center shadow-card">
+        <div className="flex-shrink-0 w-12 h-12 rounded-full gradient-primary flex items-center justify-center shadow-glow transition-all duration-300 group-hover:shadow-elevated">
           <span className="text-lg font-display font-semibold text-primary-foreground">
             {customer.fullName.charAt(0).toUpperCase()}
           </span>

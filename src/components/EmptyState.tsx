@@ -24,17 +24,17 @@ export function EmptyState({ type, searchQuery }: EmptyStateProps) {
 
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
-      <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mb-6 shadow-glow animate-pulse-soft">
+      <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mb-6 shadow-glow animate-float animate-glow-pulse">
         <Users className="w-10 h-10 text-primary-foreground" />
       </div>
-      <h3 className="text-xl font-display font-semibold text-foreground mb-2">
+      <h3 className="text-xl font-display font-semibold gradient-text mb-2">
         Welcome to Relax Salon!
       </h3>
       <p className="text-muted-foreground text-sm max-w-xs mb-6">
         Start building your customer base by adding your first customer.
       </p>
       <p className="text-xs text-muted-foreground">
-        Tap the <span className="text-primary font-medium">+</span> button below to get started
+        Tap the <span className="gradient-text font-semibold">+</span> button below to get started
       </p>
     </div>
   );

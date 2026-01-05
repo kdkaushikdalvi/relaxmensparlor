@@ -124,10 +124,6 @@
     @apply border-border;
   }
 
-  html {
-    @apply dark;
-  }
-
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-family: var(--font-body);

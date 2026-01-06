@@ -7,11 +7,20 @@ export function Header() {
       <div className="flex items-center justify-between px-4 py-3">
         <div className="w-10" /> {/* Spacer for centering */}
         <div className="flex items-center gap-3">
-          <img 
-            src={brandLogo} 
-            alt="Relax Mens Parlor Logo" 
-            className="w-14 h-14 object-contain drop-shadow-lg"
-          />
+          <div className="relative">
+            {/* Animated glow ring */}
+            <div className="absolute inset-0 rounded-full bg-primary/30 animate-glow-pulse" />
+            {/* Rotating border effect */}
+            <div className="absolute -inset-1 rounded-full border-2 border-dashed border-primary/40 animate-spin-slow" />
+            {/* Logo container */}
+            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-primary/50 shadow-glow bg-background">
+              <img 
+                src={brandLogo} 
+                alt="Relax Mens Parlor Logo" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
           <div className="text-center">
             <h1 className="text-xl font-display font-semibold gradient-text tracking-wide">
               Relax Mens Parlor

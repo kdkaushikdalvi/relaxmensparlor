@@ -66,6 +66,16 @@ const Index = () => {
     }
   };
 
+  const handleDeleteFromCard = (customer: Customer) => {
+    const name = customer.fullName;
+    deleteCustomer(customer.id);
+    toast({
+      title: "Customer deleted",
+      description: `${name} has been removed from your customers.`,
+      variant: "destructive",
+    });
+  };
+
   const openCustomerDetail = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsDetailOpen(true);
@@ -124,6 +134,7 @@ const Index = () => {
                 key={customer.id}
                 customer={customer}
                 onClick={() => openCustomerDetail(customer)}
+                onDelete={() => handleDeleteFromCard(customer)}
                 style={{ animationDelay: `${index * 50}ms` }}
               />
             ))

@@ -7,6 +7,42 @@ import { SearchBar } from '@/components/SearchBar';
 import { CustomerCard } from '@/components/CustomerCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
+import { Customer } from '@/types/customer';
+
+type DateGroup = 'Today' | 'Yesterday' | 'Older';
+
+const getDateGroup = (dateString: string): DateGroup => {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  // Reset time for comparison
+  today.setHours(0, 0, 0, 0);
+  yesterday.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  
+  if (date.getTime() === today.getTime()) return 'Today';
+  if (date.getTime() === yesterday.getTime()) return 'Yesterday';
+  return 'Older';
+};
+
+const groupCustomersByDate = (customers: Customer[]): Record<DateGroup, Customer[]> => {
+  const groups: Record<DateGroup, Customer[]> = {
+    'Today': [],
+    'Yesterday': [],
+    'Older': [],
+  };
+  
+  customers.forEach(customer => {
+    const group = getDateGroup(customer.visitingDate);
+    groups[group].push(customer);
+  });
+  
+  return groups;
+};
+
+const DATE_GROUP_ORDER: DateGroup[] = ['Today', 'Yesterday', 'Older'];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -17,6 +53,11 @@ const Index = () => {
   const filteredCustomers = useMemo(() => 
     searchCustomers(searchQuery),
     [searchCustomers, searchQuery]
+  );
+
+  const groupedCustomers = useMemo(() => 
+    groupCustomersByDate(filteredCustomers),
+    [filteredCustomers]
   );
 
   return (
@@ -49,21 +90,40 @@ const Index = () => {
           </div>
         )}
 
-        {/* Customer List */}
-        <div className="px-4 space-y-3">
+        {/* Customer List with Sticky Date Sections */}
+        <div className="px-4">
           {customers.length === 0 ? (
             <EmptyState type="no-customers" />
           ) : filteredCustomers.length === 0 ? (
             <EmptyState type="no-results" searchQuery={searchQuery} />
           ) : (
-            filteredCustomers.map((customer, index) => (
-              <CustomerCard
-                key={customer.id}
-                customer={customer}
-                onClick={() => navigate(`/customer/${customer.id}`)}
-                style={{ animationDelay: `${index * 50}ms` }}
-              />
-            ))
+            DATE_GROUP_ORDER.map((group) => {
+              const groupCustomers = groupedCustomers[group];
+              if (groupCustomers.length === 0) return null;
+              
+              return (
+                <div key={group} className="mb-2">
+                  {/* Sticky Date Header */}
+                  <div className="sticky top-[76px] z-20 -mx-4 px-4 py-2 bg-background/95 backdrop-blur-sm border-b border-border/50">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                      {group}
+                    </span>
+                  </div>
+                  
+                  {/* Customers in this group */}
+                  <div className="space-y-3 pt-2">
+                    {groupCustomers.map((customer, index) => (
+                      <CustomerCard
+                        key={customer.id}
+                        customer={customer}
+                        onClick={() => navigate(`/customer/${customer.id}`)}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       </main>

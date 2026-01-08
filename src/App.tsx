@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { PinProtection } from "@/components/PinProtection";
 import Index from "./pages/Index";
+import CustomerDetailPage from "./pages/CustomerDetailPage";
+import CustomerFormPage from "./pages/CustomerFormPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +22,9 @@ const App = () => (
           <PinProtection>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/customer/new" element={<CustomerFormPage />} />
+              <Route path="/customer/:id" element={<CustomerDetailPage />} />
+              <Route path="/customer/:id/edit" element={<CustomerFormPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

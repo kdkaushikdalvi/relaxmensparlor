@@ -124,13 +124,34 @@
     @apply border-border;
   }
 
+  /* Mobile keyboard fix - ensure content scrolls when keyboard opens */
+  html {
+    height: 100%;
+    overflow: hidden;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-family: var(--font-body);
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #root {
+    min-height: 100%;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+  }
+
+  /* Ensure inputs scroll into view when focused on mobile */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    scroll-margin-top: 120px;
+    scroll-margin-bottom: 120px;
   }
 }
 

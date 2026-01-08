@@ -67,17 +67,26 @@ const CustomerFormPage = () => {
     }
     
     if (currentStep === 'phone') {
-      if (!formData.mobileNumber.trim()) {
+      const digitsOnly = formData.mobileNumber.replace(/\D/g, '');
+      if (!digitsOnly) {
         setError('Please enter a mobile number');
         return false;
       }
-      if (!/^\d{10,15}$/.test(formData.mobileNumber.replace(/\D/g, ''))) {
-        setError('Please enter a valid mobile number');
+      if (digitsOnly.length !== 10) {
+        setError('Mobile number must be exactly 10 digits');
         return false;
       }
     }
     
     return true;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    // Only allow numeric input
+    const digitsOnly = value.replace(/\D/g, '');
+    // Limit to 10 digits
+    const limited = digitsOnly.slice(0, 10);
+    setFormData(prev => ({ ...prev, mobileNumber: limited }));
   };
 
   const handleSubmit = () => {
@@ -160,8 +169,9 @@ const CustomerFormPage = () => {
             type="tel"
             inputMode="numeric"
             value={formData.mobileNumber}
-            onChange={(e) => setFormData(prev => ({ ...prev, mobileNumber: e.target.value }))}
-            placeholder="Enter mobile number"
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            placeholder="Enter 10-digit mobile number"
+            maxLength={10}
             className={cn("h-14 text-lg", error && 'border-destructive focus:ring-destructive')}
           />
         );
@@ -215,21 +225,55 @@ const CustomerFormPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
-        <div className="flex items-center gap-3">
-          {!isFirstStep && (
-            <Button variant="ghost" size="icon" onClick={handleBack} className="w-8 h-8">
-              <ArrowLeft className="w-4 h-4" />
+      {/* Sticky Header with Next Button */}
+      <div className="sticky top-0 z-50 bg-[hsl(var(--header-bg))] border-b border-primary/20">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            {!isFirstStep && (
+              <Button variant="ghost" size="icon" onClick={handleBack} className="w-8 h-8 text-[hsl(var(--header-foreground))] hover:bg-primary/20">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            )}
+            <span className="text-sm text-[hsl(var(--header-foreground)/0.7)]">
+              {isEditing ? 'Edit Customer' : 'New Customer'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {!stepConfig.required && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleSkip}
+                className="gap-1 text-[hsl(var(--header-foreground)/0.7)] hover:bg-primary/20"
+                size="sm"
+              >
+                <SkipForward className="w-4 h-4" />
+                Skip
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={handleNext}
+              className="gap-1.5"
+              size="sm"
+            >
+              {isLastStep ? (
+                <>
+                  <Save className="w-4 h-4" />
+                  {isEditing ? 'Save' : 'Add'}
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </Button>
-          )}
-          <span className="text-sm text-muted-foreground">
-            {isEditing ? 'Edit Customer' : 'New Customer'}
-          </span>
+            <Button variant="ghost" size="icon" onClick={handleClose} className="w-8 h-8 text-[hsl(var(--header-foreground))] hover:bg-primary/20">
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={handleClose}>
-          <X className="w-5 h-5" />
-        </Button>
       </div>
 
       {/* Progress Dots */}
@@ -268,38 +312,6 @@ const CustomerFormPage = () => {
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-3 px-5 py-4 border-t border-border bg-card safe-bottom">
-        {!stepConfig.required && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSkip}
-            className="gap-2"
-          >
-            <SkipForward className="w-4 h-4" />
-            Skip
-          </Button>
-        )}
-        
-        <Button
-          type="button"
-          onClick={handleNext}
-          className="flex-1 gap-2"
-        >
-          {isLastStep ? (
-            <>
-              <Save className="w-5 h-5" />
-              {isEditing ? 'Save Changes' : 'Add Customer'}
-            </>
-          ) : (
-            <>
-              Next
-              <ArrowRight className="w-5 h-5" />
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 };

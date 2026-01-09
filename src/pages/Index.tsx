@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+import { format } from 'date-fns';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
@@ -9,7 +10,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Customer } from '@/types/customer';
 
-type DateGroup = 'Today' | 'Yesterday' | 'Older';
+type DateGroup = 'Today' | 'Yesterday' | string;
 
 const getDateGroup = (dateString: string): DateGroup => {
   const date = new Date(dateString);
@@ -24,25 +25,37 @@ const getDateGroup = (dateString: string): DateGroup => {
   
   if (date.getTime() === today.getTime()) return 'Today';
   if (date.getTime() === yesterday.getTime()) return 'Yesterday';
-  return 'Older';
+  // Return formatted date for older entries
+  return format(date, 'dd MMM yyyy');
 };
 
-const groupCustomersByDate = (customers: Customer[]): Record<DateGroup, Customer[]> => {
-  const groups: Record<DateGroup, Customer[]> = {
-    'Today': [],
-    'Yesterday': [],
-    'Older': [],
-  };
+const groupCustomersByDate = (customers: Customer[]): Record<string, Customer[]> => {
+  const groups: Record<string, Customer[]> = {};
   
   customers.forEach(customer => {
     const group = getDateGroup(customer.visitingDate);
+    if (!groups[group]) {
+      groups[group] = [];
+    }
     groups[group].push(customer);
   });
   
   return groups;
 };
 
-const DATE_GROUP_ORDER: DateGroup[] = ['Today', 'Yesterday', 'Older'];
+// Sort function to order groups: Today, Yesterday, then older dates (newest first)
+const sortDateGroups = (groups: string[]): string[] => {
+  return groups.sort((a, b) => {
+    if (a === 'Today') return -1;
+    if (b === 'Today') return 1;
+    if (a === 'Yesterday') return -1;
+    if (b === 'Yesterday') return 1;
+    // For date strings, compare as dates (newer first)
+    const dateA = new Date(a.split(' ').reverse().join(' '));
+    const dateB = new Date(b.split(' ').reverse().join(' '));
+    return dateB.getTime() - dateA.getTime();
+  });
+};
 
 const Index = () => {
   const navigate = useNavigate();
@@ -97,9 +110,9 @@ const Index = () => {
           ) : filteredCustomers.length === 0 ? (
             <EmptyState type="no-results" searchQuery={searchQuery} />
           ) : (
-            DATE_GROUP_ORDER.map((group) => {
+            sortDateGroups(Object.keys(groupedCustomers)).map((group) => {
               const groupCustomers = groupedCustomers[group];
-              if (groupCustomers.length === 0) return null;
+              if (!groupCustomers || groupCustomers.length === 0) return null;
               
               return (
                 <div key={group} className="mb-2">

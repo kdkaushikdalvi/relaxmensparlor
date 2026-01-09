@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { PinProtection } from "@/components/PinProtection";
 import { CustomerProvider } from "@/contexts/CustomerContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
 import CustomerFormPage from "./pages/CustomerFormPage";
@@ -17,22 +20,31 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <TooltipProvider>
-        <CustomerProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PinProtection>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/customer/new" element={<CustomerFormPage />} />
-                <Route path="/customer/:id" element={<CustomerDetailPage />} />
-                <Route path="/customer/:id/edit" element={<CustomerFormPage />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </PinProtection>
-          </BrowserRouter>
-        </CustomerProvider>
+        <ProfileProvider>
+          <CustomerProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <SidebarProvider defaultOpen={false}>
+                <div className="min-h-screen flex w-full">
+                  <AppSidebar />
+                  <main className="flex-1">
+                    <PinProtection>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/customer/new" element={<CustomerFormPage />} />
+                        <Route path="/customer/:id" element={<CustomerDetailPage />} />
+                        <Route path="/customer/:id/edit" element={<CustomerFormPage />} />
+                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </PinProtection>
+                  </main>
+                </div>
+              </SidebarProvider>
+            </BrowserRouter>
+          </CustomerProvider>
+        </ProfileProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

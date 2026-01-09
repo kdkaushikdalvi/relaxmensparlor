@@ -152,9 +152,23 @@ const CustomerFormPage = () => {
   };
 
   const renderStepContent = () => {
+    const renderInputWithNextButton = (input: React.ReactNode) => (
+      <div className="flex items-center gap-3">
+        <div className="flex-1">{input}</div>
+        <Button
+          type="button"
+          onClick={handleNext}
+          size="icon"
+          className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg flex-shrink-0"
+        >
+          {isLastStep ? <Save className="w-6 h-6" /> : <ArrowRight className="w-6 h-6" />}
+        </Button>
+      </div>
+    );
+
     switch (currentStep) {
       case 'name':
-        return (
+        return renderInputWithNextButton(
           <Input
             value={formData.fullName}
             onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
@@ -164,7 +178,7 @@ const CustomerFormPage = () => {
         );
       
       case 'phone':
-        return (
+        return renderInputWithNextButton(
           <Input
             type="tel"
             inputMode="numeric"
@@ -177,7 +191,7 @@ const CustomerFormPage = () => {
         );
       
       case 'date':
-        return (
+        return renderInputWithNextButton(
           <Input
             type="date"
             value={formData.visitingDate}
@@ -188,37 +202,55 @@ const CustomerFormPage = () => {
       
       case 'interests':
         return (
-          <div className="flex flex-wrap gap-2">
-            {INTEREST_OPTIONS.map((interest) => (
-              <button
-                key={interest}
-                type="button"
-                onClick={() => toggleInterest(interest)}
-                className={cn(
-                  "px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200",
-                  formData.interest.includes(interest)
-                    ? "bg-primary text-primary-foreground shadow-card scale-105"
-                    : "bg-muted text-muted-foreground hover:bg-secondary"
-                )}
-              >
-                {formData.interest.includes(interest) && (
-                  <Check className="w-4 h-4 inline mr-1.5" />
-                )}
-                {interest}
-              </button>
-            ))}
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {INTEREST_OPTIONS.map((interest) => (
+                <button
+                  key={interest}
+                  type="button"
+                  onClick={() => toggleInterest(interest)}
+                  className={cn(
+                    "px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200",
+                    formData.interest.includes(interest)
+                      ? "bg-primary text-primary-foreground shadow-card scale-105"
+                      : "bg-muted text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  {formData.interest.includes(interest) && (
+                    <Check className="w-4 h-4 inline mr-1.5" />
+                  )}
+                  {interest}
+                </button>
+              ))}
+            </div>
+            <Button
+              type="button"
+              onClick={handleNext}
+              className="w-full h-12 bg-green-500 hover:bg-green-600 text-white"
+            >
+              {isLastStep ? <><Save className="w-5 h-5 mr-2" /> Save</> : <><ArrowRight className="w-5 h-5 mr-2" /> Next</>}
+            </Button>
           </div>
         );
       
       case 'preferences':
         return (
-          <textarea
-            value={formData.preferences}
-            onChange={(e) => setFormData(prev => ({ ...prev, preferences: e.target.value }))}
-            placeholder="Any specific preferences or notes..."
-            rows={4}
-            className="flex w-full rounded-lg border border-input bg-background px-4 py-3 text-base ring-offset-background transition-all duration-200 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 font-body resize-none"
-          />
+          <div className="space-y-4">
+            <textarea
+              value={formData.preferences}
+              onChange={(e) => setFormData(prev => ({ ...prev, preferences: e.target.value }))}
+              placeholder="Any specific preferences or notes..."
+              rows={4}
+              className="flex w-full rounded-lg border border-input bg-background px-4 py-3 text-base ring-offset-background transition-all duration-200 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 font-body resize-none"
+            />
+            <Button
+              type="button"
+              onClick={handleNext}
+              className="w-full h-12 bg-green-500 hover:bg-green-600 text-white"
+            >
+              <Save className="w-5 h-5 mr-2" /> Save Customer
+            </Button>
+          </div>
         );
     }
   };
@@ -251,24 +283,6 @@ const CustomerFormPage = () => {
                 Skip
               </Button>
             )}
-            <Button
-              type="button"
-              onClick={handleNext}
-              className="gap-1.5"
-              size="sm"
-            >
-              {isLastStep ? (
-                <>
-                  <Save className="w-4 h-4" />
-                  {isEditing ? 'Save' : 'Add'}
-                </>
-              ) : (
-                <>
-                  Next
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </Button>
             <Button variant="ghost" size="icon" onClick={handleClose} className="w-8 h-8 text-[hsl(var(--header-foreground))] hover:bg-primary/20">
               <X className="w-5 h-5" />
             </Button>

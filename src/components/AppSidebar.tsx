@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Palette, User, Store, Pencil, Check, X } from 'lucide-react';
+import { Palette, User, Store, Pencil, Check, X, QrCode, ExternalLink } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useProfile } from '@/contexts/ProfileContext';
 import {
   Sidebar,
@@ -16,6 +17,8 @@ import {
 import { ThemeToggle } from './ThemeToggle';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+
+const WEBSITE_URL = 'https://relaxmensparlor.lovable.app';
 
 export function AppSidebar() {
   const { profile, updateProfile } = useProfile();
@@ -149,6 +152,52 @@ export function AppSidebar() {
                       </Button>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* QR Code Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+            Share Website
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-3 py-4">
+              <div className="flex flex-col items-center gap-4">
+                {/* QR Code Display */}
+                <div className="bg-white p-4 rounded-xl shadow-lg border border-primary/20">
+                  <QRCodeSVG 
+                    value={WEBSITE_URL} 
+                    size={160}
+                    level="H"
+                    includeMargin={false}
+                    fgColor="#d97706"
+                    bgColor="#ffffff"
+                  />
+                </div>
+                
+                {/* URL and Actions */}
+                <div className="text-center space-y-2 w-full">
+                  <div className="flex items-center justify-center gap-2">
+                    <QrCode className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-medium text-muted-foreground">Scan to visit</span>
+                  </div>
+                  <p className="text-xs text-primary break-all font-mono bg-primary/5 rounded-lg px-3 py-2">
+                    {WEBSITE_URL}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={() => window.open(WEBSITE_URL, '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Open Website
+                  </Button>
                 </div>
               </div>
             </div>

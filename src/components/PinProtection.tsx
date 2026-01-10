@@ -35,22 +35,29 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const todayPin = getTodayPin();
-    const todayDate = getTodayDateString();
-    
-    if (pin === todayPin) {
-      // Store the full date string so it only needs to be entered once per day
-      localStorage.setItem(STORAGE_KEY, todayDate);
-      setIsLocked(false);
-      setError('');
-    } else {
-      setError('Invalid PIN. Please try again.');
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      setPin('');
+  // Auto-submit when PIN is 4 digits
+  useEffect(() => {
+    if (pin.length === 4) {
+      const todayPin = getTodayPin();
+      const todayDate = getTodayDateString();
+      
+      if (pin === todayPin) {
+        localStorage.setItem(STORAGE_KEY, todayDate);
+        setIsLocked(false);
+        setError('');
+      } else {
+        setError('Invalid PIN. Please try again.');
+        setShake(true);
+        setTimeout(() => setShake(false), 500);
+        setPin('');
+      }
     }
+  }, [pin]);
+
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    setPin(value);
+    setError('');
   };
 
   if (!isLocked) {
@@ -98,8 +105,8 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
             <Sparkles className="w-4 h-4 text-primary animate-pulse" />
           </div>
 
-          {/* PIN Form */}
-          <form onSubmit={handleSubmit} className="w-full space-y-4">
+          {/* PIN Input */}
+          <div className="w-full space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
                 Enter 4-Digit PIN
@@ -109,10 +116,7 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
                 inputMode="numeric"
                 maxLength={4}
                 value={pin}
-                onChange={(e) => {
-                  setPin(e.target.value.replace(/\D/g, ''));
-                  setError('');
-                }}
+                onChange={handlePinChange}
                 placeholder="••••"
                 className={`text-center text-2xl tracking-[0.5em] font-mono h-14 bg-muted/50 border-2 transition-all duration-200 ${
                   shake ? 'animate-shake border-destructive' : 'border-border focus:border-primary'
@@ -124,15 +128,18 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
               )}
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
-              disabled={pin.length !== 4}
-            >
-              <Lock className="w-4 h-4 mr-2" />
-              Unlock Dashboard
-            </Button>
-          </form>
+            {/* Progress indicator */}
+            <div className="flex justify-center gap-2">
+              {[0, 1, 2, 3].map((i) => (
+                <div 
+                  key={i}
+                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                    pin.length > i ? 'bg-primary scale-110' : 'bg-muted-foreground/30'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
 
           {/* Hint */}
           <div className="text-xs text-muted-foreground/60 bg-muted/30 rounded-lg px-4 py-2">

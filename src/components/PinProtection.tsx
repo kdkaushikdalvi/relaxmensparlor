@@ -14,6 +14,11 @@ const getTodayPin = () => {
 
 const STORAGE_KEY = 'app_pin_verified_date';
 
+const getTodayDateString = () => {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+};
+
 export const PinProtection = ({ children }: { children: React.ReactNode }) => {
   const [isLocked, setIsLocked] = useState(true);
   const [pin, setPin] = useState('');
@@ -22,9 +27,10 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const storedDate = localStorage.getItem(STORAGE_KEY);
-    const todayPin = getTodayPin();
+    const todayDate = getTodayDateString();
     
-    if (storedDate === todayPin) {
+    // Check if already verified today (using full date string for daily reset)
+    if (storedDate === todayDate) {
       setIsLocked(false);
     }
   }, []);
@@ -32,9 +38,11 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const todayPin = getTodayPin();
+    const todayDate = getTodayDateString();
     
     if (pin === todayPin) {
-      localStorage.setItem(STORAGE_KEY, todayPin);
+      // Store the full date string so it only needs to be entered once per day
+      localStorage.setItem(STORAGE_KEY, todayDate);
       setIsLocked(false);
       setError('');
     } else {

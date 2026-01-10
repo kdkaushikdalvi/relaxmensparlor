@@ -1,6 +1,6 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
@@ -13,25 +13,25 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="w-10 h-10">
-        <div className="w-5 h-5" />
-      </Button>
+      <div className="flex items-center gap-2">
+        <Sun className="w-4 h-4 text-muted-foreground" />
+        <Switch disabled />
+        <Moon className="w-4 h-4 text-muted-foreground" />
+      </div>
     );
   }
 
+  const isDark = theme === 'dark';
+
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="w-10 h-10 rounded-full glass border-border/30 hover:shadow-glow transition-all duration-300"
-    >
-      {theme === 'dark' ? (
-        <Sun className="w-5 h-5 text-accent transition-transform duration-300 hover:rotate-45" />
-      ) : (
-        <Moon className="w-5 h-5 text-primary transition-transform duration-300 hover:-rotate-12" />
-      )}
-      <span className="sr-only">Toggle theme</span>
-    </Button>
+    <div className="flex items-center gap-2">
+      <Sun className={`w-4 h-4 transition-colors ${!isDark ? 'text-primary' : 'text-muted-foreground'}`} />
+      <Switch
+        checked={isDark}
+        onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+        className="data-[state=checked]:bg-primary"
+      />
+      <Moon className={`w-4 h-4 transition-colors ${isDark ? 'text-primary' : 'text-muted-foreground'}`} />
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, ArrowUpDown } from 'lucide-react';
+import { Plus, Users, ArrowUpDown, Calendar } from 'lucide-react';
 import { format, isToday, isYesterday, startOfWeek, startOfMonth, startOfYear, isAfter } from 'date-fns';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Header } from '@/components/Header';
@@ -205,11 +205,24 @@ const Index = () => {
               if (!groupCustomers || groupCustomers.length === 0) return null;
               
               return (
-                <div key={group} className="mb-2">
-                  <div className="sticky top-[76px] z-20 -mx-4 px-4 py-2 bg-background/95 backdrop-blur-sm border-b border-border/50">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-                      {group}
-                    </span>
+                <div key={group} className="mb-4">
+                  {/* Redesigned Sticky Date Header */}
+                  <div className="sticky top-[76px] z-20 -mx-4 px-4 py-3">
+                    <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-transparent rounded-xl px-4 py-3 border-l-4 border-primary shadow-sm backdrop-blur-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <span className="text-lg font-bold text-foreground tracking-tight">
+                            {group}
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            {groupCustomers.length} customer{groupCustomers.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="space-y-3 pt-2">

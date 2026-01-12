@@ -1,4 +1,4 @@
-import { addDays, format, isToday, parseISO } from 'date-fns';
+import { addDays, format, isToday, isBefore, parseISO, startOfToday } from 'date-fns';
 import { Customer, ReminderInterval, REMINDER_INTERVALS } from '@/types/customer';
 
 /**
@@ -16,15 +16,28 @@ export function calculateReminderDate(visitDate: string, interval: ReminderInter
 }
 
 /**
- * Check if reminder can be sent today
+ * Check if reminder is overdue (before today)
+ */
+export function isReminderOverdue(customer: Customer): boolean {
+  if (!customer.reminderDate) return false;
+  const reminderDate = parseISO(customer.reminderDate);
+  const today = startOfToday();
+  return isBefore(reminderDate, today);
+}
+
+/**
+ * Check if reminder can be sent today (due today or overdue)
  */
 export function canSendReminderToday(customer: Customer): boolean {
   // No reminder date set
   if (!customer.reminderDate) return false;
   
-  // Check if reminder date is today
+  // Check if reminder date is today or overdue
   const reminderDate = parseISO(customer.reminderDate);
-  if (!isToday(reminderDate)) return false;
+  const isDueToday = isToday(reminderDate);
+  const isOverdue = isBefore(reminderDate, startOfToday());
+  
+  if (!isDueToday && !isOverdue) return false;
   
   // Check if reminder was already sent today
   const today = format(new Date(), 'yyyy-MM-dd');

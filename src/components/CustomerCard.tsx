@@ -1,16 +1,19 @@
 import { format } from 'date-fns';
-import { Phone, Calendar, ChevronRight, Bell, MessageCircle, CheckCircle } from 'lucide-react';
+import { Phone, Calendar, ChevronRight, Bell, MessageCircle, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
 import { Customer } from '@/types/customer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { 
   canSendReminderToday, 
   wasReminderSentToday, 
   isReminderDueToday,
+  isReminderOverdue,
   isValidPhoneNumber,
   openWhatsAppReminder 
 } from '@/utils/reminderUtils';
+import { getReminderStatus, ReminderStatus } from '@/utils/reminderCategoryUtils';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useToast } from '@/hooks/use-toast';
@@ -20,9 +23,28 @@ interface CustomerCardProps {
   onClick: () => void;
   className?: string;
   style?: React.CSSProperties;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelectChange?: (selected: boolean) => void;
 }
 
-export function CustomerCard({ customer, onClick, className, style }: CustomerCardProps) {
+const statusConfig: Record<ReminderStatus, { label: string; className: string; icon: React.ElementType }> = {
+  'pending': { label: 'Pending', className: 'bg-primary/10 text-primary border-primary/30', icon: Clock },
+  'sent-today': { label: 'Sent Today', className: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30', icon: CheckCircle },
+  'overdue': { label: 'Overdue', className: 'bg-destructive/10 text-destructive border-destructive/30', icon: AlertTriangle },
+  'upcoming': { label: 'Upcoming', className: 'bg-muted text-muted-foreground border-border', icon: Bell },
+  'none': { label: '', className: '', icon: Bell },
+};
+
+export function CustomerCard({ 
+  customer, 
+  onClick, 
+  className, 
+  style,
+  selectable = false,
+  selected = false,
+  onSelectChange 
+}: CustomerCardProps) {
   const { profile } = useProfile();
   const { updateCustomer } = useCustomers();
   const { toast } = useToast();
@@ -34,10 +56,15 @@ export function CustomerCard({ customer, onClick, className, style }: CustomerCa
   const canSendReminder = canSendReminderToday(customer);
   const reminderSentToday = wasReminderSentToday(customer);
   const reminderDueToday = isReminderDueToday(customer);
+  const isOverdue = isReminderOverdue(customer);
   const hasValidPhone = isValidPhoneNumber(customer.mobileNumber);
+  const reminderStatus = getReminderStatus(customer);
+  const statusInfo = statusConfig[reminderStatus];
+
+  const showReminderButton = (reminderDueToday || isOverdue) && customer.reminderDate;
 
   const handleSendReminder = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
     
     if (!hasValidPhone) {
       toast({
@@ -48,7 +75,6 @@ export function CustomerCard({ customer, onClick, className, style }: CustomerCa
       return;
     }
 
-    // Mark reminder as sent for today
     const today = format(new Date(), 'yyyy-MM-dd');
     const sentDates = customer.reminderSentDates || [];
     
@@ -60,7 +86,6 @@ export function CustomerCard({ customer, onClick, className, style }: CustomerCa
       ],
     });
 
-    // Open WhatsApp
     openWhatsAppReminder(customer, profile.businessName);
 
     toast({
@@ -69,24 +94,51 @@ export function CustomerCard({ customer, onClick, className, style }: CustomerCa
     });
   };
 
+  const handleCheckboxChange = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const isHighlighted = reminderStatus === 'overdue' || reminderStatus === 'pending';
+
   return (
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left p-4 rounded-xl glass border border-border/30",
+        "w-full text-left p-4 rounded-xl glass border",
         "gradient-card shadow-card",
-        "transition-all duration-300 hover:shadow-elevated hover:border-primary/40",
+        "transition-all duration-300 hover:shadow-elevated",
         "hover:scale-[1.01] active:scale-[0.99]",
         "focus:outline-none focus:ring-2 focus:ring-primary/30",
         "animate-slide-up group",
+        isHighlighted ? "border-primary/50 bg-primary/5" : "border-border/30 hover:border-primary/40",
+        selected && "ring-2 ring-primary border-primary",
         className
       )}
       style={style}
     >
       <div className="flex items-start gap-4">
+        {/* Checkbox for bulk selection */}
+        {selectable && (
+          <div 
+            className="flex-shrink-0 pt-2"
+            onClick={handleCheckboxChange}
+          >
+            <Checkbox 
+              checked={selected} 
+              onCheckedChange={(checked) => onSelectChange?.(!!checked)}
+            />
+          </div>
+        )}
+
         {/* Avatar */}
-        <div className="flex-shrink-0 w-12 h-12 rounded-full gradient-primary flex items-center justify-center shadow-glow transition-all duration-300 group-hover:shadow-elevated">
-          <span className="text-lg font-display font-semibold text-primary-foreground">
+        <div className={cn(
+          "flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300 group-hover:shadow-elevated",
+          isOverdue ? "bg-destructive/20" : "gradient-primary"
+        )}>
+          <span className={cn(
+            "text-lg font-display font-semibold",
+            isOverdue ? "text-destructive" : "text-primary-foreground"
+          )}>
             {customer.fullName.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -129,26 +181,22 @@ export function CustomerCard({ customer, onClick, className, style }: CustomerCa
           )}
 
           {/* Reminder Status & Button */}
-          {customer.reminderDate && (
+          {customer.reminderDate && reminderStatus !== 'none' && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
-              <div className="flex items-center gap-2 text-xs">
-                <Bell className={cn(
-                  "w-3.5 h-3.5",
-                  reminderDueToday ? "text-primary" : "text-muted-foreground"
-                )} />
-                <span className={cn(
-                  reminderDueToday ? "text-primary font-medium" : "text-muted-foreground"
-                )}>
-                  {reminderSentToday 
-                    ? "Sent today ✓" 
-                    : reminderDueToday 
-                      ? "Due today" 
-                      : `${format(new Date(customer.reminderDate), 'dd MMM')}`
-                  }
-                </span>
-              </div>
+              <Badge 
+                variant="outline" 
+                className={cn("text-xs gap-1 border", statusInfo.className)}
+              >
+                <statusInfo.icon className="w-3 h-3" />
+                {statusInfo.label}
+                {reminderStatus === 'upcoming' && (
+                  <span className="ml-1">
+                    {format(new Date(customer.reminderDate), 'dd MMM')}
+                  </span>
+                )}
+              </Badge>
               
-              {reminderDueToday && (
+              {showReminderButton && (
                 <Button
                   size="sm"
                   variant={reminderSentToday ? "outline" : "default"}

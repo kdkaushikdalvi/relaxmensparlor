@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, ArrowUpDown, Calendar } from 'lucide-react';
+import { Plus, Users, ArrowUpDown, Calendar, Bell, MessageCircle, CheckSquare, Square } from 'lucide-react';
 import { format, isToday, isYesterday, startOfWeek, startOfMonth, startOfYear, isAfter } from 'date-fns';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Header } from '@/components/Header';
@@ -9,6 +9,21 @@ import { CustomerCard } from '@/components/CustomerCard';
 import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Customer } from '@/types/customer';
+import { useProfile } from '@/contexts/ProfileContext';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  ReminderCategory, 
+  REMINDER_CATEGORIES, 
+  filterByReminderCategory, 
+  getReminderCategoryCounts,
+  sortByReminderPriority,
+  canSendReminderForCategory 
+} from '@/utils/reminderCategoryUtils';
+import { 
+  wasReminderSentToday, 
+  isValidPhoneNumber, 
+  openWhatsAppReminder 
+} from '@/utils/reminderUtils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 type DateGroup = 'Today' | 'Yesterday' | string;
-type FilterType = 'all' | 'today' | 'week' | 'month' | 'year';
-type SortType = 'date' | 'name';
+type SortType = 'date' | 'name' | 'reminder';
 
 const getDateGroup = (dateString: string): DateGroup => {
   const date = new Date(dateString);
@@ -61,30 +75,11 @@ const sortDateGroups = (groups: string[]): string[] => {
   });
 };
 
-const filterCustomersByPeriod = (customers: Customer[], filter: FilterType): Customer[] => {
-  if (filter === 'all') return customers;
-  
-  const now = new Date();
-  
-  return customers.filter(customer => {
-    const visitDate = new Date(customer.visitingDate);
-    
-    switch (filter) {
-      case 'today':
-        return isToday(visitDate);
-      case 'week':
-        return isAfter(visitDate, startOfWeek(now, { weekStartsOn: 1 }));
-      case 'month':
-        return isAfter(visitDate, startOfMonth(now));
-      case 'year':
-        return isAfter(visitDate, startOfYear(now));
-      default:
-        return true;
-    }
-  });
-};
-
 const sortCustomers = (customers: Customer[], sortType: SortType): Customer[] => {
+  if (sortType === 'reminder') {
+    return sortByReminderPriority(customers);
+  }
+  
   return [...customers].sort((a, b) => {
     if (sortType === 'name') {
       return a.fullName.localeCompare(b.fullName);
@@ -95,34 +90,88 @@ const sortCustomers = (customers: Customer[], sortType: SortType): Customer[] =>
 
 const Index = () => {
   const navigate = useNavigate();
-  const { customers, searchCustomers } = useCustomers();
+  const { customers, searchCustomers, updateCustomer } = useCustomers();
+  const { profile } = useProfile();
+  const { toast } = useToast();
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [sortType, setSortType] = useState<SortType>('date');
+  const [reminderFilter, setReminderFilter] = useState<ReminderCategory>('all');
+  const [sortType, setSortType] = useState<SortType>('reminder');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+
+  const reminderCounts = useMemo(() => 
+    getReminderCategoryCounts(customers),
+    [customers]
+  );
 
   const filteredCustomers = useMemo(() => {
     const searched = searchCustomers(searchQuery);
-    const filtered = filterCustomersByPeriod(searched, filter);
+    const filtered = filterByReminderCategory(searched, reminderFilter);
     return sortCustomers(filtered, sortType);
-  }, [searchCustomers, searchQuery, filter, sortType]);
+  }, [searchCustomers, searchQuery, reminderFilter, sortType]);
 
   const groupedCustomers = useMemo(() => 
     groupCustomersByDate(filteredCustomers),
     [filteredCustomers]
   );
 
-  const filterLabels: Record<FilterType, string> = {
-    all: 'All',
-    today: 'Today',
-    week: 'Week',
-    month: 'Month',
-    year: 'Year',
-  };
+  const selectableCustomers = useMemo(() => 
+    filteredCustomers.filter(c => canSendReminderForCategory(c) && !wasReminderSentToday(c) && isValidPhoneNumber(c.mobileNumber)),
+    [filteredCustomers]
+  );
 
-  const getFilterCount = (filterType: FilterType) => {
-    const filtered = filterCustomersByPeriod(customers, filterType);
-    return filtered.length;
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.size === selectableCustomers.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(selectableCustomers.map(c => c.id)));
+    }
+  }, [selectableCustomers, selectedIds]);
+
+  const handleSelectChange = useCallback((customerId: string, selected: boolean) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(customerId);
+      } else {
+        newSet.delete(customerId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleBulkSendReminders = useCallback(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    let sentCount = 0;
+
+    selectedIds.forEach(id => {
+      const customer = customers.find(c => c.id === id);
+      if (customer && canSendReminderForCategory(customer) && !wasReminderSentToday(customer)) {
+        updateCustomer(id, {
+          reminderSentDates: [...(customer.reminderSentDates || []), today],
+          reminderHistory: [
+            ...(customer.reminderHistory || []),
+            { sentAt: new Date().toISOString(), message: `WhatsApp reminder sent (bulk)` }
+          ],
+        });
+        openWhatsAppReminder(customer, profile.businessName);
+        sentCount++;
+      }
+    });
+
+    setSelectedIds(new Set());
+    setBulkSelectMode(false);
+
+    toast({
+      title: `${sentCount} reminder${sentCount !== 1 ? 's' : ''} sent`,
+      description: "WhatsApp windows opened for selected customers.",
+    });
+  }, [selectedIds, customers, updateCustomer, profile.businessName, toast]);
+
+  const getCategoryLabel = (category: ReminderCategory): string => {
+    const config = REMINDER_CATEGORIES.find(c => c.value === category);
+    return config?.label || 'All';
   };
 
   return (
@@ -142,47 +191,122 @@ const Index = () => {
           />
         </div>
 
-        {/* Total Customer Count with Filters */}
+        {/* Reminder Category Filters with Counters */}
         <div className="px-4 pb-3">
           <div className="glass rounded-xl p-4 border border-primary/20">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                <span className="font-semibold text-foreground">Total Customers</span>
+                <Bell className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-foreground">Reminders</span>
               </div>
-              <span className="text-2xl font-bold text-primary">{customers.length}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Total:</span>
+                <span className="text-xl font-bold text-primary">{customers.length}</span>
+              </div>
             </div>
             
-            {/* Filter Buttons */}
+            {/* Category Filter Buttons with Counts */}
             <div className="flex gap-2 flex-wrap">
-              {(['all', 'today', 'week', 'month', 'year'] as FilterType[]).map((f) => (
-                <Button
-                  key={f}
-                  variant={filter === f ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter(f)}
-                  className={`text-xs ${filter === f ? 'bg-primary text-primary-foreground' : 'border-primary/30 text-muted-foreground'}`}
-                >
-                  {filterLabels[f]} ({getFilterCount(f)})
-                </Button>
-              ))}
+              {REMINDER_CATEGORIES.map((cat) => {
+                const count = reminderCounts[cat.value];
+                const isActive = reminderFilter === cat.value;
+                const isUrgent = cat.value === 'overdue' || cat.value === 'today';
+                
+                return (
+                  <Button
+                    key={cat.value}
+                    variant={isActive ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setReminderFilter(cat.value)}
+                    className={`text-xs ${
+                      isActive 
+                        ? isUrgent 
+                          ? 'bg-destructive text-destructive-foreground' 
+                          : 'bg-primary text-primary-foreground' 
+                        : isUrgent && count > 0
+                          ? 'border-destructive/50 text-destructive'
+                          : 'border-primary/30 text-muted-foreground'
+                    }`}
+                  >
+                    {cat.label} ({count})
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Sort Options */}
+        {/* Bulk Actions & Sort */}
         <div className="px-4 pb-2 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {filteredCustomers.length} customer{filteredCustomers.length !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center gap-2">
+            {bulkSelectMode ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="text-xs gap-1"
+                >
+                  {selectedIds.size === selectableCustomers.length ? (
+                    <CheckSquare className="w-4 h-4" />
+                  ) : (
+                    <Square className="w-4 h-4" />
+                  )}
+                  {selectedIds.size === selectableCustomers.length ? 'Deselect All' : 'Select All'}
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={selectedIds.size === 0}
+                  onClick={handleBulkSendReminders}
+                  className="text-xs gap-1"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Send ({selectedIds.size})
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setBulkSelectMode(false);
+                    setSelectedIds(new Set());
+                  }}
+                  className="text-xs"
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {filteredCustomers.length} customer{filteredCustomers.length !== 1 ? 's' : ''}
+                </p>
+                {selectableCustomers.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBulkSelectMode(true)}
+                    className="text-xs gap-1 border-primary/30"
+                  >
+                    <MessageCircle className="w-3 h-3" />
+                    Bulk Send
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="text-xs gap-1">
                 <ArrowUpDown className="w-3 h-3" />
-                Sort by {sortType === 'date' ? 'Date' : 'Name'}
+                Sort by {sortType === 'date' ? 'Date' : sortType === 'name' ? 'Name' : 'Priority'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSortType('reminder')}>
+                Sort by Priority
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSortType('date')}>
                 Sort by Date
               </DropdownMenuItem>
@@ -206,7 +330,7 @@ const Index = () => {
               
               return (
                 <div key={group} className="mb-4">
-                  {/* Redesigned Sticky Date Header */}
+                  {/* Sticky Date Header */}
                   <div className="sticky top-[76px] z-20 -mx-4 px-4 py-3">
                     <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-transparent rounded-xl px-4 py-3 border-l-4 border-primary shadow-sm backdrop-blur-sm">
                       <div className="flex items-center gap-3">
@@ -226,14 +350,21 @@ const Index = () => {
                   </div>
                   
                   <div className="space-y-3 pt-2">
-                    {groupCustomers.map((customer, index) => (
-                      <CustomerCard
-                        key={customer.id}
-                        customer={customer}
-                        onClick={() => navigate(`/customer/${customer.id}`)}
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      />
-                    ))}
+                    {groupCustomers.map((customer, index) => {
+                      const isSelectable = canSendReminderForCategory(customer) && !wasReminderSentToday(customer) && isValidPhoneNumber(customer.mobileNumber);
+                      
+                      return (
+                        <CustomerCard
+                          key={customer.id}
+                          customer={customer}
+                          onClick={() => navigate(`/customer/${customer.id}`)}
+                          style={{ animationDelay: `${index * 50}ms` }}
+                          selectable={bulkSelectMode && isSelectable}
+                          selected={selectedIds.has(customer.id)}
+                          onSelectChange={(selected) => handleSelectChange(customer.id, selected)}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               );

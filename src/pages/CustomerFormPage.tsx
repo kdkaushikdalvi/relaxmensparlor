@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Save, SkipForward, Check, X, Bell } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Save, SkipForward, Check, Bell } from 'lucide-react';
 import { CustomerFormData, INTEREST_OPTIONS, REMINDER_INTERVALS, ReminderInterval } from '@/types/customer';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,16 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { calculateReminderDate } from '@/utils/reminderUtils';
 
-type FormStep = 'name' | 'phone' | 'date' | 'reminder' | 'interests';
+type FormStep = 'basic' | 'date' | 'reminder' | 'interests';
 
-const STEPS: FormStep[] = ['name', 'phone', 'date', 'reminder', 'interests'];
+const STEPS: FormStep[] = ['basic', 'date', 'reminder', 'interests'];
 
 const STEP_CONFIG: Record<FormStep, { title: string; subtitle: string; required: boolean }> = {
-  name: { title: 'Customer Name', subtitle: "What's the customer's full name?", required: true },
-  phone: { title: 'Mobile Number', subtitle: 'Enter their contact number', required: true },
+  basic: {
+    title: 'Customer Details',
+    subtitle: 'Enter name and mobile number',
+    required: true,
+  },
   date: { title: 'Visiting Date', subtitle: 'When are they visiting?', required: false },
   reminder: { title: 'Reminder', subtitle: 'When should we remind this customer?', required: false },
   interests: { title: 'Services & Notes', subtitle: 'What are they interested in?', required: false },
@@ -30,7 +33,7 @@ const CustomerFormPage = () => {
   const customer = id ? getCustomer(id) : undefined;
   const isEditing = !!customer;
 
-  const [currentStep, setCurrentStep] = useState<FormStep>('name');
+  const [currentStep, setCurrentStep] = useState<FormStep>('basic');
   const [formData, setFormData] = useState<CustomerFormData>({
     fullName: '',
     mobileNumber: '',
@@ -65,12 +68,12 @@ const CustomerFormPage = () => {
   const validateCurrentStep = (): boolean => {
     setError('');
 
-    if (currentStep === 'name' && !formData.fullName.trim()) {
-      setError('Please enter the customer name');
-      return false;
-    }
+    if (currentStep === 'basic') {
+      if (!formData.fullName.trim()) {
+        setError('Please enter the customer name');
+        return false;
+      }
 
-    if (currentStep === 'phone') {
       const digits = formData.mobileNumber.replace(/\D/g, '');
       if (digits.length !== 10) {
         setError('Mobile number must be exactly 10 digits');
@@ -101,11 +104,8 @@ const CustomerFormPage = () => {
   const handleNext = () => {
     if (!validateCurrentStep()) return;
 
-    if (isLastStep) {
-      handleSubmit();
-    } else {
-      setCurrentStep(STEPS[currentStepIndex + 1]);
-    }
+    if (isLastStep) handleSubmit();
+    else setCurrentStep(STEPS[currentStepIndex + 1]);
   };
 
   const handleBack = () => {
@@ -128,27 +128,26 @@ const CustomerFormPage = () => {
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'name':
+      case 'basic':
         return (
-          <Input
-            autoFocus
-            value={formData.fullName}
-            onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-            placeholder="Enter full name"
-            className={cn("h-14 text-lg", error && 'border-destructive')}
-          />
-        );
+          <div className="space-y-4">
+            <Input
+              autoFocus
+              value={formData.fullName}
+              onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+              placeholder="Full Name"
+              className={cn("h-14 text-lg", error && 'border-destructive')}
+            />
 
-      case 'phone':
-        return (
-          <Input
-            type="tel"
-            inputMode="numeric"
-            value={formData.mobileNumber}
-            onChange={(e) => handlePhoneChange(e.target.value)}
-            placeholder="10-digit mobile number"
-            className={cn("h-14 text-lg", error && 'border-destructive')}
-          />
+            <Input
+              type="tel"
+              inputMode="numeric"
+              value={formData.mobileNumber}
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              placeholder="10-digit Mobile Number"
+              className={cn("h-14 text-lg", error && 'border-destructive')}
+            />
+          </div>
         );
 
       case 'date':
@@ -273,7 +272,15 @@ const CustomerFormPage = () => {
           onClick={handleNext}
           className="w-full h-14 text-lg bg-green-500 hover:bg-green-600 text-white rounded-xl"
         >
-          {isLastStep ? <><Save className="w-5 h-5 mr-2" /> Save Customer</> : <>Next <ArrowRight className="w-5 h-5 ml-2" /></>}
+          {isLastStep ? (
+            <>
+              <Save className="w-5 h-5 mr-2" /> Save Customer
+            </>
+          ) : (
+            <>
+              Next <ArrowRight className="w-5 h-5 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </div>

@@ -15,13 +15,17 @@ const SAMPLE_CUSTOMER: Customer = {
   visitingDate: new Date().toISOString().split('T')[0],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  reminderInterval: '1week',
+  reminderDate: new Date().toISOString().split('T')[0], // Set to today for demo
+  reminderSentDates: [],
+  reminderHistory: [],
 };
 
 interface CustomerContextType {
   customers: Customer[];
   isLoading: boolean;
   addCustomer: (data: CustomerFormData) => Customer;
-  updateCustomer: (id: string, data: Partial<CustomerFormData>) => Customer | null;
+  updateCustomer: (id: string, data: Partial<Customer>) => Customer | null;
   deleteCustomer: (id: string) => boolean;
   getCustomer: (id: string) => Customer | undefined;
   searchCustomers: (query: string) => Customer[];
@@ -66,12 +70,14 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       id: generateId(),
       createdAt: now,
       updatedAt: now,
+      reminderSentDates: [],
+      reminderHistory: [],
     };
     setCustomers(prev => [newCustomer, ...prev]);
     return newCustomer;
   }, []);
 
-  const updateCustomer = useCallback((id: string, data: Partial<CustomerFormData>): Customer | null => {
+  const updateCustomer = useCallback((id: string, data: Partial<Customer>): Customer | null => {
     let updatedCustomer: Customer | null = null;
     setCustomers(prev =>
       prev.map(customer => {

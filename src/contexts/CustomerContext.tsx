@@ -8,8 +8,8 @@ const generateId = () => Math.random().toString(36).substring(2) + Date.now().to
 // Sample customer for first-time users
 const SAMPLE_CUSTOMER: Customer = {
   id: 'sample-customer-1',
-  fullName: 'Rahul Sharma',
-  mobileNumber: '9876543210',
+  fullName: 'JAYSING GADEKAR',
+  mobileNumber: '8275883781',
   interest: ['Haircut', 'Facial'],
   preferences: 'Prefers appointments in evening',
   visitingDate: new Date().toISOString().split('T')[0],

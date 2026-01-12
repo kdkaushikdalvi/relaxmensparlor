@@ -1,27 +1,64 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Save, SkipForward, Check, Bell } from 'lucide-react';
-import { CustomerFormData, INTEREST_OPTIONS, REMINDER_INTERVALS, ReminderInterval } from '@/types/customer';
-import { useCustomers } from '@/hooks/useCustomers';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { calculateReminderDate } from '@/utils/reminderUtils';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Save,
+  SkipForward,
+  Check,
+  Bell,
+} from "lucide-react";
+import {
+  CustomerFormData,
+  REMINDER_INTERVALS,
+  ReminderInterval,
+} from "@/types/customer";
+import { useCustomers } from "@/hooks/useCustomers";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { calculateReminderDate } from "@/utils/reminderUtils";
 
-type FormStep = 'basic' | 'date' | 'reminder' | 'interests';
+export const INTEREST_OPTIONS = [
+  // ⭐ Priority services
+  "हेअर कट",
+  "दाढी",
+  "कोरीव दाढी",
+  "हेअर कलर",
+  "मसाज",
+  // Other services
+  "फेशियल",
+  "स्पा",
+  "मेकअप",
+  "हेअर ट्रीटमेंट",
+  "वॅक्सिंग",
+  "थ्रेडिंग",
+] as const;
 
-const STEPS: FormStep[] = ['basic', 'date', 'reminder', 'interests'];
+type FormStep = "basic" | "reminder" | "interests";
 
-const STEP_CONFIG: Record<FormStep, { title: string; subtitle: string; required: boolean }> = {
+const STEPS: FormStep[] = ["basic", "reminder", "interests"];
+
+const STEP_CONFIG: Record<
+  FormStep,
+  { title: string; subtitle: string; required: boolean }
+> = {
   basic: {
-    title: 'Customer Details',
-    subtitle: 'Enter name and mobile number',
+    title: "Customer Details",
+    subtitle: "Enter name and mobile number",
     required: true,
   },
-  date: { title: 'Visiting Date', subtitle: 'When are they visiting?', required: false },
-  reminder: { title: 'Reminder', subtitle: 'When should we remind this customer?', required: false },
-  interests: { title: 'Services & Notes', subtitle: 'What are they interested in?', required: false },
+  reminder: {
+    title: "Reminder",
+    subtitle: "When should we remind this customer?",
+    required: false,
+  },
+  interests: {
+    title: "सेवा",
+    subtitle: "ग्राहकाला कशामध्ये रस आहे?",
+    required: false,
+  },
 };
 
 const CustomerFormPage = () => {
@@ -33,18 +70,18 @@ const CustomerFormPage = () => {
   const customer = id ? getCustomer(id) : undefined;
   const isEditing = !!customer;
 
-  const [currentStep, setCurrentStep] = useState<FormStep>('basic');
+  const [currentStep, setCurrentStep] = useState<FormStep>("basic");
   const [formData, setFormData] = useState<CustomerFormData>({
-    fullName: '',
-    mobileNumber: '',
+    fullName: "",
+    mobileNumber: "",
     interest: [],
-    preferences: '',
-    visitingDate: new Date().toISOString().split('T')[0],
-    reminderInterval: 'none' as ReminderInterval,
+    preferences: "",
+    visitingDate: new Date().toISOString().split("T")[0], // Always today
+    reminderInterval: "none" as ReminderInterval,
     reminderDate: undefined,
   });
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (customer) {
@@ -54,7 +91,7 @@ const CustomerFormPage = () => {
         interest: customer.interest,
         preferences: customer.preferences,
         visitingDate: customer.visitingDate,
-        reminderInterval: customer.reminderInterval || 'none',
+        reminderInterval: customer.reminderInterval || "none",
         reminderDate: customer.reminderDate,
       });
     }
@@ -66,17 +103,17 @@ const CustomerFormPage = () => {
   const stepConfig = STEP_CONFIG[currentStep];
 
   const validateCurrentStep = (): boolean => {
-    setError('');
+    setError("");
 
-    if (currentStep === 'basic') {
+    if (currentStep === "basic") {
       if (!formData.fullName.trim()) {
-        setError('Please enter the customer name');
+        setError("Please enter the customer name");
         return false;
       }
 
-      const digits = formData.mobileNumber.replace(/\D/g, '');
+      const digits = formData.mobileNumber.replace(/\D/g, "");
       if (digits.length !== 10) {
-        setError('Mobile number must be exactly 10 digits');
+        setError("Mobile number must be exactly 10 digits");
         return false;
       }
     }
@@ -85,25 +122,30 @@ const CustomerFormPage = () => {
   };
 
   const handlePhoneChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
-    setFormData(prev => ({ ...prev, mobileNumber: digitsOnly }));
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+    setFormData((prev) => ({ ...prev, mobileNumber: digitsOnly }));
   };
 
   const handleSubmit = () => {
     if (isEditing && customer) {
       updateCustomer(customer.id, formData);
-      toast({ title: 'Customer updated', description: `${formData.fullName} updated successfully.` });
+      toast({
+        title: "Customer updated",
+        description: `${formData.fullName} updated successfully.`,
+      });
       navigate(`/customer/${customer.id}`);
     } else {
       addCustomer(formData);
-      toast({ title: 'Customer added', description: `${formData.fullName} added successfully.` });
-      navigate('/');
+      toast({
+        title: "Customer added",
+        description: `${formData.fullName} added successfully.`,
+      });
+      navigate("/");
     }
   };
 
   const handleNext = () => {
     if (!validateCurrentStep()) return;
-
     if (isLastStep) handleSubmit();
     else setCurrentStep(STEPS[currentStepIndex + 1]);
   };
@@ -118,25 +160,27 @@ const CustomerFormPage = () => {
   };
 
   const toggleInterest = (interest: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       interest: prev.interest.includes(interest)
-        ? prev.interest.filter(i => i !== interest)
+        ? prev.interest.filter((i) => i !== interest)
         : [...prev.interest, interest],
     }));
   };
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'basic':
+      case "basic":
         return (
           <div className="space-y-4">
             <Input
               autoFocus
               value={formData.fullName}
-              onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, fullName: e.target.value }))
+              }
               placeholder="Full Name"
-              className={cn("h-14 text-lg", error && 'border-destructive')}
+              className={cn("h-14 text-lg", error && "border-destructive")}
             />
 
             <Input
@@ -145,22 +189,12 @@ const CustomerFormPage = () => {
               value={formData.mobileNumber}
               onChange={(e) => handlePhoneChange(e.target.value)}
               placeholder="10-digit Mobile Number"
-              className={cn("h-14 text-lg", error && 'border-destructive')}
+              className={cn("h-14 text-lg", error && "border-destructive")}
             />
           </div>
         );
 
-      case 'date':
-        return (
-          <Input
-            type="date"
-            value={formData.visitingDate}
-            onChange={(e) => setFormData(prev => ({ ...prev, visitingDate: e.target.value }))}
-            className="h-14 text-lg"
-          />
-        );
-
-      case 'reminder':
+      case "reminder":
         return (
           <div className="flex flex-wrap gap-3 justify-center">
             {REMINDER_INTERVALS.map((interval) => (
@@ -168,8 +202,15 @@ const CustomerFormPage = () => {
                 key={interval.value}
                 type="button"
                 onClick={() => {
-                  const reminderDate = calculateReminderDate(formData.visitingDate, interval.value);
-                  setFormData(prev => ({ ...prev, reminderInterval: interval.value, reminderDate }));
+                  const reminderDate = calculateReminderDate(
+                    formData.visitingDate,
+                    interval.value
+                  );
+                  setFormData((prev) => ({
+                    ...prev,
+                    reminderInterval: interval.value,
+                    reminderDate,
+                  }));
                 }}
                 className={cn(
                   "px-5 py-3 rounded-full text-base font-medium",
@@ -178,14 +219,16 @@ const CustomerFormPage = () => {
                     : "bg-muted"
                 )}
               >
-                {formData.reminderInterval === interval.value && <Bell className="w-4 h-4 inline mr-1" />}
+                {formData.reminderInterval === interval.value && (
+                  <Bell className="w-4 h-4 inline mr-1" />
+                )}
                 {interval.label}
               </button>
             ))}
           </div>
         );
 
-      case 'interests':
+      case "interests":
         return (
           <div className="space-y-5">
             <div className="flex flex-wrap gap-3 justify-center">
@@ -201,7 +244,9 @@ const CustomerFormPage = () => {
                       : "bg-muted"
                   )}
                 >
-                  {formData.interest.includes(interest) && <Check className="w-4 h-4 inline mr-1" />}
+                  {formData.interest.includes(interest) && (
+                    <Check className="w-4 h-4 inline mr-1" />
+                  )}
                   {interest}
                 </button>
               ))}
@@ -209,8 +254,13 @@ const CustomerFormPage = () => {
 
             <textarea
               value={formData.preferences}
-              onChange={(e) => setFormData(prev => ({ ...prev, preferences: e.target.value }))}
-              placeholder="Any note? (optional)"
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  preferences: e.target.value,
+                }))
+              }
+              placeholder="काही नोंद? (ऐच्छिक)"
               rows={3}
               className="w-full rounded-xl border px-4 py-3 text-base"
             />
@@ -230,7 +280,9 @@ const CustomerFormPage = () => {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             )}
-            <span className="text-sm opacity-70">{isEditing ? 'Edit Customer' : 'New Customer'}</span>
+            <span className="text-sm opacity-70">
+              {isEditing ? "Edit Customer" : "New Customer"}
+            </span>
           </div>
 
           {!stepConfig.required && (
@@ -255,7 +307,7 @@ const CustomerFormPage = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-6 pb-32 space-y-4">
+      <div className="flex-1 p-6 space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-semibold">{stepConfig.title}</h2>
           <p className="text-muted-foreground text-sm">{stepConfig.subtitle}</p>
@@ -263,14 +315,14 @@ const CustomerFormPage = () => {
 
         {renderStepContent()}
 
-        {error && <p className="text-sm text-destructive text-center">{error}</p>}
-      </div>
+        {error && (
+          <p className="text-sm text-destructive text-center">{error}</p>
+        )}
 
-      {/* Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
+        {/* Action Button */}
         <Button
           onClick={handleNext}
-          className="w-full h-14 text-lg bg-green-500 hover:bg-green-600 text-white rounded-xl"
+          className="w-full h-14 text-lg bg-green-500 hover:bg-green-600 text-white rounded-xl mt-6"
         >
           {isLastStep ? (
             <>

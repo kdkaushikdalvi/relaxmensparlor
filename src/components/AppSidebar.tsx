@@ -175,7 +175,7 @@ export function AppSidebar() {
             <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
               <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
                 <Settings className="w-4 h-4 flex-shrink-0" /> 
-                <span>Profile Settings</span>
+                <span className="font-medium text-sm sm:text-base truncate">Profile Settings</span>
               </SidebarGroupLabel>
             </AccordionTrigger>
 

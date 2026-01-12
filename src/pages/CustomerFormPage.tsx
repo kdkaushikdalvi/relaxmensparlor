@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Save, SkipForward, Check, X } from 'lucide-react';
-import { Customer, CustomerFormData, INTEREST_OPTIONS } from '@/types/customer';
+import { ArrowRight, ArrowLeft, Save, SkipForward, Check, X, Bell } from 'lucide-react';
+import { Customer, CustomerFormData, INTEREST_OPTIONS, REMINDER_INTERVALS, ReminderInterval } from '@/types/customer';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { calculateReminderDate } from '@/utils/reminderUtils';
 
-type FormStep = 'name' | 'phone' | 'date' | 'interests' | 'preferences';
+type FormStep = 'name' | 'phone' | 'date' | 'reminder' | 'interests' | 'preferences';
 
-const STEPS: FormStep[] = ['name', 'phone', 'date', 'interests', 'preferences'];
+const STEPS: FormStep[] = ['name', 'phone', 'date', 'reminder', 'interests', 'preferences'];
 
 const STEP_CONFIG: Record<FormStep, { title: string; subtitle: string; required: boolean }> = {
   name: { title: 'Customer Name', subtitle: "What's the customer's full name?", required: true },
   phone: { title: 'Mobile Number', subtitle: 'Enter their contact number', required: true },
   date: { title: 'Visiting Date', subtitle: 'When are they visiting?', required: false },
+  reminder: { title: 'Reminder Interval', subtitle: 'When should we remind this customer?', required: false },
   interests: { title: 'Services Interested', subtitle: 'What services are they looking for?', required: false },
   preferences: { title: 'Notes & Preferences', subtitle: 'Any special requests or notes?', required: false },
 };
@@ -36,6 +38,8 @@ const CustomerFormPage = () => {
     interest: [],
     preferences: '',
     visitingDate: new Date().toISOString().split('T')[0],
+    reminderInterval: 'none' as ReminderInterval,
+    reminderDate: undefined,
   });
   const [error, setError] = useState('');
 
@@ -47,6 +51,8 @@ const CustomerFormPage = () => {
         interest: customer.interest,
         preferences: customer.preferences,
         visitingDate: customer.visitingDate,
+        reminderInterval: customer.reminderInterval || 'none',
+        reminderDate: customer.reminderDate,
       });
     }
   }, [customer]);
@@ -198,6 +204,51 @@ const CustomerFormPage = () => {
             onChange={(e) => setFormData(prev => ({ ...prev, visitingDate: e.target.value }))}
             className="h-14 text-lg"
           />
+        );
+      
+      case 'reminder':
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {REMINDER_INTERVALS.map((interval) => (
+                <button
+                  key={interval.value}
+                  type="button"
+                  onClick={() => {
+                    const reminderDate = calculateReminderDate(formData.visitingDate, interval.value);
+                    setFormData(prev => ({
+                      ...prev,
+                      reminderInterval: interval.value,
+                      reminderDate,
+                    }));
+                  }}
+                  className={cn(
+                    "px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200",
+                    formData.reminderInterval === interval.value
+                      ? "bg-primary text-primary-foreground shadow-card scale-105"
+                      : "bg-muted text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  {formData.reminderInterval === interval.value && (
+                    <Bell className="w-4 h-4 inline mr-1.5" />
+                  )}
+                  {interval.label}
+                </button>
+              ))}
+            </div>
+            {formData.reminderDate && (
+              <p className="text-sm text-muted-foreground text-center">
+                Reminder will be sent on: <span className="font-medium text-primary">{formData.reminderDate}</span>
+              </p>
+            )}
+            <Button
+              type="button"
+              onClick={handleNext}
+              className="w-full h-12 bg-green-500 hover:bg-green-600 text-white"
+            >
+              <ArrowRight className="w-5 h-5 mr-2" /> Next
+            </Button>
+          </div>
         );
       
       case 'interests':

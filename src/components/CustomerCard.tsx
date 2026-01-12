@@ -1,8 +1,19 @@
 import { format } from 'date-fns';
-import { Phone, Calendar, ChevronRight } from 'lucide-react';
+import { Phone, Calendar, ChevronRight, Bell, MessageCircle, CheckCircle } from 'lucide-react';
 import { Customer } from '@/types/customer';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { 
+  canSendReminderToday, 
+  wasReminderSentToday, 
+  isReminderDueToday,
+  isValidPhoneNumber,
+  openWhatsAppReminder 
+} from '@/utils/reminderUtils';
+import { useProfile } from '@/contexts/ProfileContext';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useToast } from '@/hooks/use-toast';
 
 interface CustomerCardProps {
   customer: Customer;
@@ -12,9 +23,51 @@ interface CustomerCardProps {
 }
 
 export function CustomerCard({ customer, onClick, className, style }: CustomerCardProps) {
+  const { profile } = useProfile();
+  const { updateCustomer } = useCustomers();
+  const { toast } = useToast();
+  
   const formattedDate = customer.visitingDate 
     ? format(new Date(customer.visitingDate), 'MMM d, yyyy')
     : 'No date set';
+
+  const canSendReminder = canSendReminderToday(customer);
+  const reminderSentToday = wasReminderSentToday(customer);
+  const reminderDueToday = isReminderDueToday(customer);
+  const hasValidPhone = isValidPhoneNumber(customer.mobileNumber);
+
+  const handleSendReminder = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    
+    if (!hasValidPhone) {
+      toast({
+        title: "Invalid phone number",
+        description: "Please update the customer's phone number to send a reminder.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Mark reminder as sent for today
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const sentDates = customer.reminderSentDates || [];
+    
+    updateCustomer(customer.id, {
+      reminderSentDates: [...sentDates, today],
+      reminderHistory: [
+        ...(customer.reminderHistory || []),
+        { sentAt: new Date().toISOString(), message: `WhatsApp reminder sent` }
+      ],
+    });
+
+    // Open WhatsApp
+    openWhatsAppReminder(customer, profile.businessName);
+
+    toast({
+      title: "WhatsApp opened",
+      description: "Edit the message if needed and send it to the customer.",
+    });
+  };
 
   return (
     <button
@@ -71,6 +124,53 @@ export function CustomerCard({ customer, onClick, className, style }: CustomerCa
                 <Badge variant="secondary" className="text-xs">
                   +{customer.interest.length - 3}
                 </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Reminder Status & Button */}
+          {customer.reminderDate && (
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
+              <div className="flex items-center gap-2 text-xs">
+                <Bell className={cn(
+                  "w-3.5 h-3.5",
+                  reminderDueToday ? "text-primary" : "text-muted-foreground"
+                )} />
+                <span className={cn(
+                  reminderDueToday ? "text-primary font-medium" : "text-muted-foreground"
+                )}>
+                  {reminderSentToday 
+                    ? "Sent today ✓" 
+                    : reminderDueToday 
+                      ? "Due today" 
+                      : `${format(new Date(customer.reminderDate), 'dd MMM')}`
+                  }
+                </span>
+              </div>
+              
+              {reminderDueToday && (
+                <Button
+                  size="sm"
+                  variant={reminderSentToday ? "outline" : "default"}
+                  disabled={reminderSentToday || !hasValidPhone}
+                  onClick={handleSendReminder}
+                  className={cn(
+                    "h-8 gap-1.5 text-xs",
+                    reminderSentToday && "opacity-60"
+                  )}
+                >
+                  {reminderSentToday ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Sent
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      Send Reminder
+                    </>
+                  )}
+                </Button>
               )}
             </div>
           )}

@@ -11,8 +11,8 @@ interface ProfileContextType {
 }
 
 const DEFAULT_PROFILE: Profile = {
-  ownerName: 'Jaying Gadekar',
-  businessName: 'Relax Mens Parlor',
+  ownerName: 'JAYSING GADEKAR',
+  businessName: `RELAX MEN'S PARLOR`,
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);

@@ -1,16 +1,27 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowUpDown, Calendar, Bell, MessageCircle, CheckSquare, Square, Eye, Pencil, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { useCustomers } from '@/hooks/useCustomers';
-import { Header } from '@/components/Header';
-import { SearchBar } from '@/components/SearchBar';
-import { CustomerCard } from '@/components/CustomerCard';
-import { EmptyState } from '@/components/EmptyState';
-import { Button } from '@/components/ui/button';
-import { Customer } from '@/types/customer';
-import { useProfile } from '@/contexts/ProfileContext';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Plus,
+  ArrowUpDown,
+  Calendar,
+  Bell,
+  MessageCircle,
+  CheckSquare,
+  Square,
+  Eye,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import { format } from "date-fns";
+import { useCustomers } from "@/hooks/useCustomers";
+import { Header } from "@/components/Header";
+import { SearchBar } from "@/components/SearchBar";
+import { CustomerCard } from "@/components/CustomerCard";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Customer } from "@/types/customer";
+import { useProfile } from "@/contexts/ProfileContext";
+import { useToast } from "@/hooks/use-toast";
 import {
   ReminderCategory,
   REMINDER_CATEGORIES,
@@ -18,18 +29,18 @@ import {
   getReminderCategoryCounts,
   sortByReminderPriority,
   canSendReminderForCategory,
-} from '@/utils/reminderCategoryUtils';
+} from "@/utils/reminderCategoryUtils";
 import {
   wasReminderSentToday,
   isValidPhoneNumber,
   openWhatsAppReminder,
-} from '@/utils/reminderUtils';
+} from "@/utils/reminderUtils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,10 +50,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
-type DateGroup = 'Today' | 'Yesterday' | string;
-type SortType = 'date' | 'name' | 'reminder' | 'newest';
+type DateGroup = "Today" | "Yesterday" | string;
+type SortType = "date" | "name" | "reminder" | "newest";
 
 /* -------------------- Date Group Helpers -------------------- */
 
@@ -56,12 +67,14 @@ const getDateGroup = (dateString: string): DateGroup => {
   yesterday.setHours(0, 0, 0, 0);
   date.setHours(0, 0, 0, 0);
 
-  if (date.getTime() === today.getTime()) return 'Today';
-  if (date.getTime() === yesterday.getTime()) return 'Yesterday';
-  return format(date, 'dd MMM yyyy');
+  if (date.getTime() === today.getTime()) return "Today";
+  if (date.getTime() === yesterday.getTime()) return "Yesterday";
+  return format(date, "dd MMM yyyy");
 };
 
-const groupCustomersByDate = (customers: Customer[]): Record<string, Customer[]> => {
+const groupCustomersByDate = (
+  customers: Customer[]
+): Record<string, Customer[]> => {
   const groups: Record<string, Customer[]> = {};
   customers.forEach((customer) => {
     const group = getDateGroup(customer.visitingDate);
@@ -73,25 +86,30 @@ const groupCustomersByDate = (customers: Customer[]): Record<string, Customer[]>
 
 const sortDateGroups = (groups: string[]): string[] => {
   return groups.sort((a, b) => {
-    if (a === 'Today') return -1;
-    if (b === 'Today') return 1;
-    if (a === 'Yesterday') return -1;
-    if (b === 'Yesterday') return 1;
-    const dateA = new Date(a.split(' ').reverse().join(' '));
-    const dateB = new Date(b.split(' ').reverse().join(' '));
+    if (a === "Today") return -1;
+    if (b === "Today") return 1;
+    if (a === "Yesterday") return -1;
+    if (b === "Yesterday") return 1;
+    const dateA = new Date(a.split(" ").reverse().join(" "));
+    const dateB = new Date(b.split(" ").reverse().join(" "));
     return dateB.getTime() - dateA.getTime();
   });
 };
 
-const sortCustomers = (customers: Customer[], sortType: SortType): Customer[] => {
-  if (sortType === 'reminder') return sortByReminderPriority(customers);
+const sortCustomers = (
+  customers: Customer[],
+  sortType: SortType
+): Customer[] => {
+  if (sortType === "reminder") return sortByReminderPriority(customers);
 
   return [...customers].sort((a, b) => {
-    if (sortType === 'name') return a.fullName.localeCompare(b.fullName);
-    if (sortType === 'newest') {
+    if (sortType === "name") return a.fullName.localeCompare(b.fullName);
+    if (sortType === "newest") {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
-    return new Date(b.visitingDate).getTime() - new Date(a.visitingDate).getTime();
+    return (
+      new Date(b.visitingDate).getTime() - new Date(a.visitingDate).getTime()
+    );
   });
 };
 
@@ -99,19 +117,25 @@ const sortCustomers = (customers: Customer[], sortType: SortType): Customer[] =>
 
 const Index = () => {
   const navigate = useNavigate();
-  const { customers, searchCustomers, updateCustomer, deleteCustomer } = useCustomers();
+  const { customers, searchCustomers, updateCustomer, deleteCustomer } =
+    useCustomers();
   const { profile } = useProfile();
   const { toast } = useToast();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [reminderFilter, setReminderFilter] = useState<ReminderCategory>('all');
-  const [sortType, setSortType] = useState<SortType>('newest');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [reminderFilter, setReminderFilter] = useState<ReminderCategory>("all");
+  const [sortType, setSortType] = useState<SortType>("newest");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null
+  );
 
-  const reminderCounts = useMemo(() => getReminderCategoryCounts(customers), [customers]);
+  const reminderCounts = useMemo(
+    () => getReminderCategoryCounts(customers),
+    [customers]
+  );
 
   const filteredCustomers = useMemo(() => {
     const searched = searchCustomers(searchQuery);
@@ -143,27 +167,37 @@ const Index = () => {
     }
   }, [selectableCustomers, selectedIds]);
 
-  const handleSelectChange = useCallback((customerId: string, selected: boolean) => {
-    setSelectedIds((prev) => {
-      const newSet = new Set(prev);
-      if (selected) newSet.add(customerId);
-      else newSet.delete(customerId);
-      return newSet;
-    });
-  }, []);
+  const handleSelectChange = useCallback(
+    (customerId: string, selected: boolean) => {
+      setSelectedIds((prev) => {
+        const newSet = new Set(prev);
+        if (selected) newSet.add(customerId);
+        else newSet.delete(customerId);
+        return newSet;
+      });
+    },
+    []
+  );
 
   const handleBulkSendReminders = useCallback(() => {
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = format(new Date(), "yyyy-MM-dd");
     let sentCount = 0;
 
     selectedIds.forEach((id) => {
       const customer = customers.find((c) => c.id === id);
-      if (customer && canSendReminderForCategory(customer) && !wasReminderSentToday(customer)) {
+      if (
+        customer &&
+        canSendReminderForCategory(customer) &&
+        !wasReminderSentToday(customer)
+      ) {
         updateCustomer(id, {
           reminderSentDates: [...(customer.reminderSentDates || []), today],
           reminderHistory: [
             ...(customer.reminderHistory || []),
-            { sentAt: new Date().toISOString(), message: `WhatsApp reminder sent (bulk)` },
+            {
+              sentAt: new Date().toISOString(),
+              message: `WhatsApp reminder sent (bulk)`,
+            },
           ],
         });
         openWhatsAppReminder(customer, profile.businessName);
@@ -175,8 +209,8 @@ const Index = () => {
     setBulkSelectMode(false);
 
     toast({
-      title: `${sentCount} reminder${sentCount !== 1 ? 's' : ''} sent`,
-      description: 'WhatsApp windows opened for selected customers.',
+      title: `${sentCount} reminder${sentCount !== 1 ? "s" : ""} sent`,
+      description: "WhatsApp windows opened for selected customers.",
     });
   }, [selectedIds, customers, updateCustomer, profile.businessName, toast]);
 
@@ -185,9 +219,9 @@ const Index = () => {
       const name = customerToDelete.fullName;
       deleteCustomer(customerToDelete.id);
       toast({
-        title: 'Customer deleted',
+        title: "Customer deleted",
         description: `${name} has been removed.`,
-        variant: 'destructive',
+        variant: "destructive",
       });
       setCustomerToDelete(null);
       setDeleteDialogOpen(false);
@@ -237,7 +271,8 @@ const Index = () => {
               {REMINDER_CATEGORIES.map((cat) => {
                 const count = reminderCounts[cat.value];
                 const isActive = reminderFilter === cat.value;
-                const isUrgent = cat.value === 'overdue' || cat.value === 'today';
+                const isUrgent =
+                  cat.value === "overdue" || cat.value === "today";
 
                 return (
                   <Button
@@ -250,11 +285,11 @@ const Index = () => {
                       ${
                         isActive
                           ? isUrgent
-                            ? 'bg-destructive text-white shadow-md scale-105'
-                            : 'bg-primary text-white shadow-md scale-105'
+                            ? "bg-destructive text-white shadow-md scale-105"
+                            : "bg-primary text-white shadow-md scale-105"
                           : isUrgent && count > 0
-                          ? 'border border-destructive/40 text-destructive bg-destructive/5'
-                          : 'border border-primary/20 text-muted-foreground hover:bg-primary/5'
+                          ? "border border-destructive/40 text-destructive bg-destructive/5"
+                          : "border border-primary/20 text-muted-foreground hover:bg-primary/5"
                       }
                     `}
                   >
@@ -272,7 +307,12 @@ const Index = () => {
             <div className="flex items-center gap-2">
               {bulkSelectMode ? (
                 <>
-                  <Button variant="ghost" size="sm" onClick={handleSelectAll} className="text-xs gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="text-xs gap-1"
+                  >
                     {selectedIds.size === selectableCustomers.length ? (
                       <CheckSquare className="w-4 h-4" />
                     ) : (
@@ -332,16 +372,16 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSortType('newest')}>
+                <DropdownMenuItem onClick={() => setSortType("newest")}>
                   Newest First
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType('reminder')}>
+                <DropdownMenuItem onClick={() => setSortType("reminder")}>
                   Sort by Priority
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType('date')}>
+                <DropdownMenuItem onClick={() => setSortType("date")}>
                   Sort by Visit Date
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType('name')}>
+                <DropdownMenuItem onClick={() => setSortType("name")}>
                   Sort by Name
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -367,12 +407,12 @@ const Index = () => {
                     <div className="sticky top-[180px] z-20 -mx-4 px-4 py-3">
                       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 backdrop-blur-xl shadow-lg">
                         <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
-                        <div className="relative flex items-center gap-4 px-5 py-4">
-                          <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
-                            <Calendar className="w-6 h-6 text-primary" />
+                        <div className="relative flex items-center gap-4 px-5 py-1">
+                          <div className="w-8 h-8 rounded-2xl bg-primary/20 flex items-center justify-center">
+                            <Calendar className="w-4 h-4 text-primary" />
                           </div>
-                          <div>
-                            <div className="text-2xl font-bold">{group}</div>
+                          <div className="flex items-center justify-between w-full">
+                            <div className="text-md font-bold">{group}</div>
                             <div className="text-xs text-muted-foreground">
                               {groupCustomers.length} customers
                             </div>
@@ -400,10 +440,10 @@ const Index = () => {
                                 handleSelectChange(customer.id, selected)
                               }
                             />
-                            
+
                             {/* Quick Actions */}
                             {!bulkSelectMode && (
-                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                              <div className="absolute top-2 right-2  group-hover:opacity-100 transition-opacity flex gap-1">
                                 <Button
                                   size="icon"
                                   variant="secondary"
@@ -454,15 +494,54 @@ const Index = () => {
         </div>
       </main>
 
-      {/* FAB */}
       <div className="fixed bottom-6 right-6 z-40">
         <Button
-          variant="fab"
-          size="fab"
-          onClick={() => navigate('/customer/new')}
-          className="shadow-2xl shadow-primary/40 hover:scale-110 transition-transform"
+          onClick={() => navigate("/customer/new")}
+          className="
+      relative
+      h-14 px-7 rounded-full
+      bg-gradient-to-r from-primary to-purple-600
+      text-primary-foreground
+      shadow-2xl shadow-primary/40
+      flex items-center gap-3
+      font-semibold
+      tracking-wide
+
+      active:scale-95
+      transition-all duration-300 ease-out
+      hover:scale-105 hover:-translate-y-0.5
+    "
         >
-          <Plus className="w-7 h-7" />
+          {/* Plus SVG */}
+          <span
+            className="
+      flex items-center justify-center
+      w-8 h-8 rounded-full
+      bg-white/15
+    "
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </span>
+
+          <span className="font-bold">Add New</span>
+
+          {/* 🔴 Attention Dot */}
+          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 animate-ping opacity-75" />
+          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500" />
+
+          {/* Subtle highlight ring */}
+          <span className="pointer-events-none absolute inset-0 rounded-full border border-white/20" />
         </Button>
       </div>
 
@@ -472,9 +551,11 @@ const Index = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Customer</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{' '}
-              <span className="font-semibold">{customerToDelete?.fullName}</span>? This action
-              cannot be undone.
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">
+                {customerToDelete?.fullName}
+              </span>
+              ? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

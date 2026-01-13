@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface SetupData {
   ownerName: string;
   businessName: string;
+  mobileNumber: string;
   isSetupComplete: boolean;
 }
 
@@ -11,6 +12,7 @@ interface SetupContextType {
   isSetupComplete: boolean;
   completeSetup: (data: Omit<SetupData, 'isSetupComplete'>) => void;
   resetSetup: () => void;
+  resetAll: () => void;
 }
 
 const STORAGE_KEY = 'relax-salon-setup';
@@ -18,6 +20,7 @@ const STORAGE_KEY = 'relax-salon-setup';
 const DEFAULT_SETUP: SetupData = {
   ownerName: '',
   businessName: '',
+  mobileNumber: '',
   isSetupComplete: false,
 };
 
@@ -52,6 +55,17 @@ export function SetupProvider({ children }: { children: ReactNode }) {
     setSetupData(DEFAULT_SETUP);
   };
 
+  const resetAll = () => {
+    // Clear all app data
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('relax-parlor-profile');
+    localStorage.removeItem('relax-salon-customers');
+    localStorage.removeItem('app_pin_verified_date');
+    localStorage.removeItem('message-templates');
+    setSetupData(DEFAULT_SETUP);
+    window.location.reload();
+  };
+
   return (
     <SetupContext.Provider
       value={{
@@ -59,6 +73,7 @@ export function SetupProvider({ children }: { children: ReactNode }) {
         isSetupComplete: setupData.isSetupComplete,
         completeSetup,
         resetSetup,
+        resetAll,
       }}
     >
       {children}

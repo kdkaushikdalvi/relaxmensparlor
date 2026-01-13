@@ -20,10 +20,12 @@ import {
   MessageSquare,
   Download,
   RefreshCw,
+  RotateCcw,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSetup } from "@/contexts/SetupContext";
+import { useCustomers } from "@/hooks/useCustomers";
 import {
   Sidebar,
   SidebarContent,
@@ -73,7 +75,8 @@ const WEBSITE_URL = "https://relaxmensparlor.lovable.app";
 export function AppSidebar() {
   const navigate = useNavigate();
   const { profile, updateProfile } = useProfile();
-  const { resetSetup } = useSetup();
+  const { resetSetup, resetAll, setupData } = useSetup();
+  const { customers } = useCustomers();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editField, setEditField] = useState<"ownerName" | "businessName" | null>(null);
@@ -107,11 +110,26 @@ export function AppSidebar() {
     setEditValue("");
   };
 
-  const resetKey = (key: string) => {
-    localStorage.removeItem(key);
-    if (key === 'relax-salon-setup') {
-      resetSetup();
-    }
+  const resetProfile = () => {
+    localStorage.removeItem('relax-salon-setup');
+    localStorage.removeItem('relax-parlor-profile');
+    resetSetup();
+    window.location.reload();
+  };
+
+  const resetCustomers = () => {
+    // Create default test customer using owner data
+    const defaultCustomer = {
+      id: crypto.randomUUID(),
+      fullName: setupData.ownerName || 'Test Customer',
+      mobileNumber: setupData.mobileNumber || '9999999999',
+      visitingDate: new Date().toISOString().split('T')[0],
+      interest: ['Haircut'],
+      preferences: 'Default test customer',
+      createdAt: new Date().toISOString(),
+      reminderInterval: 'none' as const,
+    };
+    localStorage.setItem('relax-salon-customers', JSON.stringify([defaultCustomer]));
     window.location.reload();
   };
 
@@ -444,24 +462,28 @@ export function AppSidebar() {
 
             <AccordionContent className="space-y-2 px-1 pt-2 pb-0">
               <ConfirmReset
-                label="Reset PIN"
-                title="Reset App PIN"
-                description="This will ask for PIN again."
-                onConfirm={() => resetKey("app_pin_verified_date")}
-              />
-
-              <ConfirmReset
                 label="Reset Profile"
                 title="Reset Profile"
-                description="This will delete profile info."
-                onConfirm={() => resetKey("relax-parlor-profile")}
+                description="This will clear your profile and ask again for Owner Name, Shop Name, and Mobile Number."
+                onConfirm={resetProfile}
+                icon={<RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
               />
 
               <ConfirmReset
-                label="Remove All Customers"
-                title="Delete All Customers"
-                description="This cannot be undone."
-                onConfirm={() => resetKey("relax-salon-customers")}
+                label="Reset Customers"
+                title="Reset Customers"
+                description="This will delete all customers and create 1 default test customer (yourself)."
+                onConfirm={resetCustomers}
+                icon={<RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
+              />
+
+              <ConfirmReset
+                label="Reset All"
+                title="Reset Everything"
+                description="This will clear ALL app data and restart in first-time setup mode. This cannot be undone."
+                onConfirm={resetAll}
+                icon={<Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
+                destructive
               />
             </AccordionContent>
           </AccordionItem>
@@ -507,20 +529,28 @@ function ConfirmReset({
   description,
   onConfirm,
   label,
+  icon,
+  destructive = false,
 }: {
   title: string;
   description: string;
   onConfirm: () => void;
   label: string;
+  icon?: React.ReactNode;
+  destructive?: boolean;
 }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button 
           variant="outline" 
-          className="w-full justify-start text-destructive border-destructive/20 hover:bg-destructive/10 h-9 text-xs sm:text-sm"
+          className={`w-full justify-start h-9 text-xs sm:text-sm ${
+            destructive 
+              ? 'text-destructive border-destructive/40 hover:bg-destructive/10' 
+              : 'text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+          }`}
         >
-          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
+          {icon || <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
           {label}
         </Button>
       </AlertDialogTrigger>
@@ -533,7 +563,12 @@ function ConfirmReset({
 
         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
           <AlertDialogCancel className="h-9 w-full sm:w-auto m-0">Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="h-9 w-full sm:w-auto m-0">
+          <AlertDialogAction 
+            onClick={onConfirm} 
+            className={`h-9 w-full sm:w-auto m-0 ${
+              destructive ? 'bg-destructive hover:bg-destructive/90' : ''
+            }`}
+          >
             Yes, Reset
           </AlertDialogAction>
         </AlertDialogFooter>

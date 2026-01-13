@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowUpDown, Calendar, Bell, MessageCircle, CheckSquare, Square } from 'lucide-react';
+import { Plus, ArrowUpDown, Calendar, Bell, MessageCircle, CheckSquare, Square, Eye, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Header } from '@/components/Header';
@@ -30,9 +30,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type DateGroup = 'Today' | 'Yesterday' | string;
-type SortType = 'date' | 'name' | 'reminder';
+type SortType = 'date' | 'name' | 'reminder' | 'newest';
 
 /* -------------------- Date Group Helpers -------------------- */
 
@@ -78,6 +88,9 @@ const sortCustomers = (customers: Customer[], sortType: SortType): Customer[] =>
 
   return [...customers].sort((a, b) => {
     if (sortType === 'name') return a.fullName.localeCompare(b.fullName);
+    if (sortType === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
     return new Date(b.visitingDate).getTime() - new Date(a.visitingDate).getTime();
   });
 };
@@ -86,15 +99,17 @@ const sortCustomers = (customers: Customer[], sortType: SortType): Customer[] =>
 
 const Index = () => {
   const navigate = useNavigate();
-  const { customers, searchCustomers, updateCustomer } = useCustomers();
+  const { customers, searchCustomers, updateCustomer, deleteCustomer } = useCustomers();
   const { profile } = useProfile();
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [reminderFilter, setReminderFilter] = useState<ReminderCategory>('all');
-  const [sortType, setSortType] = useState<SortType>('reminder');
+  const [sortType, setSortType] = useState<SortType>('newest');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   const reminderCounts = useMemo(() => getReminderCategoryCounts(customers), [customers]);
 
@@ -165,6 +180,33 @@ const Index = () => {
     });
   }, [selectedIds, customers, updateCustomer, profile.businessName, toast]);
 
+  const handleDeleteConfirm = useCallback(() => {
+    if (customerToDelete) {
+      const name = customerToDelete.fullName;
+      deleteCustomer(customerToDelete.id);
+      toast({
+        title: 'Customer deleted',
+        description: `${name} has been removed.`,
+        variant: 'destructive',
+      });
+      setCustomerToDelete(null);
+      setDeleteDialogOpen(false);
+    }
+  }, [customerToDelete, deleteCustomer, toast]);
+
+  const handleViewCustomer = (customer: Customer) => {
+    navigate(`/customer/${customer.id}`);
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    navigate(`/customer/${customer.id}/edit`);
+  };
+
+  const handleDeleteCustomer = (customer: Customer) => {
+    setCustomerToDelete(customer);
+    setDeleteDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary)/0.12),transparent_40%)]" />
@@ -183,9 +225,9 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Reminder Filters */}
+        {/* Reminder Filters - Different background */}
         <div className="px-4 pb-3">
-          <div className="glass rounded-2xl p-4 border border-primary/20 shadow-lg">
+          <div className="rounded-2xl p-4 border border-primary/20 shadow-lg bg-[hsl(var(--reminder-section))]">
             <div className="flex items-center gap-2 mb-3">
               <Bell className="w-5 h-5 text-primary" />
               <span className="font-semibold">Reminders</span>
@@ -290,11 +332,14 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setSortType('newest')}>
+                  Newest First
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSortType('reminder')}>
                   Sort by Priority
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSortType('date')}>
-                  Sort by Date
+                  Sort by Visit Date
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSortType('name')}>
                   Sort by Name
@@ -304,63 +349,108 @@ const Index = () => {
           </div>
         </div>
 
-        {/* List */}
+        {/* Customer List - Different background */}
         <div className="px-4">
-          {customers.length === 0 ? (
-            <EmptyState type="no-customers" />
-          ) : filteredCustomers.length === 0 ? (
-            <EmptyState type="no-results" searchQuery={searchQuery} />
-          ) : (
-            sortDateGroups(Object.keys(groupedCustomers)).map((group) => {
-              const groupCustomers = groupedCustomers[group];
-              if (!groupCustomers?.length) return null;
+          <div className="rounded-2xl p-4 bg-[hsl(var(--customer-section))] border border-primary/10">
+            {customers.length === 0 ? (
+              <EmptyState type="no-customers" />
+            ) : filteredCustomers.length === 0 ? (
+              <EmptyState type="no-results" searchQuery={searchQuery} />
+            ) : (
+              sortDateGroups(Object.keys(groupedCustomers)).map((group) => {
+                const groupCustomers = groupedCustomers[group];
+                if (!groupCustomers?.length) return null;
 
-              return (
-                <div key={group} className="mb-6">
-                  {/* Date Header */}
-                  <div className="sticky top-[180px] z-20 -mx-4 px-4 py-3">
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 backdrop-blur-xl shadow-lg">
-                      <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
-                      <div className="relative flex items-center gap-4 px-5 py-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
-                          <Calendar className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold">{group}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {groupCustomers.length} customers
+                return (
+                  <div key={group} className="mb-6">
+                    {/* Date Header */}
+                    <div className="sticky top-[180px] z-20 -mx-4 px-4 py-3">
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 backdrop-blur-xl shadow-lg">
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
+                        <div className="relative flex items-center gap-4 px-5 py-4">
+                          <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
+                            <Calendar className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold">{group}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {groupCustomers.length} customers
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-4 pt-3">
-                    {groupCustomers.map((customer, index) => {
-                      const isSelectable =
-                        canSendReminderForCategory(customer) &&
-                        !wasReminderSentToday(customer) &&
-                        isValidPhoneNumber(customer.mobileNumber);
+                    <div className="space-y-4 pt-3">
+                      {groupCustomers.map((customer, index) => {
+                        const isSelectable =
+                          canSendReminderForCategory(customer) &&
+                          !wasReminderSentToday(customer) &&
+                          isValidPhoneNumber(customer.mobileNumber);
 
-                      return (
-                        <CustomerCard
-                          key={customer.id}
-                          customer={customer}
-                          onClick={() => navigate(`/customer/${customer.id}`)}
-                          style={{ animationDelay: `${index * 50}ms` }}
-                          selectable={bulkSelectMode && isSelectable}
-                          selected={selectedIds.has(customer.id)}
-                          onSelectChange={(selected) =>
-                            handleSelectChange(customer.id, selected)
-                          }
-                        />
-                      );
-                    })}
+                        return (
+                          <div key={customer.id} className="relative group">
+                            <CustomerCard
+                              customer={customer}
+                              onClick={() => handleViewCustomer(customer)}
+                              style={{ animationDelay: `${index * 50}ms` }}
+                              selectable={bulkSelectMode && isSelectable}
+                              selected={selectedIds.has(customer.id)}
+                              onSelectChange={(selected) =>
+                                handleSelectChange(customer.id, selected)
+                              }
+                            />
+                            
+                            {/* Quick Actions */}
+                            {!bulkSelectMode && (
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="secondary"
+                                  className="h-8 w-8 shadow-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewCustomer(customer);
+                                  }}
+                                  title="View"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="secondary"
+                                  className="h-8 w-8 shadow-md"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditCustomer(customer);
+                                  }}
+                                  title="Edit"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="secondary"
+                                  className="h-8 w-8 shadow-md text-destructive hover:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteCustomer(customer);
+                                  }}
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
       </main>
 
@@ -375,6 +465,29 @@ const Index = () => {
           <Plus className="w-7 h-7" />
         </Button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-semibold">{customerToDelete?.fullName}</span>? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Palette,
   User,
@@ -15,9 +16,14 @@ import {
   Copy,
   Share2,
   Check,
+  History,
+  MessageSquare,
+  Download,
+  RefreshCw,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
+import { useSetup } from "@/contexts/SetupContext";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +38,7 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { MessageTemplateManager } from "./MessageTemplateManager";
 import brandLogo from "@/assets/brand-logo-transparent.png";
 
 import {
@@ -64,14 +71,26 @@ import {
 const WEBSITE_URL = "https://relaxmensparlor.lovable.app";
 
 export function AppSidebar() {
+  const navigate = useNavigate();
   const { profile, updateProfile } = useProfile();
+  const { resetSetup } = useSetup();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [editField, setEditField] = useState<
-    "ownerName" | "businessName" | null
-  >(null);
+  const [editField, setEditField] = useState<"ownerName" | "businessName" | null>(null);
   const [editValue, setEditValue] = useState("");
   const [copied, setCopied] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  // PWA install prompt handler
+  useState(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  });
 
   const startEditing = (field: "ownerName" | "businessName") => {
     setEditField(field);
@@ -90,7 +109,20 @@ export function AppSidebar() {
 
   const resetKey = (key: string) => {
     localStorage.removeItem(key);
+    if (key === 'relax-salon-setup') {
+      resetSetup();
+    }
     window.location.reload();
+  };
+
+  const handleInstallPWA = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setInstallPrompt(null);
+      }
+    }
   };
 
   const copyToClipboard = async () => {
@@ -298,7 +330,69 @@ export function AppSidebar() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* ========== IMPORT CONTACTS ========== */}
+          {/* ========== MESSAGE TEMPLATES ========== */}
+          <AccordionItem value="templates" className="border-none">
+            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
+              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
+                <MessageSquare className="w-4 h-4 flex-shrink-0" /> 
+                <span>Message Templates</span>
+              </SidebarGroupLabel>
+            </AccordionTrigger>
+
+            <AccordionContent className="pb-0">
+              <div className="py-3 px-1">
+                <MessageTemplateManager />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* ========== REMINDER HISTORY ========== */}
+          <AccordionItem value="history" className="border-none">
+            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
+              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
+                <History className="w-4 h-4 flex-shrink-0" /> 
+                <span>Reminder History</span>
+              </SidebarGroupLabel>
+            </AccordionTrigger>
+
+            <AccordionContent className="pb-0">
+              <div className="py-3 px-2">
+                <Button 
+                  variant="outline" 
+                  className="w-full h-9 text-xs sm:text-sm"
+                  onClick={() => navigate('/reminder-history')}
+                >
+                  <History className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
+                  View All History
+                </Button>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* ========== INSTALL APP ========== */}
+          {installPrompt && (
+            <AccordionItem value="install" className="border-none">
+              <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors">
+                <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base text-primary">
+                  <Download className="w-4 h-4 flex-shrink-0" /> 
+                  <span>Install App</span>
+                </SidebarGroupLabel>
+              </AccordionTrigger>
+
+              <AccordionContent className="pb-0">
+                <div className="py-3 px-2 space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Install this app on your device for quick access and offline use.
+                  </p>
+                  <Button onClick={handleInstallPWA} className="w-full h-9 text-xs sm:text-sm">
+                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
+                    Install Now
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
           <AccordionItem value="import" className="border-none">
             <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
               <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">

@@ -14,6 +14,7 @@ import {
   openWhatsAppReminder 
 } from '@/utils/reminderUtils';
 import { getReminderStatus, ReminderStatus } from '@/utils/reminderCategoryUtils';
+import { getAvatarGradient, getAvatarTextColor } from '@/utils/avatarColors';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useToast } from '@/hooks/use-toast';
@@ -130,14 +131,14 @@ export function CustomerCard({
           </div>
         )}
 
-        {/* Avatar */}
+        {/* Multi-Color Avatar */}
         <div className={cn(
           "flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300 group-hover:shadow-elevated",
-          isOverdue ? "bg-destructive/20" : "gradient-primary"
+          isOverdue ? "bg-destructive/20" : getAvatarGradient(customer.fullName)
         )}>
           <span className={cn(
             "text-lg font-display font-semibold",
-            isOverdue ? "text-destructive" : "text-primary-foreground"
+            isOverdue ? "text-destructive" : getAvatarTextColor(customer.fullName)
           )}>
             {customer.fullName.charAt(0).toUpperCase()}
           </span>

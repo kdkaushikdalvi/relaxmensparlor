@@ -1,18 +1,29 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Check, Star, MessageSquare } from 'lucide-react';
-import { useMessageTemplates, MessageTemplate } from '@/contexts/MessageTemplateContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState } from "react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  Star,
+  MessageSquare,
+  X,
+} from "lucide-react";
+import {
+  useMessageTemplates,
+  MessageTemplate,
+} from "@/contexts/MessageTemplateContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,23 +34,41 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+/* ============================= */
+/* Variable Examples */
+/* ============================= */
+
+const VARIABLE_EXAMPLES: Record<string, string> = {
+  customerName: "Rahul",
+  businessName: "Relax Men's Parlor",
+  services: "Haircut & Beard",
+  offer: "20% OFF",
+};
 
 export function MessageTemplateManager() {
-  const { templates, addTemplate, updateTemplate, deleteTemplate, setDefaultTemplate } = useMessageTemplates();
+  const {
+    templates,
+    addTemplate,
+    updateTemplate,
+    deleteTemplate,
+    setDefaultTemplate,
+  } = useMessageTemplates();
   const { toast } = useToast();
-  
+
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<MessageTemplate | null>(null);
-  const [name, setName] = useState('');
-  const [message, setMessage] = useState('');
+  const [editingTemplate, setEditingTemplate] =
+    useState<MessageTemplate | null>(null);
+  const [name, setName] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleOpenCreate = () => {
     setEditingTemplate(null);
-    setName('');
-    setMessage('');
+    setName("");
+    setMessage("");
     setEditDialogOpen(true);
   };
 
@@ -53,19 +82,19 @@ export function MessageTemplateManager() {
   const handleSave = () => {
     if (!name.trim() || !message.trim()) {
       toast({
-        title: 'Missing fields',
-        description: 'Please enter both name and message',
-        variant: 'destructive',
+        title: "Missing fields",
+        description: "Please enter both name and message",
+        variant: "destructive",
       });
       return;
     }
 
     if (editingTemplate) {
       updateTemplate(editingTemplate.id, { name, message });
-      toast({ title: 'Template updated' });
+      toast({ title: "Template updated" });
     } else {
       addTemplate(name, message);
-      toast({ title: 'Template created' });
+      toast({ title: "Template created" });
     }
 
     setEditDialogOpen(false);
@@ -73,17 +102,38 @@ export function MessageTemplateManager() {
 
   const handleDelete = (id: string) => {
     deleteTemplate(id);
-    toast({ title: 'Template deleted' });
+    toast({ title: "Template deleted" });
   };
 
   const handleSetDefault = (id: string) => {
     setDefaultTemplate(id);
-    toast({ title: 'Default template updated' });
+    toast({ title: "Default template updated" });
   };
+
+  /* ============================= */
+  /* Variable Helpers */
+  /* ============================= */
+
+  const insertVariable = (key: string) => {
+    setMessage((m) => (m ? `${m} {${key}}` : `{${key}}`));
+  };
+
+  const removeVariable = (variable: string) => {
+    setMessage((m) => m.replace(variable, "").replace(/\s+/g, " ").trim());
+  };
+
+  const renderPreview = () => {
+    return Object.entries(VARIABLE_EXAMPLES).reduce(
+      (acc, [k, v]) => acc.replaceAll(`{${k}}`, v),
+      message || ""
+    );
+  };
+
+  const usedVariables = Array.from(new Set(message.match(/{\w+}/g) || []));
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* ================= Header ================= */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary" />
@@ -95,18 +145,35 @@ export function MessageTemplateManager() {
         </Button>
       </div>
 
-      {/* Variables Help */}
-      <div className="p-3 rounded-xl bg-muted/50 border text-xs space-y-2">
-        <p className="font-medium">Available Variables:</p>
+      {/* ================= Variables ================= */}
+      <div className="p-3 rounded-xl bg-muted/40 border space-y-2">
+        <p className="text-xs font-medium">Click to insert variables:</p>
+
         <div className="flex flex-wrap gap-2">
-          <code className="px-2 py-1 rounded bg-background">{'{customerName}'}</code>
-          <code className="px-2 py-1 rounded bg-background">{'{businessName}'}</code>
-          <code className="px-2 py-1 rounded bg-background">{'{services}'}</code>
-          <code className="px-2 py-1 rounded bg-background">{'{offer}'}</code>
+          {Object.keys(VARIABLE_EXAMPLES).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => insertVariable(key)}
+              className="px-2 py-1 rounded-md bg-background border text-xs hover:bg-primary/10 transition"
+            >
+              {`{${key}}`}
+            </button>
+          ))}
         </div>
+
+        {/* Preview */}
+        {message && (
+          <div className="mt-2 text-xs p-2 rounded-md bg-background border">
+            <p className="text-muted-foreground mb-1">Preview (example):</p>
+            <p className="text-foreground whitespace-pre-wrap">
+              {renderPreview()}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Template List */}
+      {/* ================= Template List ================= */}
       <ScrollArea className="h-[300px]">
         <div className="space-y-3 pr-4">
           {templates.map((template) => (
@@ -145,7 +212,7 @@ export function MessageTemplateManager() {
                       <Star className="w-4 h-4" />
                     </Button>
                   )}
-                  
+
                   <Button
                     size="icon"
                     variant="ghost"
@@ -169,12 +236,15 @@ export function MessageTemplateManager() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Template</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete "{template.name}"? This cannot be undone.
+                          Are you sure you want to delete "{template.name}"?
+                          This cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(template.id)}>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(template.id)}
+                        >
                           Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -187,12 +257,12 @@ export function MessageTemplateManager() {
         </div>
       </ScrollArea>
 
-      {/* Edit/Create Dialog */}
+      {/* ================= Edit/Create Dialog ================= */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="w-[95vw] max-w-lg rounded-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingTemplate ? 'Edit Template' : 'Create Template'}
+              {editingTemplate ? "Edit Template" : "Create Template"}
             </DialogTitle>
             <DialogDescription>
               Create a reusable message template for WhatsApp reminders
@@ -201,7 +271,9 @@ export function MessageTemplateManager() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Template Name</label>
+              <label className="text-sm font-medium mb-2 block">
+                Template Name
+              </label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -215,10 +287,28 @@ export function MessageTemplateManager() {
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Write your message here..."
+                placeholder="Hi {customerName}, welcome to {businessName}. Enjoy {offer}!"
                 rows={6}
                 className="resize-none"
               />
+
+              {/* Used variables */}
+              {usedVariables.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {usedVariables.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => removeVariable(v)}
+                      className="text-xs px-2 py-1 rounded-md bg-primary/10 border hover:bg-destructive/10 flex items-center gap-1"
+                      title="Click to remove"
+                    >
+                      {v}
+                      <X className="w-3 h-3" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -228,7 +318,7 @@ export function MessageTemplateManager() {
             </Button>
             <Button onClick={handleSave} className="gap-1">
               <Check className="w-4 h-4" />
-              {editingTemplate ? 'Update' : 'Create'}
+              {editingTemplate ? "Update" : "Create"}
             </Button>
           </div>
         </DialogContent>

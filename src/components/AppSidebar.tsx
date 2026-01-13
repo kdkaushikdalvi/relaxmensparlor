@@ -1,4 +1,5 @@
-import { useState } from "react";
+// AppSidebar.tsx
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Palette,
@@ -41,7 +42,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MessageTemplateManager } from "./MessageTemplateManager";
-import brandLogo from "@/assets/brand-logo-transparent.png";
+import brandLogo from "@/assets/brand-logo2.png";
 
 import {
   Dialog,
@@ -79,21 +80,21 @@ export function AppSidebar() {
   const { customers } = useCustomers();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [editField, setEditField] = useState<"ownerName" | "businessName" | null>(null);
+  const [editField, setEditField] = useState<
+    "ownerName" | "businessName" | null
+  >(null);
   const [editValue, setEditValue] = useState("");
   const [copied, setCopied] = useState(false);
-  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
-  // PWA install prompt handler
-  useState(() => {
+  useEffect(() => {
     const handler = (e: any) => {
       e.preventDefault();
       setInstallPrompt(e);
     };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  });
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
   const startEditing = (field: "ownerName" | "businessName") => {
     setEditField(field);
@@ -106,414 +107,261 @@ export function AppSidebar() {
       updateProfile({ [editField]: editValue.trim() });
     }
     setEditOpen(false);
-    setEditField(null);
-    setEditValue("");
   };
 
   const resetProfile = () => {
-    localStorage.removeItem('relax-salon-setup');
-    localStorage.removeItem('relax-parlor-profile');
+    localStorage.removeItem("relax-salon-setup");
+    localStorage.removeItem("relax-parlor-profile");
     resetSetup();
     window.location.reload();
   };
 
   const resetCustomers = () => {
-    // Create default test customer using owner data
     const defaultCustomer = {
       id: crypto.randomUUID(),
-      fullName: setupData.ownerName || 'Test Customer',
-      mobileNumber: setupData.mobileNumber || '9999999999',
-      visitingDate: new Date().toISOString().split('T')[0],
-      interest: ['Haircut'],
-      preferences: 'Default test customer',
+      fullName: setupData.ownerName || "Test Customer",
+      mobileNumber: setupData.mobileNumber || "9999999999",
+      visitingDate: new Date().toISOString().split("T")[0],
+      interest: ["Haircut"],
+      preferences: "Default test customer",
       createdAt: new Date().toISOString(),
-      reminderInterval: 'none' as const,
+      reminderInterval: "none" as const,
     };
-    localStorage.setItem('relax-salon-customers', JSON.stringify([defaultCustomer]));
+    localStorage.setItem(
+      "relax-salon-customers",
+      JSON.stringify([defaultCustomer])
+    );
     window.location.reload();
   };
 
   const handleInstallPWA = async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setInstallPrompt(null);
-      }
-    }
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") setInstallPrompt(null);
   };
 
   const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(WEBSITE_URL);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
+    await navigator.clipboard.writeText(WEBSITE_URL);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const shareWebsite = async () => {
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: profile.businessName,
-          text: `Check out ${profile.businessName}!`,
-          url: WEBSITE_URL,
-        });
-      } catch (err) {
-        console.error("Share failed:", err);
-      }
+      await navigator.share({
+        title: profile.businessName,
+        text: `Check out ${profile.businessName}!`,
+        url: WEBSITE_URL,
+      });
     } else {
       copyToClipboard();
     }
   };
 
-  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
-      
-      // Simple CSV parsing (name, phone format)
-      if (file.name.endsWith('.csv')) {
-        const lines = content.split('\n').filter(line => line.trim());
-        const customers = lines.slice(1).map(line => {
-          const [name, phone] = line.split(',').map(s => s.trim());
-          return { name, phone, visits: [] };
-        }).filter(c => c.name && c.phone);
-        
-        // Merge with existing customers
-        const existing = JSON.parse(localStorage.getItem('relax-salon-customers') || '[]');
-        localStorage.setItem('relax-salon-customers', JSON.stringify([...existing, ...customers]));
-        window.location.reload();
-      }
+      const lines = content.split("\n").filter(Boolean);
+      const customers = lines.slice(1).map((line) => {
+        const [name, phone] = line.split(",").map((s) => s.trim());
+        return { name, phone, visits: [] };
+      });
+      const existing = JSON.parse(
+        localStorage.getItem("relax-salon-customers") || "[]"
+      );
+      localStorage.setItem(
+        "relax-salon-customers",
+        JSON.stringify([...existing, ...customers])
+      );
+      window.location.reload();
     };
     reader.readAsText(file);
   };
 
   return (
-    <Sidebar className="border-r border-border/50 bg-gradient-to-b from-background via-background to-background/95 backdrop-blur-xl">
-      {/* Header */}
-      <SidebarHeader className="p-3 sm:p-6 border-b border-border/40">
-        <div className="flex flex-col items-center gap-3">
-          <div className="relative w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg">
+    <Sidebar className="border-r border-white/10 bg-gradient-to-b from-background/80 via-background/90 to-background/80 backdrop-blur-xl">
+      {/* ===== Header ===== */}
+      <SidebarHeader className="p-2">
+        <div className="rounded-xl p-2 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 shadow-md flex items-center gap-3">
+          {/* Logo */}
+          <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
             <img
               src={brandLogo}
-              alt="Brand Logo"
-              className="w-[85%] h-[85%] object-contain"
+              className="w-[100%] h-[100%] object-contain border border-white/20 border-rose-700 rounded-xl"
+              alt="Logo"
             />
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 border border-primary/20">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-            <span className="text-xs sm:text-sm font-semibold text-primary truncate max-w-[180px]">
+          {/* Name + Status */}
+          <div className="flex flex-col min-w-0 flex-1">
+            <p className="font-semibold text-sm leading-tight truncate">
               {profile.businessName}
-            </span>
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span className="text-[11px] text-muted-foreground">Active</span>
+            </div>
           </div>
         </div>
       </SidebarHeader>
 
-      {/* Accordion Content */}
-      <SidebarContent className="py-3 px-2 sm:py-4">
-        <Accordion type="multiple" className="space-y-2">
-
+      <SidebarContent className="px-3 pb-6">
+        <Accordion type="multiple" className="space-y-3">
           {/* ========== PROFILE ========== */}
-          <AccordionItem value="profile" className="border-none">
-            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
-              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
-                <Settings className="w-4 h-4 flex-shrink-0" /> 
-                <span className="font-medium text-sm sm:text-base truncate">Profile Settings</span>
-              </SidebarGroupLabel>
-            </AccordionTrigger>
-
-            <AccordionContent className="pb-0">
-              <SidebarGroup>
-                <SidebarGroupContent className="px-1 pt-2 space-y-2">
-                  {/* Owner */}
-                  <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl border bg-card/50 hover:bg-card transition-colors">
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Owner</p>
-                        <p className="font-medium text-sm sm:text-base truncate">{profile.ownerName}</p>
-                      </div>
-                    </div>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 flex-shrink-0" onClick={() => startEditing("ownerName")}>
-                      <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </Button>
-                  </div>
-
-                  {/* Business */}
-                  <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl border bg-card/50 hover:bg-card transition-colors">
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                      <Store className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Business</p>
-                        <p className="font-medium text-sm sm:text-base truncate">{profile.businessName}</p>
-                      </div>
-                    </div>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 flex-shrink-0" onClick={() => startEditing("businessName")}>
-                      <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </Button>
-                  </div>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </AccordionContent>
-          </AccordionItem>
+          <PremiumAccordion
+            title="Profile Settings"
+            icon={<Settings className="w-4 h-4" />}
+          >
+            <SettingRow
+              icon={<User className="w-4 h-4" />}
+              label="Owner"
+              value={profile.ownerName}
+              onEdit={() => startEditing("ownerName")}
+            />
+            <SettingRow
+              icon={<Store className="w-4 h-4" />}
+              label="Business"
+              value={profile.businessName}
+              onEdit={() => startEditing("businessName")}
+            />
+          </PremiumAccordion>
 
           {/* ========== APPEARANCE ========== */}
-          <AccordionItem value="appearance" className="border-none">
-            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
-              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
-                <Palette className="w-4 h-4 flex-shrink-0" /> 
-                <span>Appearance</span>
-              </SidebarGroupLabel>
-            </AccordionTrigger>
-
-            <AccordionContent className="pb-0">
-              <SidebarMenu className="px-1 pt-2">
-                <SidebarMenuItem>
-                  <SidebarMenuButton className="h-auto py-2.5 sm:py-3">
-                    <div className="flex justify-between items-center w-full">
-                      <span className="text-sm sm:text-base">Theme</span>
-                      <ThemeToggle />
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </AccordionContent>
-          </AccordionItem>
+          <PremiumAccordion
+            title="Appearance"
+            icon={<Palette className="w-4 h-4" />}
+          >
+            <div className="flex justify-between items-center p-3 rounded-xl bg-white/50 dark:bg-black/30 border">
+              <span>Theme</span>
+              <ThemeToggle />
+            </div>
+          </PremiumAccordion>
 
           {/* ========== SHARE ========== */}
-          <AccordionItem value="share" className="border-none">
-            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
-              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
-                <Globe className="w-4 h-4 flex-shrink-0" /> 
-                <span>Share Website</span>
-              </SidebarGroupLabel>
-            </AccordionTrigger>
-
-            <AccordionContent className="pb-0">
-              <div className="flex flex-col items-center gap-3 py-3 px-2">
-                <div className="bg-white p-3 rounded-xl shadow-md">
-                  <QRCodeSVG value={WEBSITE_URL} size={120} />
-                </div>
-                <p className="text-[10px] sm:text-xs break-all text-center text-muted-foreground px-2 leading-relaxed">
-                  {WEBSITE_URL}
-                </p>
-                
-                <div className="grid grid-cols-1 gap-2 w-full px-2">
-                  <Button 
-                    size="sm" 
-                    onClick={copyToClipboard} 
-                    variant="outline" 
-                    className="w-full h-9 text-xs sm:text-sm"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                        Copy Link
-                      </>
-                    )}
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    onClick={shareWebsite} 
-                    variant="outline" 
-                    className="w-full h-9 text-xs sm:text-sm"
-                  >
-                    <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
-                    Share
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    onClick={() => window.open(WEBSITE_URL, "_blank")} 
-                    className="w-full h-9 text-xs sm:text-sm"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
-                    Open Website
-                  </Button>
-                </div>
+          <PremiumAccordion
+            title="Share Website"
+            icon={<Globe className="w-4 h-4" />}
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="bg-white p-3 rounded-xl shadow">
+                <QRCodeSVG value={WEBSITE_URL} size={120} />
               </div>
-            </AccordionContent>
-          </AccordionItem>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={copyToClipboard}
+              >
+                {copied ? "Copied!" : "Copy Link"}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={shareWebsite}
+              >
+                Share
+              </Button>
+              <Button
+                className="w-full"
+                onClick={() => window.open(WEBSITE_URL)}
+              >
+                Open Website
+              </Button>
+            </div>
+          </PremiumAccordion>
 
-          {/* ========== MESSAGE TEMPLATES ========== */}
-          <AccordionItem value="templates" className="border-none">
-            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
-              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
-                <MessageSquare className="w-4 h-4 flex-shrink-0" /> 
-                <span>Message Templates</span>
-              </SidebarGroupLabel>
-            </AccordionTrigger>
+          {/* ========== TEMPLATES ========== */}
+          <PremiumAccordion
+            title="Message Templates"
+            icon={<MessageSquare className="w-4 h-4" />}
+          >
+            <MessageTemplateManager />
+          </PremiumAccordion>
 
-            <AccordionContent className="pb-0">
-              <div className="py-3 px-1">
-                <MessageTemplateManager />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+          {/* ========== HISTORY ========== */}
+          <PremiumAccordion
+            title="Reminder History"
+            icon={<History className="w-4 h-4" />}
+          >
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/reminder-history")}
+            >
+              View History
+            </Button>
+          </PremiumAccordion>
 
-          {/* ========== REMINDER HISTORY ========== */}
-          <AccordionItem value="history" className="border-none">
-            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
-              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
-                <History className="w-4 h-4 flex-shrink-0" /> 
-                <span>Reminder History</span>
-              </SidebarGroupLabel>
-            </AccordionTrigger>
+          {/* ========== IMPORT ========== */}
+          <PremiumAccordion
+            title="Import Customers"
+            icon={<Upload className="w-4 h-4" />}
+          >
+            <label>
+              <Button variant="outline" className="w-full">
+                Choose CSV File
+              </Button>
+              <input
+                type="file"
+                hidden
+                accept=".csv"
+                onChange={handleFileImport}
+              />
+            </label>
+          </PremiumAccordion>
 
-            <AccordionContent className="pb-0">
-              <div className="py-3 px-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full h-9 text-xs sm:text-sm"
-                  onClick={() => navigate('/reminder-history')}
-                >
-                  <History className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                  View All History
-                </Button>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* ========== INSTALL APP ========== */}
+          {/* ========== INSTALL ========== */}
           {installPrompt && (
-            <AccordionItem value="install" className="border-none">
-              <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors">
-                <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base text-primary">
-                  <Download className="w-4 h-4 flex-shrink-0" /> 
-                  <span>Install App</span>
-                </SidebarGroupLabel>
-              </AccordionTrigger>
-
-              <AccordionContent className="pb-0">
-                <div className="py-3 px-2 space-y-3">
-                  <p className="text-xs text-muted-foreground">
-                    Install this app on your device for quick access and offline use.
-                  </p>
-                  <Button onClick={handleInstallPWA} className="w-full h-9 text-xs sm:text-sm">
-                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                    Install Now
-                  </Button>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+            <PremiumAccordion
+              title="Install App"
+              icon={<Download className="w-4 h-4" />}
+            >
+              <Button className="w-full" onClick={handleInstallPWA}>
+                Install Now
+              </Button>
+            </PremiumAccordion>
           )}
 
-          <AccordionItem value="import" className="border-none">
-            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-card/50 border hover:bg-card transition-colors">
-              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
-                <UserPlus className="w-4 h-4 flex-shrink-0" /> 
-                <span>Import Contacts</span>
-              </SidebarGroupLabel>
-            </AccordionTrigger>
-
-            <AccordionContent className="pb-0">
-              <div className="flex flex-col gap-3 py-3 px-2">
-                <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed px-1">
-                  Import customers from a CSV file with columns: <strong>name</strong>, <strong>phone</strong>
-                </p>
-                
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <Button variant="outline" className="w-full h-9 text-xs sm:text-sm pointer-events-none">
-                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" /> 
-                    Choose CSV File
-                  </Button>
-                </label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileImport}
-                  className="hidden"
-                />
-                
-                <div className="text-[10px] sm:text-xs text-muted-foreground space-y-1.5 p-2.5 sm:p-3 bg-muted/50 rounded-lg border">
-                  <p className="font-semibold text-foreground">CSV Format Example:</p>
-                  <code className="block bg-background p-2 rounded text-[10px] leading-relaxed overflow-x-auto">
-                    name,phone<br />
-                    John Doe,1234567890<br />
-                    Jane Smith,9876543210
-                  </code>
-                </div>
+          {/* ========== DANGER ZONE ========== */}
+          <AccordionItem value="danger" className="border-none">
+            <AccordionTrigger className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" /> Danger Zone
               </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* ========== RESET ========== */}
-          <AccordionItem value="reset" className="border-none">
-            <AccordionTrigger className="px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive/20 transition-colors">
-              <SidebarGroupLabel className="p-0 flex items-center gap-2 text-sm sm:text-base">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0" /> 
-                <span>Reset Actions</span>
-              </SidebarGroupLabel>
             </AccordionTrigger>
-
-            <AccordionContent className="space-y-2 px-1 pt-2 pb-0">
-              <ConfirmReset
-                label="Reset Profile"
-                title="Reset Profile"
-                description="This will clear your profile and ask again for Owner Name, Shop Name, and Mobile Number."
-                onConfirm={resetProfile}
-                icon={<RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
-              />
-
+            <AccordionContent className="space-y-2 p-2">
+              <ConfirmReset label="Reset Profile" onConfirm={resetProfile} />
               <ConfirmReset
                 label="Reset Customers"
-                title="Reset Customers"
-                description="This will delete all customers and create 1 default test customer (yourself)."
                 onConfirm={resetCustomers}
-                icon={<RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
               />
-
               <ConfirmReset
-                label="Reset All"
-                title="Reset Everything"
-                description="This will clear ALL app data and restart in first-time setup mode. This cannot be undone."
+                label="Reset Everything"
                 onConfirm={resetAll}
-                icon={<Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
                 destructive
               />
             </AccordionContent>
           </AccordionItem>
-
         </Accordion>
       </SidebarContent>
 
-      {/* Edit Dialog */}
+      {/* ===== Edit Dialog ===== */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="w-[90vw] max-w-md rounded-2xl">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-lg">Edit Information</DialogTitle>
-            <DialogDescription className="text-sm">Update the value below</DialogDescription>
+            <DialogTitle>Edit</DialogTitle>
+            <DialogDescription>Update value</DialogDescription>
           </DialogHeader>
-
-          <Input 
-            value={editValue} 
-            onChange={(e) => setEditValue(e.target.value)} 
-            autoFocus 
-            className="h-10 text-base"
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
           />
-
-          <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={() => setEditOpen(false)} className="h-9">
-              Cancel
-            </Button>
-            <Button onClick={saveEdit} className="h-9">
-              Save Changes
-            </Button>
-          </div>
+          <Button onClick={saveEdit}>Save</Button>
         </DialogContent>
       </Dialog>
     </Sidebar>
@@ -521,56 +369,64 @@ export function AppSidebar() {
 }
 
 /* ============================= */
-/* Confirm Reset Button */
+/* Small Components */
 /* ============================= */
 
-function ConfirmReset({
-  title,
-  description,
-  onConfirm,
-  label,
-  icon,
-  destructive = false,
-}: {
-  title: string;
-  description: string;
-  onConfirm: () => void;
-  label: string;
-  icon?: React.ReactNode;
-  destructive?: boolean;
-}) {
+function PremiumAccordion({ title, icon, children }: any) {
+  return (
+    <AccordionItem value={title} className="border-none">
+      <AccordionTrigger className="px-4 py-3 rounded-xl bg-white/70 dark:bg-black/40 border backdrop-blur-xl shadow">
+        <div className="flex items-center gap-2">
+          {icon} {title}
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="p-2 space-y-2">{children}</AccordionContent>
+    </AccordionItem>
+  );
+}
+
+function SettingRow({ icon, label, value, onEdit }: any) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-white/50 dark:bg-black/30 border">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+          {icon}
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="font-medium">{value}</p>
+        </div>
+      </div>
+      <Button size="icon" variant="ghost" onClick={onEdit}>
+        <Pencil className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
+function ConfirmReset({ label, onConfirm, destructive = false }: any) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          className={`w-full justify-start h-9 text-xs sm:text-sm ${
-            destructive 
-              ? 'text-destructive border-destructive/40 hover:bg-destructive/10' 
-              : 'text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10'
+        <Button
+          variant="outline"
+          className={`w-full justify-start ${
+            destructive ? "text-red-500 border-red-500/30" : ""
           }`}
         >
-          {icon || <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />}
-          {label}
+          <Trash2 className="w-4 h-4 mr-2" /> {label}
         </Button>
       </AlertDialogTrigger>
-
-      <AlertDialogContent className="w-[90vw] max-w-md rounded-2xl">
+      <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-lg">{title}</AlertDialogTitle>
-          <AlertDialogDescription className="text-sm">{description}</AlertDialogDescription>
+          <AlertDialogTitle>Confirm</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone.
+          </AlertDialogDescription>
         </AlertDialogHeader>
-
-        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-          <AlertDialogCancel className="h-9 w-full sm:w-auto m-0">Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={onConfirm} 
-            className={`h-9 w-full sm:w-auto m-0 ${
-              destructive ? 'bg-destructive hover:bg-destructive/90' : ''
-            }`}
-          >
-            Yes, Reset
-          </AlertDialogAction>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>Yes, Reset</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

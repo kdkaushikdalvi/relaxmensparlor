@@ -534,11 +534,11 @@ const Index = () => {
             </svg>
           </span>
 
-          <span className="font-bold">Add New</span>
-
-          {/* 🔴 Attention Dot */}
-          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 animate-ping opacity-75" />
-          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500" />
+          <span className="font-bold">
+            <span className="absolute top-1 right-9 h-3 w-3 rounded-full bg-red-500 animate-ping opacity-75" />
+            <span className="absolute top-1 right-9 h-3 w-3 rounded-full bg-red-500" />
+            Add New
+          </span>
 
           {/* Subtle highlight ring */}
           <span className="pointer-events-none absolute inset-0 rounded-full border border-white/20" />

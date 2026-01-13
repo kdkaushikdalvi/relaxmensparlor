@@ -63,6 +63,8 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "reminder-section": "hsl(var(--reminder-section))",
+        "customer-section": "hsl(var(--customer-section))",
       },
       borderRadius: {
         lg: "var(--radius)",

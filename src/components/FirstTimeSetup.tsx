@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Store, User, Sparkles, ArrowRight, Check } from 'lucide-react';
+import { Store, User, Sparkles, ArrowRight, Check, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useSetup } from '@/contexts/SetupContext';
@@ -7,7 +7,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { cn } from '@/lib/utils';
 import brandLogo from '@/assets/brand-logo-transparent.png';
 
-type SetupStep = 'welcome' | 'owner' | 'business' | 'complete';
+type SetupStep = 'welcome' | 'owner' | 'business' | 'mobile' | 'complete';
 
 export function FirstTimeSetup() {
   const { completeSetup } = useSetup();
@@ -16,6 +16,7 @@ export function FirstTimeSetup() {
   const [step, setStep] = useState<SetupStep>('welcome');
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [error, setError] = useState('');
 
   const handleNext = () => {
@@ -34,10 +35,16 @@ export function FirstTimeSetup() {
         setError('Please enter your business name');
         return;
       }
+      setStep('mobile');
+    } else if (step === 'mobile') {
+      if (!mobileNumber.trim() || mobileNumber.length < 10) {
+        setError('Please enter a valid mobile number');
+        return;
+      }
       setStep('complete');
     } else if (step === 'complete') {
       // Save to both contexts
-      completeSetup({ ownerName, businessName });
+      completeSetup({ ownerName, businessName, mobileNumber });
       updateProfile({ ownerName, businessName });
     }
   };
@@ -126,6 +133,28 @@ export function FirstTimeSetup() {
             </div>
           )}
 
+          {step === 'mobile' && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Phone className="w-8 h-8 text-primary" />
+                </div>
+                <h2 className="text-2xl font-display font-bold">Your Mobile Number</h2>
+                <p className="text-sm text-muted-foreground mt-1">For default test customer creation</p>
+              </div>
+              
+              <Input
+                autoFocus
+                type="tel"
+                value={mobileNumber}
+                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter your mobile number"
+                className={cn("h-14 text-lg text-center", error && "border-destructive")}
+                maxLength={10}
+              />
+            </div>
+          )}
+
           {step === 'complete' && (
             <div className="text-center space-y-6">
               <div className="w-20 h-20 mx-auto rounded-full bg-green-500/20 flex items-center justify-center animate-scale-in">
@@ -147,6 +176,13 @@ export function FirstTimeSetup() {
                   <div>
                     <p className="text-xs text-muted-foreground">Business</p>
                     <p className="font-medium">{businessName}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Mobile</p>
+                    <p className="font-medium">{mobileNumber}</p>
                   </div>
                 </div>
               </div>
@@ -179,7 +215,7 @@ export function FirstTimeSetup() {
 
           {/* Step Indicators */}
           <div className="flex justify-center gap-2 mt-6">
-            {['welcome', 'owner', 'business', 'complete'].map((s, i) => (
+            {['welcome', 'owner', 'business', 'mobile', 'complete'].map((s, i) => (
               <div
                 key={s}
                 className={cn(

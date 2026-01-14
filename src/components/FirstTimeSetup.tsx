@@ -138,7 +138,7 @@ export function FirstTimeSetup() {
                 autoFocus
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Shop/Salon name"
+                placeholder="Shop name"
                 className={cn(
                   "h-14 text-lg text-center",
                   error && "border-destructive"

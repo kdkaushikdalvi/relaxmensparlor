@@ -9,10 +9,6 @@ export function Header() {
   const { profile } = useProfile();
   const { toggleSidebar } = useSidebar();
 
-  const day = format(new Date(), "EEE"); // Sat
-  const dateNum = format(new Date(), "dd"); // 10
-  const month = format(new Date(), "MMM"); // Jan
-
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-primary/10 safe-top">
       <div className="flex items-center justify-between px-4 py-3">
@@ -48,28 +44,12 @@ export function Header() {
 
           {/* Business Info */}
           <div className="leading-tight">
-            <h1 className="text-base font-app tracking-tight font-app">
+            <h1 className="text-base font-app tracking-tight font-app uppercase">
               {profile.businessName}
             </h1>
-            <p className="text-xs text-muted-foreground font-app">
+            <p className="text-xs text-muted-foreground font-app uppercase">
               {profile.ownerName}
             </p>
-          </div>
-        </div>
-
-        {/* Right Section - Date Widget */}
-        <div className="flex items-center">
-          <div className="flex items-center gap-3 px-4 py-2 rounded-2xl border border-primary/20 bg-primary/5 shadow-sm">
-            <div className="text-right">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                {day}
-              </p>
-              <p className="text-2xl font-bold text-primary leading-none">
-                {dateNum}
-              </p>
-            </div>
-
-            <div className="text-lg font-app text-primary/80">{month}</div>
           </div>
         </div>
       </div>

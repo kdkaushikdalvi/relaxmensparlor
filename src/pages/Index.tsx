@@ -250,6 +250,10 @@ const Index = () => {
     setDeleteDialogOpen(true);
   };
 
+  const day = format(new Date(), "EEE"); // Sat
+  const dateNum = format(new Date(), "dd"); // 10
+  const month = format(new Date(), "MMM"); // Jan
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
       <Header />
@@ -263,7 +267,9 @@ const Index = () => {
               className="border rounded-2xl shadow-lg"
             >
               <AccordionTrigger className="px-4 py-3">
-                <span className="font-app">🔍 Search, Filters & Sort</span>
+                <span className="font-app no-underline">
+                  🔍 Search, Filters & Sort
+                </span>
               </AccordionTrigger>
 
               <AccordionContent className="p-4 space-y-4">

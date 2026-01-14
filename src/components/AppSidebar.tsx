@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Download,
 } from "lucide-react";
+import { format } from "date-fns";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSetup } from "@/contexts/SetupContext";
@@ -143,20 +144,55 @@ export function AppSidebar() {
     }
   };
 
+  const now = new Date();
+
+  const day = now
+    .toLocaleDateString("en-US", { weekday: "short" })
+    .toUpperCase();
+  const month = now
+    .toLocaleDateString("en-US", { month: "short" })
+    .toUpperCase();
+  const dateNum = now.getDate();
+
+  const shortDate = `${dateNum} ${month}, ${day}`;
+
   return (
     <Sidebar className="font-app border-r bg-gradient-to-b from-white to-white">
       {/* ===== Header ===== */}
       <SidebarHeader className="p-3">
-        <div className="rounded-xl p-3 bg-white border shadow flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
-            <img src={brandLogo} className="w-full h-full object-contain" />
-          </div>
+        <div className="w-full">
+          <div
+            className="
+        w-full
+        px-4 py-3
+        rounded-2xl
+        border border-primary/30
+        bg-primary/5
+        shadow-sm
+        flex items-center justify-between
+      "
+          >
+            {/* Date */}
+            <p className="text-xl font-bold text-primary tracking-wide">
+              {shortDate}
+            </p>
 
-          <div className="flex flex-col min-w-0 flex-1">
-            <p className="font-app text-sm truncate">{profile.businessName}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span className="text-[11px] text-gray-500">Active</span>
+            {/* Calendar Icon */}
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <svg
+                viewBox="0 0 24 24"
+                className="w-5 h-5 text-primary"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
             </div>
           </div>
         </div>

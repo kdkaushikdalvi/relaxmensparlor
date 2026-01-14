@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Phone, Calendar, ChevronRight, Bell, MessageCircle, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
+import { Phone, Calendar, Bell, MessageCircle, CheckCircle, AlertTriangle, Clock, Pencil, Trash2 } from 'lucide-react';
 import { Customer } from '@/types/customer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 interface CustomerCardProps {
   customer: Customer;
   onClick: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   className?: string;
   style?: React.CSSProperties;
   selectable?: boolean;
@@ -40,6 +42,8 @@ const statusConfig: Record<ReminderStatus, { label: string; className: string; i
 export function CustomerCard({ 
   customer, 
   onClick, 
+  onEdit,
+  onDelete,
   className, 
   style,
   selectable = false,
@@ -102,14 +106,11 @@ export function CustomerCard({
   const isHighlighted = reminderStatus === 'overdue' || reminderStatus === 'pending';
 
   return (
-    <button
-      onClick={onClick}
+    <div
       className={cn(
-        "w-full text-left p-4 rounded-xl glass border",
+        "w-full text-left p-3 sm:p-4 rounded-xl glass border relative",
         "gradient-card shadow-card",
         "transition-all duration-300 hover:shadow-elevated",
-        "hover:scale-[1.01] active:scale-[0.99]",
-        "focus:outline-none focus:ring-2 focus:ring-primary/30",
         "animate-slide-up group",
         isHighlighted ? "border-primary/50 bg-primary/5" : "border-border/30 hover:border-primary/40",
         selected && "ring-2 ring-primary border-primary",
@@ -117,114 +118,150 @@ export function CustomerCard({
       )}
       style={style}
     >
-      <div className="flex items-start gap-4">
-        {/* Checkbox for bulk selection */}
-        {selectable && (
-          <div 
-            className="flex-shrink-0 pt-2"
-            onClick={handleCheckboxChange}
-          >
-            <Checkbox 
-              checked={selected} 
-              onCheckedChange={(checked) => onSelectChange?.(!!checked)}
-            />
-          </div>
-        )}
-
-        {/* Multi-Color Avatar */}
-        <div className={cn(
-          "flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300 group-hover:shadow-elevated",
-          isOverdue ? "bg-destructive/20" : getAvatarGradient(customer.fullName)
-        )}>
-          <span className={cn(
-            "text-lg font-display font-semibold",
-            isOverdue ? "text-destructive" : getAvatarTextColor(customer.fullName)
-          )}>
-            {customer.fullName.charAt(0).toUpperCase()}
-          </span>
+      {/* Action Icons - Top Right */}
+      {!selectable && (onEdit || onDelete) && (
+        <div className="absolute top-2 right-2 flex gap-1 z-10">
+          {onEdit && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 bg-primary/10 hover:bg-primary/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              title="Edit"
+            >
+              <Pencil className="w-4 h-4 text-primary" />
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 bg-destructive/10 hover:bg-destructive/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </Button>
+          )}
         </div>
+      )}
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="font-display font-semibold text-lg text-foreground truncate">
+      <button
+        onClick={onClick}
+        className="w-full text-left focus:outline-none"
+      >
+        <div className="flex items-start gap-3">
+          {/* Checkbox for bulk selection */}
+          {selectable && (
+            <div 
+              className="flex-shrink-0 pt-1"
+              onClick={handleCheckboxChange}
+            >
+              <Checkbox 
+                checked={selected} 
+                onCheckedChange={(checked) => onSelectChange?.(!!checked)}
+              />
+            </div>
+          )}
+
+          {/* Multi-Color Avatar */}
+          <div className={cn(
+            "flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300",
+            isOverdue ? "bg-destructive/20" : getAvatarGradient(customer.fullName)
+          )}>
+            <span className={cn(
+              "text-base sm:text-lg font-display font-semibold",
+              isOverdue ? "text-destructive" : getAvatarTextColor(customer.fullName)
+            )}>
+              {customer.fullName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0 pr-16">
+            <h3 className="font-display font-semibold text-base sm:text-lg text-foreground truncate">
               {customer.fullName}
             </h3>
-            <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-          </div>
 
-          {/* Phone & Date */}
-          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5" />
-              {customer.mobileNumber}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              {formattedDate}
-            </span>
-          </div>
-
-          {/* Interests */}
-          {customer.interest.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {customer.interest.slice(0, 3).map((interest) => (
-                <Badge key={interest} variant="soft" className="text-xs">
-                  {interest}
-                </Badge>
-              ))}
-              {customer.interest.length > 3 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{customer.interest.length - 3}
-                </Badge>
-              )}
+            {/* Phone & Date - Stacked on mobile */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mt-1 text-xs sm:text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" />
+                {customer.mobileNumber}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                {formattedDate}
+              </span>
             </div>
-          )}
 
-          {/* Reminder Status & Button */}
-          {customer.reminderDate && reminderStatus !== 'none' && (
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
-              <Badge 
-                variant="outline" 
-                className={cn("text-xs gap-1 border", statusInfo.className)}
-              >
-                <statusInfo.icon className="w-3 h-3" />
-                {statusInfo.label}
-                {reminderStatus === 'upcoming' && (
-                  <span className="ml-1">
-                    {format(new Date(customer.reminderDate), 'dd MMM')}
-                  </span>
+            {/* Interests */}
+            {customer.interest.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {customer.interest.slice(0, 2).map((interest) => (
+                  <Badge key={interest} variant="soft" className="text-[10px] sm:text-xs px-2 py-0.5">
+                    {interest}
+                  </Badge>
+                ))}
+                {customer.interest.length > 2 && (
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5">
+                    +{customer.interest.length - 2}
+                  </Badge>
                 )}
-              </Badge>
-              
-              {showReminderButton && (
-                <Button
-                  size="sm"
-                  variant={reminderSentToday ? "outline" : "default"}
-                  disabled={reminderSentToday || !hasValidPhone}
-                  onClick={handleSendReminder}
-                  className={cn(
-                    "h-8 gap-1.5 text-xs",
-                    reminderSentToday && "opacity-60"
-                  )}
+              </div>
+            )}
+
+            {/* Reminder Status & Button */}
+            {customer.reminderDate && reminderStatus !== 'none' && (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 pt-2 border-t border-border/30">
+                <Badge 
+                  variant="outline" 
+                  className={cn("text-[10px] sm:text-xs gap-1 border w-fit", statusInfo.className)}
                 >
-                  {reminderSentToday ? (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Sent
-                    </>
-                  ) : (
-                    <>
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      Send Reminder
-                    </>
+                  <statusInfo.icon className="w-3 h-3" />
+                  {statusInfo.label}
+                  {reminderStatus === 'upcoming' && (
+                    <span className="ml-1">
+                      {format(new Date(customer.reminderDate), 'dd MMM')}
+                    </span>
                   )}
-                </Button>
-              )}
-            </div>
-          )}
+                </Badge>
+                
+                {showReminderButton && (
+                  <Button
+                    size="sm"
+                    variant={reminderSentToday ? "outline" : "default"}
+                    disabled={reminderSentToday || !hasValidPhone}
+                    onClick={handleSendReminder}
+                    className={cn(
+                      "h-7 sm:h-8 gap-1 text-[10px] sm:text-xs",
+                      reminderSentToday && "opacity-60"
+                    )}
+                  >
+                    {reminderSentToday ? (
+                      <>
+                        <CheckCircle className="w-3 h-3" />
+                        Sent
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="w-3 h-3" />
+                        Remind
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </div>
   );
 }

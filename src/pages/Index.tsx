@@ -8,9 +8,6 @@ import {
   MessageCircle,
   CheckSquare,
   Square,
-  Eye,
-  Pencil,
-  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -429,60 +426,19 @@ const Index = () => {
                           isValidPhoneNumber(customer.mobileNumber);
 
                         return (
-                          <div key={customer.id} className="relative group">
-                            <CustomerCard
-                              customer={customer}
-                              onClick={() => handleViewCustomer(customer)}
-                              style={{ animationDelay: `${index * 50}ms` }}
-                              selectable={bulkSelectMode && isSelectable}
-                              selected={selectedIds.has(customer.id)}
-                              onSelectChange={(selected) =>
-                                handleSelectChange(customer.id, selected)
-                              }
-                            />
-
-                            {/* Quick Actions */}
-                            {!bulkSelectMode && (
-                              <div className="absolute top-2 right-2  group-hover:opacity-100 transition-opacity flex gap-1">
-                                <Button
-                                  size="icon"
-                                  variant="secondary"
-                                  className="h-8 w-8 shadow-md"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewCustomer(customer);
-                                  }}
-                                  title="View"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="secondary"
-                                  className="h-8 w-8 shadow-md"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditCustomer(customer);
-                                  }}
-                                  title="Edit"
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="secondary"
-                                  className="h-8 w-8 shadow-md text-destructive hover:text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteCustomer(customer);
-                                  }}
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                          <CustomerCard
+                            key={customer.id}
+                            customer={customer}
+                            onClick={() => handleViewCustomer(customer)}
+                            onEdit={() => handleEditCustomer(customer)}
+                            onDelete={() => handleDeleteCustomer(customer)}
+                            style={{ animationDelay: `${index * 50}ms` }}
+                            selectable={bulkSelectMode && isSelectable}
+                            selected={selectedIds.has(customer.id)}
+                            onSelectChange={(selected) =>
+                              handleSelectChange(customer.id, selected)
+                            }
+                          />
                         );
                       })}
                     </div>

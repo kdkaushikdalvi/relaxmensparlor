@@ -7,6 +7,7 @@ import {
   SkipForward,
   Check,
   Bell,
+  X,
 } from "lucide-react";
 import {
   CustomerFormData,
@@ -45,18 +46,18 @@ const STEP_CONFIG: Record<
   { title: string; subtitle: string; required: boolean }
 > = {
   basic: {
-    title: "Customer Details",
-    subtitle: "Enter name and mobile number",
+    title: "Details",
+    subtitle: "Name & mobile",
     required: true,
   },
   reminder: {
     title: "Reminder",
-    subtitle: "When should we remind this customer?",
+    subtitle: "When to remind?",
     required: false,
   },
   interests: {
-    title: "सेवा",
-    subtitle: "ग्राहकाला कशामध्ये रस आहे?",
+    title: "Services",
+    subtitle: "What services?",
     required: false,
   },
 };
@@ -273,21 +274,29 @@ const CustomerFormPage = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[hsl(var(--header-bg))] border-b">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            {!isFirstStep && (
-              <Button variant="ghost" size="icon" onClick={handleBack}>
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            )}
-            <span className="text-sm opacity-70">
-              {isEditing ? "Edit Customer" : "New Customer"}
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            {/* Back/Close Button - Always visible */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={isFirstStep ? () => navigate(-1) : handleBack}
+              className="h-12 w-12 rounded-full bg-primary/10 hover:bg-primary/20"
+            >
+              {isFirstStep ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <ArrowLeft className="w-6 h-6" />
+              )}
+            </Button>
+            <span className="text-sm font-medium">
+              {isEditing ? "Edit" : "New"}
             </span>
           </div>
 
           {!stepConfig.required && (
             <Button variant="ghost" size="sm" onClick={handleSkip}>
-              <SkipForward className="w-4 h-4 mr-1" /> Skip
+              Skip
             </Button>
           )}
         </div>

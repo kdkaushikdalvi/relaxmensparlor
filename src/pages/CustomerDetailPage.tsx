@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   ArrowLeft,
+  X,
   Edit2,
   Phone,
   Calendar,
@@ -69,12 +70,17 @@ const CustomerDetailPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
-      <div className="px-4 py-3 border-b border-border bg-card flex items-center justify-between">
+      <div className="px-3 py-2 border-b border-border bg-card flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="w-5 h-5" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate('/')}
+            className="h-12 w-12 rounded-full bg-primary/10 hover:bg-primary/20"
+          >
+            <X className="w-6 h-6" />
           </Button>
-          <span className="font-semibold text-foreground">Customer Details</span>
+          <span className="font-semibold text-foreground">Details</span>
         </div>
 
         {/* Actions */}
@@ -82,21 +88,21 @@ const CustomerDetailPage = () => {
           <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9"
+            className="h-10 w-10"
             onClick={() => navigate(`/customer/${customer.id}/edit`)}
             title="Edit"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-5 h-5" />
           </Button>
 
           <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9 text-destructive border-destructive/40 hover:bg-destructive/10"
+            className="h-10 w-10 text-destructive border-destructive/40 hover:bg-destructive/10"
             onClick={() => setShowDeleteDialog(true)}
             title="Delete"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5" />
           </Button>
         </div>
       </div>

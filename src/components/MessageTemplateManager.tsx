@@ -123,10 +123,11 @@ export function MessageTemplateManager() {
   };
 
   const renderPreview = () => {
-    return Object.entries(VARIABLE_EXAMPLES).reduce(
-      (acc, [k, v]) => acc.replaceAll(`{${k}}`, v),
-      message || ""
-    );
+    let preview = message || "";
+    Object.entries(VARIABLE_EXAMPLES).forEach(([k, v]) => {
+      preview = preview.split(`{${k}}`).join(v);
+    });
+    return preview;
   };
 
   const usedVariables = Array.from(new Set(message.match(/{\w+}/g) || []));

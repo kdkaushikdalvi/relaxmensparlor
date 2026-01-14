@@ -69,25 +69,25 @@ export function FirstTimeSetup() {
               </div>
               
               <h1 className="text-3xl font-display font-bold">
-                Let's Get Started!
+                Let's Start!
               </h1>
               
               <p className="text-muted-foreground">
-                Set up your salon in just a few steps. Manage customers, send reminders, and grow your business.
+                Quick setup. Manage customers & send reminders.
               </p>
               
-              <div className="grid grid-cols-3 gap-4 pt-4">
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                  <div className="text-2xl mb-2">👥</div>
-                  <p className="text-xs text-muted-foreground">Manage Customers</p>
+              <div className="grid grid-cols-3 gap-3 pt-4">
+                <div className="p-3 rounded-2xl bg-primary/5 border border-primary/10">
+                  <div className="text-2xl mb-1">👥</div>
+                  <p className="text-[10px] text-muted-foreground">Customers</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                  <div className="text-2xl mb-2">📱</div>
-                  <p className="text-xs text-muted-foreground">WhatsApp Reminders</p>
+                <div className="p-3 rounded-2xl bg-primary/5 border border-primary/10">
+                  <div className="text-2xl mb-1">📱</div>
+                  <p className="text-[10px] text-muted-foreground">Reminders</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                  <div className="text-2xl mb-2">📊</div>
-                  <p className="text-xs text-muted-foreground">Track Visits</p>
+                <div className="p-3 rounded-2xl bg-primary/5 border border-primary/10">
+                  <div className="text-2xl mb-1">📊</div>
+                  <p className="text-[10px] text-muted-foreground">Tracking</p>
                 </div>
               </div>
             </div>
@@ -96,18 +96,18 @@ export function FirstTimeSetup() {
           {step === 'owner' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <User className="w-8 h-8 text-primary" />
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <User className="w-7 h-7 text-primary" />
                 </div>
-                <h2 className="text-2xl font-display font-bold">What's your name?</h2>
-                <p className="text-sm text-muted-foreground mt-1">This will be shown in your profile</p>
+                <h2 className="text-xl font-display font-bold">Your Name</h2>
+                <p className="text-xs text-muted-foreground mt-1">Shown in profile</p>
               </div>
               
               <Input
                 autoFocus
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
-                placeholder="Enter your full name"
+                placeholder="Full name"
                 className={cn("h-14 text-lg text-center", error && "border-destructive")}
               />
             </div>
@@ -116,18 +116,18 @@ export function FirstTimeSetup() {
           {step === 'business' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Store className="w-8 h-8 text-primary" />
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Store className="w-7 h-7 text-primary" />
                 </div>
-                <h2 className="text-2xl font-display font-bold">Your Business Name</h2>
-                <p className="text-sm text-muted-foreground mt-1">This appears in messages & headers</p>
+                <h2 className="text-xl font-display font-bold">Business Name</h2>
+                <p className="text-xs text-muted-foreground mt-1">For messages & headers</p>
               </div>
               
               <Input
                 autoFocus
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Enter your shop/salon name"
+                placeholder="Shop/Salon name"
                 className={cn("h-14 text-lg text-center", error && "border-destructive")}
               />
             </div>
@@ -136,11 +136,11 @@ export function FirstTimeSetup() {
           {step === 'mobile' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Phone className="w-8 h-8 text-primary" />
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Phone className="w-7 h-7 text-primary" />
                 </div>
-                <h2 className="text-2xl font-display font-bold">Your Mobile Number</h2>
-                <p className="text-sm text-muted-foreground mt-1">For default test customer creation</p>
+                <h2 className="text-xl font-display font-bold">Mobile Number</h2>
+                <p className="text-xs text-muted-foreground mt-1">For test customer</p>
               </div>
               
               <Input
@@ -148,7 +148,7 @@ export function FirstTimeSetup() {
                 type="tel"
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                placeholder="Enter your mobile number"
+                placeholder="10-digit number"
                 className={cn("h-14 text-lg text-center", error && "border-destructive")}
                 maxLength={10}
               />
@@ -156,39 +156,30 @@ export function FirstTimeSetup() {
           )}
 
           {step === 'complete' && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 mx-auto rounded-full bg-green-500/20 flex items-center justify-center animate-scale-in">
-                <Check className="w-10 h-10 text-green-500" />
+            <div className="text-center space-y-5">
+              <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center animate-scale-in">
+                <Check className="w-8 h-8 text-green-500" />
               </div>
               
-              <h2 className="text-2xl font-display font-bold">You're All Set!</h2>
+              <h2 className="text-xl font-display font-bold">All Set!</h2>
               
-              <div className="space-y-3 text-left p-4 rounded-2xl bg-muted/50">
+              <div className="space-y-2 text-left p-3 rounded-2xl bg-muted/50 text-sm">
                 <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Owner</p>
-                    <p className="font-medium">{ownerName}</p>
-                  </div>
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{ownerName}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Store className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Business</p>
-                    <p className="font-medium">{businessName}</p>
-                  </div>
+                  <Store className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{businessName}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Mobile</p>
-                    <p className="font-medium">{mobileNumber}</p>
-                  </div>
+                  <Phone className="w-4 h-4 text-primary" />
+                  <span className="font-medium">{mobileNumber}</span>
                 </div>
               </div>
               
-              <p className="text-sm text-muted-foreground">
-                You can always change these in Settings
+              <p className="text-xs text-muted-foreground">
+                Change anytime in Settings
               </p>
             </div>
           )}

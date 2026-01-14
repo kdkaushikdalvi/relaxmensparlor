@@ -2,26 +2,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Palette,
   User,
   Store,
   Pencil,
-  ExternalLink,
   Trash2,
   AlertTriangle,
   Settings,
-  Sparkles,
   Globe,
   Upload,
-  UserPlus,
-  Copy,
-  Share2,
-  Check,
   History,
   MessageSquare,
   Download,
-  RefreshCw,
-  RotateCcw,
+  X,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -30,15 +22,9 @@ import { useCustomers } from "@/hooks/useCustomers";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { ThemeToggle } from "./ThemeToggle";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MessageTemplateManager } from "./MessageTemplateManager";
@@ -78,6 +64,7 @@ export function AppSidebar() {
   const { profile, updateProfile } = useProfile();
   const { resetSetup, resetAll, setupData } = useSetup();
   const { customers } = useCustomers();
+  const { setOpenMobile } = useSidebar();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editField, setEditField] = useState<
@@ -185,10 +172,10 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-white/10 bg-gradient-to-b from-background/80 via-background/90 to-background/80 backdrop-blur-xl">
+    <Sidebar className="border-r border-white/10 bg-gradient-to-b from-background/80 via-background/90 to-background/80 backdrop-blur-xl w-72">
       {/* ===== Header ===== */}
-      <SidebarHeader className="p-2">
-        <div className="rounded-xl p-2 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 shadow-md flex items-center gap-3">
+      <SidebarHeader className="p-3">
+        <div className="rounded-xl p-3 bg-white/70 backdrop-blur-xl border border-white/20 shadow-md flex items-center gap-3">
           {/* Logo */}
           <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
             <img
@@ -208,6 +195,16 @@ export function AppSidebar() {
               <span className="text-[11px] text-muted-foreground">Active</span>
             </div>
           </div>
+
+          {/* Close Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0"
+            onClick={() => setOpenMobile(false)}
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
       </SidebarHeader>
 
@@ -215,42 +212,31 @@ export function AppSidebar() {
         <Accordion type="multiple" className="space-y-3">
           {/* ========== PROFILE ========== */}
           <PremiumAccordion
-            title="Profile Settings"
-            icon={<Settings className="w-4 h-4" />}
+            title="Profile"
+            icon={<Settings className="w-4 h-4 text-purple-500" />}
           >
             <SettingRow
-              icon={<User className="w-4 h-4" />}
+              icon={<User className="w-4 h-4 text-blue-500" />}
               label="Owner"
               value={profile.ownerName}
               onEdit={() => startEditing("ownerName")}
             />
             <SettingRow
-              icon={<Store className="w-4 h-4" />}
+              icon={<Store className="w-4 h-4 text-green-500" />}
               label="Business"
               value={profile.businessName}
               onEdit={() => startEditing("businessName")}
             />
           </PremiumAccordion>
 
-          {/* ========== APPEARANCE ========== */}
-          <PremiumAccordion
-            title="Appearance"
-            icon={<Palette className="w-4 h-4" />}
-          >
-            <div className="flex justify-between items-center p-3 rounded-xl bg-white/50 dark:bg-black/30 border">
-              <span>Theme</span>
-              <ThemeToggle />
-            </div>
-          </PremiumAccordion>
-
           {/* ========== SHARE ========== */}
           <PremiumAccordion
-            title="Share Website"
-            icon={<Globe className="w-4 h-4" />}
+            title="Share"
+            icon={<Globe className="w-4 h-4 text-cyan-500" />}
           >
             <div className="flex flex-col items-center gap-3">
               <div className="bg-white p-3 rounded-xl shadow">
-                <QRCodeSVG value={WEBSITE_URL} size={120} />
+                <QRCodeSVG value={WEBSITE_URL} size={140} />
               </div>
               <Button
                 variant="outline"
@@ -270,41 +256,44 @@ export function AppSidebar() {
                 className="w-full"
                 onClick={() => window.open(WEBSITE_URL)}
               >
-                Open Website
+                Open
               </Button>
             </div>
           </PremiumAccordion>
 
           {/* ========== TEMPLATES ========== */}
           <PremiumAccordion
-            title="Message Templates"
-            icon={<MessageSquare className="w-4 h-4" />}
+            title="Templates"
+            icon={<MessageSquare className="w-4 h-4 text-orange-500" />}
           >
             <MessageTemplateManager />
           </PremiumAccordion>
 
           {/* ========== HISTORY ========== */}
           <PremiumAccordion
-            title="Reminder History"
-            icon={<History className="w-4 h-4" />}
+            title="History"
+            icon={<History className="w-4 h-4 text-indigo-500" />}
           >
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => navigate("/reminder-history")}
+              onClick={() => {
+                navigate("/reminder-history");
+                setOpenMobile(false);
+              }}
             >
-              View History
+              View
             </Button>
           </PremiumAccordion>
 
           {/* ========== IMPORT ========== */}
           <PremiumAccordion
-            title="Import Customers"
-            icon={<Upload className="w-4 h-4" />}
+            title="Import"
+            icon={<Upload className="w-4 h-4 text-teal-500" />}
           >
             <label>
               <Button variant="outline" className="w-full">
-                Choose CSV File
+                CSV File
               </Button>
               <input
                 type="file"
@@ -318,11 +307,11 @@ export function AppSidebar() {
           {/* ========== INSTALL ========== */}
           {installPrompt && (
             <PremiumAccordion
-              title="Install App"
-              icon={<Download className="w-4 h-4" />}
+              title="Install"
+              icon={<Download className="w-4 h-4 text-pink-500" />}
             >
               <Button className="w-full" onClick={handleInstallPWA}>
-                Install Now
+                Install
               </Button>
             </PremiumAccordion>
           )}
@@ -331,17 +320,17 @@ export function AppSidebar() {
           <AccordionItem value="danger" className="border-none">
             <AccordionTrigger className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" /> Danger Zone
+                <AlertTriangle className="w-4 h-4" /> Reset
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-2 p-2">
-              <ConfirmReset label="Reset Profile" onConfirm={resetProfile} />
+              <ConfirmReset label="Profile" onConfirm={resetProfile} />
               <ConfirmReset
-                label="Reset Customers"
+                label="Customers"
                 onConfirm={resetCustomers}
               />
               <ConfirmReset
-                label="Reset Everything"
+                label="All Data"
                 onConfirm={resetAll}
                 destructive
               />

@@ -2,18 +2,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Palette,
   User,
   Store,
   Pencil,
+  ExternalLink,
   Trash2,
   AlertTriangle,
   Settings,
+  Sparkles,
   Globe,
   Upload,
+  UserPlus,
+  Copy,
+  Share2,
+  Check,
   History,
   MessageSquare,
   Download,
-  X,
+  RefreshCw,
+  RotateCcw,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -22,9 +30,15 @@ import { useCustomers } from "@/hooks/useCustomers";
 import {
   Sidebar,
   SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { useSidebar } from "@/components/ui/sidebar";
+import { ThemeToggle } from "./ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MessageTemplateManager } from "./MessageTemplateManager";
@@ -64,7 +78,6 @@ export function AppSidebar() {
   const { profile, updateProfile } = useProfile();
   const { resetSetup, resetAll, setupData } = useSetup();
   const { customers } = useCustomers();
-  const { setOpenMobile } = useSidebar();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editField, setEditField] = useState<
@@ -172,10 +185,10 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-white/10 bg-gradient-to-b from-background/80 via-background/90 to-background/80 backdrop-blur-xl w-72">
+    <Sidebar className="border-r border-white/10 bg-gradient-to-b from-background/80 via-background/90 to-background/80 backdrop-blur-xl">
       {/* ===== Header ===== */}
-      <SidebarHeader className="p-3">
-        <div className="rounded-xl p-3 bg-white/70 backdrop-blur-xl border border-white/20 shadow-md flex items-center gap-3">
+      <SidebarHeader className="p-2">
+        <div className="rounded-xl p-2 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 shadow-md flex items-center gap-3">
           {/* Logo */}
           <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
             <img
@@ -195,16 +208,6 @@ export function AppSidebar() {
               <span className="text-[11px] text-muted-foreground">Active</span>
             </div>
           </div>
-
-          {/* Close Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 shrink-0"
-            onClick={() => setOpenMobile(false)}
-          >
-            <X className="w-5 h-5" />
-          </Button>
         </div>
       </SidebarHeader>
 
@@ -212,17 +215,17 @@ export function AppSidebar() {
         <Accordion type="multiple" className="space-y-3">
           {/* ========== PROFILE ========== */}
           <PremiumAccordion
-            title="Profile"
-            icon={<Settings className="w-4 h-4 text-purple-500" />}
+            title="Profile Settings"
+            icon={<Settings className="w-4 h-4" />}
           >
             <SettingRow
-              icon={<User className="w-4 h-4 text-blue-500" />}
+              icon={<User className="w-4 h-4" />}
               label="Owner"
               value={profile.ownerName}
               onEdit={() => startEditing("ownerName")}
             />
             <SettingRow
-              icon={<Store className="w-4 h-4 text-green-500" />}
+              icon={<Store className="w-4 h-4" />}
               label="Business"
               value={profile.businessName}
               onEdit={() => startEditing("businessName")}
@@ -231,12 +234,12 @@ export function AppSidebar() {
 
           {/* ========== SHARE ========== */}
           <PremiumAccordion
-            title="Share"
-            icon={<Globe className="w-4 h-4 text-cyan-500" />}
+            title="Share Website"
+            icon={<Globe className="w-4 h-4" />}
           >
             <div className="flex flex-col items-center gap-3">
               <div className="bg-white p-3 rounded-xl shadow">
-                <QRCodeSVG value={WEBSITE_URL} size={140} />
+                <QRCodeSVG value={WEBSITE_URL} size={120} />
               </div>
               <Button
                 variant="outline"
@@ -256,44 +259,41 @@ export function AppSidebar() {
                 className="w-full"
                 onClick={() => window.open(WEBSITE_URL)}
               >
-                Open
+                Open Website
               </Button>
             </div>
           </PremiumAccordion>
 
           {/* ========== TEMPLATES ========== */}
           <PremiumAccordion
-            title="Templates"
-            icon={<MessageSquare className="w-4 h-4 text-orange-500" />}
+            title="Message Templates"
+            icon={<MessageSquare className="w-4 h-4" />}
           >
             <MessageTemplateManager />
           </PremiumAccordion>
 
           {/* ========== HISTORY ========== */}
           <PremiumAccordion
-            title="History"
-            icon={<History className="w-4 h-4 text-indigo-500" />}
+            title="Reminder History"
+            icon={<History className="w-4 h-4" />}
           >
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => {
-                navigate("/reminder-history");
-                setOpenMobile(false);
-              }}
+              onClick={() => navigate("/reminder-history")}
             >
-              View
+              View History
             </Button>
           </PremiumAccordion>
 
           {/* ========== IMPORT ========== */}
           <PremiumAccordion
-            title="Import"
-            icon={<Upload className="w-4 h-4 text-teal-500" />}
+            title="Import Customers"
+            icon={<Upload className="w-4 h-4" />}
           >
             <label>
               <Button variant="outline" className="w-full">
-                CSV File
+                Choose CSV File
               </Button>
               <input
                 type="file"
@@ -307,11 +307,11 @@ export function AppSidebar() {
           {/* ========== INSTALL ========== */}
           {installPrompt && (
             <PremiumAccordion
-              title="Install"
-              icon={<Download className="w-4 h-4 text-pink-500" />}
+              title="Install App"
+              icon={<Download className="w-4 h-4" />}
             >
               <Button className="w-full" onClick={handleInstallPWA}>
-                Install
+                Install Now
               </Button>
             </PremiumAccordion>
           )}
@@ -320,17 +320,17 @@ export function AppSidebar() {
           <AccordionItem value="danger" className="border-none">
             <AccordionTrigger className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" /> Reset
+                <AlertTriangle className="w-4 h-4" /> Danger Zone
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-2 p-2">
-              <ConfirmReset label="Profile" onConfirm={resetProfile} />
+              <ConfirmReset label="Reset Profile" onConfirm={resetProfile} />
               <ConfirmReset
-                label="Customers"
+                label="Reset Customers"
                 onConfirm={resetCustomers}
               />
               <ConfirmReset
-                label="All Data"
+                label="Reset Everything"
                 onConfirm={resetAll}
                 destructive
               />

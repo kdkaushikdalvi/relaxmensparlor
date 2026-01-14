@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
@@ -128,6 +128,10 @@ const Index = () => {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
     null
   );
+
+  useEffect(() => {
+    localStorage.setItem("theme", "light");
+  }, []);
 
   const reminderCounts = useMemo(
     () => getReminderCategoryCounts(customers),

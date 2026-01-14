@@ -2,23 +2,40 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { Customer, CustomerFormData } from '@/types/customer';
 
 const STORAGE_KEY = 'relax-salon-customers';
+const SETUP_KEY = 'relax-salon-setup';
 
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-// Sample customer for first-time users
-const SAMPLE_CUSTOMER: Customer = {
-  id: 'sample-customer-1',
-  fullName: 'Test Test',
-  mobileNumber: '8275883781',
-  interest: ['हेयरकट '],
-  preferences: 'Prefers appointments in evening',
-  visitingDate: new Date().toISOString().split('T')[0],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  reminderInterval: '1week',
-  reminderDate: new Date().toISOString().split('T')[0], // Set to today for demo
-  reminderSentDates: [],
-  reminderHistory: [],
+// Get sample customer using signup data
+const getSampleCustomer = (): Customer => {
+  let ownerName = 'Test Customer';
+  let mobileNumber = '9999999999';
+  
+  try {
+    const setupData = localStorage.getItem(SETUP_KEY);
+    if (setupData) {
+      const parsed = JSON.parse(setupData);
+      if (parsed.ownerName) ownerName = parsed.ownerName;
+      if (parsed.mobileNumber) mobileNumber = parsed.mobileNumber;
+    }
+  } catch {
+    // Use defaults
+  }
+  
+  return {
+    id: 'sample-customer-1',
+    fullName: ownerName,
+    mobileNumber: mobileNumber,
+    interest: ['Haircut', 'Facial'],
+    preferences: 'Prefers appointments in evening',
+    visitingDate: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    reminderInterval: '1week',
+    reminderDate: new Date().toISOString().split('T')[0],
+    reminderSentDates: [],
+    reminderHistory: [],
+  };
 };
 
 interface CustomerContextType {
@@ -46,12 +63,12 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
         setCustomers(parsed);
       } catch (error) {
         console.error('Failed to parse customers from localStorage:', error);
-        // If no customers, add sample
-        setCustomers([SAMPLE_CUSTOMER]);
+        // If no customers, add sample using signup data
+        setCustomers([getSampleCustomer()]);
       }
     } else {
-      // First time user - add sample customer
-      setCustomers([SAMPLE_CUSTOMER]);
+      // First time user - add sample customer using signup data
+      setCustomers([getSampleCustomer()]);
     }
     setIsLoading(false);
   }, []);

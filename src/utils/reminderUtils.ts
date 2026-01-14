@@ -11,6 +11,7 @@ import {
   ReminderInterval,
   REMINDER_INTERVALS,
 } from "@/types/customer";
+import { MessageTemplate } from "@/contexts/MessageTemplateContext";
 
 /**
  * Calculate the reminder date based on visit date and interval
@@ -100,16 +101,48 @@ export function formatPhoneForWhatsApp(
 }
 
 /**
- * Generate WhatsApp reminder message
+ * Get default template from localStorage
+ */
+function getDefaultTemplateFromStorage(): MessageTemplate | null {
+  try {
+    const stored = localStorage.getItem('relax-salon-message-templates');
+    if (stored) {
+      const templates: MessageTemplate[] = JSON.parse(stored);
+      return templates.find(t => t.isDefault) || templates[0] || null;
+    }
+  } catch {
+    // Fall through to return null
+  }
+  return null;
+}
+
+/**
+ * Generate WhatsApp reminder message using template
  */
 export function generateReminderMessage(
   customer: Customer,
   businessName: string,
-  offerText?: string
+  offerText?: string,
+  template?: MessageTemplate
 ): string {
   const services =
     customer.interest.length > 0 ? customer.interest.join(", ") : "आमच्या सेवा";
 
+  // Get template from storage if not provided
+  const activeTemplate = template || getDefaultTemplateFromStorage();
+  
+  if (activeTemplate) {
+    // Replace template variables
+    let message = activeTemplate.message
+      .replace(/\{customerName\}/g, customer.fullName)
+      .replace(/\{businessName\}/g, businessName)
+      .replace(/\{services\}/g, services)
+      .replace(/\{offer\}/g, offerText ? `🎁 ऑफर: ${offerText}` : '');
+    
+    return message;
+  }
+
+  // Fallback to default message
   const getVisitText = (dateStr: string) => {
     const today = new Date();
     const visitDate = new Date(dateStr);
@@ -144,14 +177,15 @@ ${offerText ? `🎁 ऑफर: ${offerText}\n` : ""}
 }
 
 /**
- * Open WhatsApp with pre-filled message
+ * Open WhatsApp with pre-filled message using current default template
  */
 export function openWhatsAppReminder(
   customer: Customer,
-  businessName: string
+  businessName: string,
+  template?: MessageTemplate
 ): void {
   const phone = formatPhoneForWhatsApp(customer.mobileNumber);
-  const message = generateReminderMessage(customer, businessName);
+  const message = generateReminderMessage(customer, businessName, undefined, template);
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
   window.open(whatsappUrl, "_blank");

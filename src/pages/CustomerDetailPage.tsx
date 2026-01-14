@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { format } from 'date-fns';
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { format } from "date-fns";
 import {
   ArrowLeft,
   X,
@@ -12,10 +12,10 @@ import {
   FileText,
   Trash2,
   AlertTriangle,
-} from 'lucide-react';
-import { useCustomers } from '@/hooks/useCustomers';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { useCustomers } from "@/hooks/useCustomers";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +25,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const CustomerDetailPage = () => {
   const navigate = useNavigate();
@@ -42,7 +42,11 @@ const CustomerDetailPage = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground">Customer not found</p>
-          <Button variant="outline" onClick={() => navigate('/')} className="mt-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/")}
+            className="mt-4"
+          >
             Go Back
           </Button>
         </div>
@@ -51,20 +55,20 @@ const CustomerDetailPage = () => {
   }
 
   const formattedDate = customer.visitingDate
-    ? format(new Date(customer.visitingDate), 'MMMM d, yyyy')
-    : 'No date set';
+    ? format(new Date(customer.visitingDate), "MMMM d, yyyy")
+    : "No date set";
 
-  const createdDate = format(new Date(customer.createdAt), 'MMM d, yyyy');
+  const createdDate = format(new Date(customer.createdAt), "MMM d, yyyy");
 
   const handleDelete = () => {
     const name = customer.fullName;
     deleteCustomer(customer.id);
     toast({
-      title: 'Customer deleted',
+      title: "Customer deleted",
       description: `${name} has been removed from your customers.`,
-      variant: 'destructive',
+      variant: "destructive",
     });
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -72,15 +76,15 @@ const CustomerDetailPage = () => {
       {/* Top Bar */}
       <div className="px-3 py-2 border-b border-border bg-card flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/')}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/")}
             className="h-12 w-12 rounded-full bg-primary/10 hover:bg-primary/20"
           >
             <X className="w-6 h-6" />
           </Button>
-          <span className="font-semibold text-foreground">Details</span>
+          <span className="font-app text-foreground">Details</span>
         </div>
 
         {/* Actions */}
@@ -111,11 +115,11 @@ const CustomerDetailPage = () => {
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {/* Profile Card */}
         <div className="bg-card rounded-xl border p-4 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl font-semibold text-primary">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl font-app text-primary">
             {customer.fullName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h2 className="text-lg font-semibold">{customer.fullName}</h2>
+            <h2 className="text-lg font-app">{customer.fullName}</h2>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
               <Clock className="w-3.5 h-3.5" />
               Customer since {createdDate}
@@ -131,7 +135,7 @@ const CustomerDetailPage = () => {
               <p className="text-xs text-muted-foreground">Mobile Number</p>
               <a
                 href={`tel:${customer.mobileNumber}`}
-                className="font-medium text-foreground"
+                className="font-app text-foreground"
               >
                 {customer.mobileNumber}
               </a>
@@ -142,7 +146,7 @@ const CustomerDetailPage = () => {
             <Calendar className="w-5 h-5 text-primary" />
             <div>
               <p className="text-xs text-muted-foreground">Last Visit</p>
-              <p className="font-medium text-foreground">{formattedDate}</p>
+              <p className="font-app text-foreground">{formattedDate}</p>
             </div>
           </div>
         </div>
@@ -150,7 +154,7 @@ const CustomerDetailPage = () => {
         {/* Interests */}
         {customer.interest.length > 0 && (
           <div className="bg-card border rounded-xl p-4 space-y-2">
-            <h3 className="text-sm font-medium flex items-center gap-2">
+            <h3 className="text-sm font-app flex items-center gap-2">
               <Heart className="w-4 h-4 text-primary" />
               Interests
             </h3>
@@ -167,7 +171,7 @@ const CustomerDetailPage = () => {
         {/* Notes */}
         {customer.preferences && (
           <div className="bg-card border rounded-xl p-4 space-y-2">
-            <h3 className="text-sm font-medium flex items-center gap-2">
+            <h3 className="text-sm font-app flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" />
               Notes
             </h3>
@@ -199,8 +203,8 @@ const CustomerDetailPage = () => {
               <AlertDialogTitle>Delete Customer</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="pt-2">
-              Are you sure you want to delete{' '}
-              <span className="font-semibold">{customer.fullName}</span>? This action
+              Are you sure you want to delete{" "}
+              <span className="font-app">{customer.fullName}</span>? This action
               cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

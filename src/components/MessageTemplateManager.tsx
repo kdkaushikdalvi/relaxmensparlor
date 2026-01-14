@@ -136,19 +136,15 @@ export function MessageTemplateManager() {
     <div className="space-y-4">
       {/* ================= Header ================= */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold">Message Templates</h3>
-        </div>
         <Button size="sm" onClick={handleOpenCreate} className="gap-1">
           <Plus className="w-4 h-4" />
-          New Template
+          New
         </Button>
       </div>
 
       {/* ================= Variables ================= */}
       <div className="p-3 rounded-xl bg-muted/40 border space-y-2">
-        <p className="text-xs font-medium">Click to insert variables:</p>
+        <p className="text-xs font-app">Click to insert variables:</p>
 
         <div className="flex flex-wrap gap-2">
           {Object.keys(VARIABLE_EXAMPLES).map((key) => (
@@ -188,7 +184,7 @@ export function MessageTemplateManager() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-medium truncate">{template.name}</h4>
+                    <h4 className="font-app truncate">{template.name}</h4>
                     {template.isDefault && (
                       <Badge variant="secondary" className="text-xs gap-1">
                         <Star className="w-3 h-3 fill-current" />
@@ -272,7 +268,7 @@ export function MessageTemplateManager() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">
+              <label className="text-sm font-app mb-2 block">
                 Template Name
               </label>
               <Input
@@ -284,7 +280,7 @@ export function MessageTemplateManager() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Message</label>
+              <label className="text-sm font-app mb-2 block">Message</label>
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

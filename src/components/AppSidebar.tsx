@@ -2,26 +2,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Palette,
   User,
   Store,
   Pencil,
-  ExternalLink,
   Trash2,
   AlertTriangle,
   Settings,
-  Sparkles,
   Globe,
   Upload,
-  UserPlus,
-  Copy,
-  Share2,
-  Check,
   History,
   MessageSquare,
   Download,
-  RefreshCw,
-  RotateCcw,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -30,15 +21,8 @@ import { useCustomers } from "@/hooks/useCustomers";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { ThemeToggle } from "./ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MessageTemplateManager } from "./MessageTemplateManager";
@@ -159,53 +143,20 @@ export function AppSidebar() {
     }
   };
 
-  const handleFileImport = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      const lines = content.split("\n").filter(Boolean);
-      const customers = lines.slice(1).map((line) => {
-        const [name, phone] = line.split(",").map((s) => s.trim());
-        return { name, phone, visits: [] };
-      });
-      const existing = JSON.parse(
-        localStorage.getItem("relax-salon-customers") || "[]"
-      );
-      localStorage.setItem(
-        "relax-salon-customers",
-        JSON.stringify([...existing, ...customers])
-      );
-      window.location.reload();
-    };
-    reader.readAsText(file);
-  };
-
   return (
-    <Sidebar className="border-r border-white/10 bg-gradient-to-b from-background/80 via-background/90 to-background/80 backdrop-blur-xl">
+    <Sidebar className="font-app border-r bg-gradient-to-b from-white to-white">
       {/* ===== Header ===== */}
-      <SidebarHeader className="p-2">
-        <div className="rounded-xl p-2 bg-white/70 dark:bg-black/40 backdrop-blur-xl border border-white/20 shadow-md flex items-center gap-3">
-          {/* Logo */}
-          <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
-            <img
-              src={brandLogo}
-              className="w-[100%] h-[100%] object-contain border border-white/20 border-rose-700 rounded-xl"
-              alt="Logo"
-            />
+      <SidebarHeader className="p-3">
+        <div className="rounded-xl p-3 bg-white border shadow flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+            <img src={brandLogo} className="w-full h-full object-contain" />
           </div>
 
-          {/* Name + Status */}
           <div className="flex flex-col min-w-0 flex-1">
-            <p className="font-semibold text-sm leading-tight truncate">
-              {profile.businessName}
-            </p>
+            <p className="font-app text-sm truncate">{profile.businessName}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span className="text-[11px] text-muted-foreground">Active</span>
+              <span className="text-[11px] text-gray-500">Active</span>
             </div>
           </div>
         </div>
@@ -213,29 +164,27 @@ export function AppSidebar() {
 
       <SidebarContent className="px-3 pb-6">
         <Accordion type="multiple" className="space-y-3">
-          {/* ========== PROFILE ========== */}
           <PremiumAccordion
             title="Profile Settings"
-            icon={<Settings className="w-4 h-4" />}
+            icon={<Settings className="text-indigo-600" />}
           >
             <SettingRow
-              icon={<User className="w-4 h-4" />}
+              icon={<User className="text-blue-600" />}
               label="Owner"
               value={profile.ownerName}
               onEdit={() => startEditing("ownerName")}
             />
             <SettingRow
-              icon={<Store className="w-4 h-4" />}
+              icon={<Store className="text-emerald-600" />}
               label="Business"
               value={profile.businessName}
               onEdit={() => startEditing("businessName")}
             />
           </PremiumAccordion>
 
-          {/* ========== SHARE ========== */}
           <PremiumAccordion
             title="Share Website"
-            icon={<Globe className="w-4 h-4" />}
+            icon={<Globe className="text-sky-600" />}
           >
             <div className="flex flex-col items-center gap-3">
               <div className="bg-white p-3 rounded-xl shadow">
@@ -264,18 +213,16 @@ export function AppSidebar() {
             </div>
           </PremiumAccordion>
 
-          {/* ========== TEMPLATES ========== */}
           <PremiumAccordion
             title="Message Templates"
-            icon={<MessageSquare className="w-4 h-4" />}
+            icon={<MessageSquare className="text-purple-600" />}
           >
             <MessageTemplateManager />
           </PremiumAccordion>
 
-          {/* ========== HISTORY ========== */}
           <PremiumAccordion
             title="Reminder History"
-            icon={<History className="w-4 h-4" />}
+            icon={<History className="text-orange-600" />}
           >
             <Button
               variant="outline"
@@ -286,29 +233,10 @@ export function AppSidebar() {
             </Button>
           </PremiumAccordion>
 
-          {/* ========== IMPORT ========== */}
-          <PremiumAccordion
-            title="Import Customers"
-            icon={<Upload className="w-4 h-4" />}
-          >
-            <label>
-              <Button variant="outline" className="w-full">
-                Choose CSV File
-              </Button>
-              <input
-                type="file"
-                hidden
-                accept=".csv"
-                onChange={handleFileImport}
-              />
-            </label>
-          </PremiumAccordion>
-
-          {/* ========== INSTALL ========== */}
           {installPrompt && (
             <PremiumAccordion
               title="Install App"
-              icon={<Download className="w-4 h-4" />}
+              icon={<Download className="text-green-600" />}
             >
               <Button className="w-full" onClick={handleInstallPWA}>
                 Install Now
@@ -316,11 +244,12 @@ export function AppSidebar() {
             </PremiumAccordion>
           )}
 
-          {/* ========== DANGER ZONE ========== */}
+          {/* Danger Zone */}
           <AccordionItem value="danger" className="border-none">
-            <AccordionTrigger className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
+            <AccordionTrigger className="px-4 py-3 rounded-xl bg-red-50 border text-red-600">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" /> Danger Zone
+                <AlertTriangle className="w-4 h-4" />
+                <span className="font-app">Reset</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-2 p-2">
@@ -339,7 +268,7 @@ export function AppSidebar() {
         </Accordion>
       </SidebarContent>
 
-      {/* ===== Edit Dialog ===== */}
+      {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
@@ -358,15 +287,14 @@ export function AppSidebar() {
 }
 
 /* ============================= */
-/* Small Components */
-/* ============================= */
 
 function PremiumAccordion({ title, icon, children }: any) {
   return (
     <AccordionItem value={title} className="border-none">
-      <AccordionTrigger className="px-4 py-3 rounded-xl bg-white/70 dark:bg-black/40 border backdrop-blur-xl shadow">
-        <div className="flex items-center gap-2">
-          {icon} {title}
+      <AccordionTrigger className="px-4 py-3 rounded-xl bg-white border shadow-sm">
+        <div className="flex items-center gap-2 font-app font-app">
+          {icon}
+          <span>{title}</span>
         </div>
       </AccordionTrigger>
       <AccordionContent className="p-2 space-y-2">{children}</AccordionContent>
@@ -376,18 +304,18 @@ function PremiumAccordion({ title, icon, children }: any) {
 
 function SettingRow({ icon, label, value, onEdit }: any) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-xl bg-white/50 dark:bg-black/30 border">
+    <div className="flex items-center justify-between p-3 rounded-xl bg-white border">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
           {icon}
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="font-medium">{value}</p>
+          <p className="text-xs text-gray-500">{label}</p>
+          <p className="font-app">{value}</p>
         </div>
       </div>
       <Button size="icon" variant="ghost" onClick={onEdit}>
-        <Pencil className="w-4 h-4" />
+        <Pencil className="w-4 h-4 text-gray-600" />
       </Button>
     </div>
   );
@@ -400,7 +328,7 @@ function ConfirmReset({ label, onConfirm, destructive = false }: any) {
         <Button
           variant="outline"
           className={`w-full justify-start ${
-            destructive ? "text-red-500 border-red-500/30" : ""
+            destructive ? "text-red-600 border-red-300" : ""
           }`}
         >
           <Trash2 className="w-4 h-4 mr-2" /> {label}

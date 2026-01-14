@@ -1,10 +1,13 @@
-import { format } from 'date-fns';
-import { History, MessageCircle, Clock, User } from 'lucide-react';
-import { Customer, ReminderHistory as ReminderHistoryType } from '@/types/customer';
-import { useCustomers } from '@/hooks/useCustomers';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { format } from "date-fns";
+import { History, MessageCircle, Clock, User } from "lucide-react";
+import {
+  Customer,
+  ReminderHistory as ReminderHistoryType,
+} from "@/types/customer";
+import { useCustomers } from "@/hooks/useCustomers";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface ReminderHistoryProps {
   customerId?: string; // If provided, show only this customer's history
@@ -25,14 +28,14 @@ export function ReminderHistory({ customerId, limit }: ReminderHistoryProps) {
   if (customerId) {
     const customer = getCustomer(customerId);
     if (customer?.reminderHistory) {
-      customer.reminderHistory.forEach(reminder => {
+      customer.reminderHistory.forEach((reminder) => {
         historyEntries.push({ customer, reminder });
       });
     }
   } else {
-    customers.forEach(customer => {
+    customers.forEach((customer) => {
       if (customer.reminderHistory) {
-        customer.reminderHistory.forEach(reminder => {
+        customer.reminderHistory.forEach((reminder) => {
           historyEntries.push({ customer, reminder });
         });
       }
@@ -40,12 +43,16 @@ export function ReminderHistory({ customerId, limit }: ReminderHistoryProps) {
   }
 
   // Sort by date (newest first)
-  historyEntries.sort((a, b) => 
-    new Date(b.reminder.sentAt).getTime() - new Date(a.reminder.sentAt).getTime()
+  historyEntries.sort(
+    (a, b) =>
+      new Date(b.reminder.sentAt).getTime() -
+      new Date(a.reminder.sentAt).getTime()
   );
 
   // Apply limit if provided
-  const displayEntries = limit ? historyEntries.slice(0, limit) : historyEntries;
+  const displayEntries = limit
+    ? historyEntries.slice(0, limit)
+    : historyEntries;
 
   if (displayEntries.length === 0) {
     return (
@@ -72,7 +79,7 @@ export function ReminderHistory({ customerId, limit }: ReminderHistoryProps) {
             <div className="flex items-start gap-3">
               {/* Avatar */}
               <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-primary-foreground">
+                <span className="text-sm font-app text-primary-foreground">
                   {entry.customer.fullName.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -80,10 +87,13 @@ export function ReminderHistory({ customerId, limit }: ReminderHistoryProps) {
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-medium truncate">
+                  <h4 className="font-app truncate">
                     {entry.customer.fullName}
                   </h4>
-                  <Badge variant="outline" className="text-xs gap-1 flex-shrink-0">
+                  <Badge
+                    variant="outline"
+                    className="text-xs gap-1 flex-shrink-0"
+                  >
                     <MessageCircle className="w-3 h-3" />
                     WhatsApp
                   </Badge>
@@ -96,7 +106,10 @@ export function ReminderHistory({ customerId, limit }: ReminderHistoryProps) {
                 <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {format(new Date(entry.reminder.sentAt), 'dd MMM yyyy, hh:mm a')}
+                    {format(
+                      new Date(entry.reminder.sentAt),
+                      "dd MMM yyyy, hh:mm a"
+                    )}
                   </span>
                   {!customerId && (
                     <span className="flex items-center gap-1">

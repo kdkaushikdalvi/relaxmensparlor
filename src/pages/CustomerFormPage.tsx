@@ -214,7 +214,7 @@ const CustomerFormPage = () => {
                   }));
                 }}
                 className={cn(
-                  "px-5 py-3 rounded-full text-base font-medium",
+                  "px-5 py-3 rounded-full text-base font-app",
                   formData.reminderInterval === interval.value
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
@@ -239,7 +239,7 @@ const CustomerFormPage = () => {
                   type="button"
                   onClick={() => toggleInterest(interest)}
                   className={cn(
-                    "px-5 py-3 rounded-full text-base font-medium",
+                    "px-5 py-3 rounded-full text-base font-app",
                     formData.interest.includes(interest)
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"
@@ -271,15 +271,15 @@ const CustomerFormPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen  flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-[hsl(var(--header-bg))] border-b">
+      <div className="sticky top-0 z-50  border-b">
         <div className="flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2">
             {/* Back/Close Button - Always visible */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={isFirstStep ? () => navigate(-1) : handleBack}
               className="h-12 w-12 rounded-full bg-primary/10 hover:bg-primary/20"
             >
@@ -289,8 +289,8 @@ const CustomerFormPage = () => {
                 <ArrowLeft className="w-6 h-6" />
               )}
             </Button>
-            <span className="text-sm font-medium">
-              {isEditing ? "Edit" : "New"}
+            <span className="text-sm font-app">
+              {isEditing ? "Edit" : "Add"}
             </span>
           </div>
 
@@ -318,7 +318,7 @@ const CustomerFormPage = () => {
       {/* Content */}
       <div className="flex-1 p-6 space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold">{stepConfig.title}</h2>
+          <h2 className="text-2xl font-app">{stepConfig.title}</h2>
           <p className="text-muted-foreground text-sm">{stepConfig.subtitle}</p>
         </div>
 

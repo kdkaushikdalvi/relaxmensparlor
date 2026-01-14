@@ -1,7 +1,7 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, History } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ReminderHistory } from '@/components/ReminderHistory';
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, History } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ReminderHistory } from "@/components/ReminderHistory";
 
 const ReminderHistoryPage = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const ReminderHistoryPage = () => {
           </Button>
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-primary" />
-            <h1 className="text-lg font-semibold text-[hsl(var(--header-foreground))]">
+            <h1 className="text-lg font-app text-[hsl(var(--header-foreground))]">
               Reminder History
             </h1>
           </div>

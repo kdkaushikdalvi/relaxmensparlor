@@ -1,34 +1,37 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Shield, Lock, Sparkles } from 'lucide-react';
-import brandLogo from '@/assets/brand-logo.png';
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Shield, Lock, Sparkles } from "lucide-react";
+import brandLogo from "@/assets/brand-logo.png";
 
 const getTodayPin = () => {
   const today = new Date();
-  const day = String(today.getDate()).padStart(2, '0');
-  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0");
   return `${day}${month}`;
 };
 
-const STORAGE_KEY = 'app_pin_verified_date';
+const STORAGE_KEY = "app_pin_verified_date";
 
 const getTodayDateString = () => {
   const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(today.getDate()).padStart(2, "0")}`;
 };
 
 export const PinProtection = ({ children }: { children: React.ReactNode }) => {
   const [isLocked, setIsLocked] = useState(true);
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState('');
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
 
   useEffect(() => {
     const storedDate = localStorage.getItem(STORAGE_KEY);
     const todayDate = getTodayDateString();
-    
+
     // Check if already verified today (using full date string for daily reset)
     if (storedDate === todayDate) {
       setIsLocked(false);
@@ -40,24 +43,24 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
     if (pin.length === 4) {
       const todayPin = getTodayPin();
       const todayDate = getTodayDateString();
-      
+
       if (pin === todayPin) {
         localStorage.setItem(STORAGE_KEY, todayDate);
         setIsLocked(false);
-        setError('');
+        setError("");
       } else {
-        setError('Invalid PIN. Please try again.');
+        setError("Invalid PIN. Please try again.");
         setShake(true);
         setTimeout(() => setShake(false), 500);
-        setPin('');
+        setPin("");
       }
     }
   }, [pin]);
 
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '');
+    const value = e.target.value.replace(/\D/g, "");
     setPin(value);
-    setError('');
+    setError("");
   };
 
   if (!isLocked) {
@@ -66,7 +69,7 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Dialog open={isLocked} onOpenChange={() => {}}>
-      <DialogContent 
+      <DialogContent
         className="sm:max-w-md border-0 bg-gradient-to-br from-background via-background to-primary/5 shadow-2xl"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
@@ -76,9 +79,9 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
           <div className="relative">
             <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl animate-pulse" />
             <div className="relative w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-lg">
-              <img 
-                src={brandLogo} 
-                alt="Brand Logo" 
+              <img
+                src={brandLogo}
+                alt="Brand Logo"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -94,7 +97,8 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
               Secure Access
             </h2>
             <p className="text-muted-foreground text-sm max-w-xs">
-              Welcome back! Enter today's security PIN to access your customer management dashboard.
+              Welcome back! Enter today's security PIN to access your customer
+              management dashboard.
             </p>
           </div>
 
@@ -108,7 +112,7 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
           {/* PIN Input */}
           <div className="w-full space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
+              <label className="text-sm font-app text-foreground">
                 Enter 4-Digit PIN
               </label>
               <Input
@@ -119,22 +123,28 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
                 onChange={handlePinChange}
                 placeholder="••••"
                 className={`text-center text-2xl tracking-[0.5em] font-mono h-14 bg-muted/50 border-2 transition-all duration-200 ${
-                  shake ? 'animate-shake border-destructive' : 'border-border focus:border-primary'
+                  shake
+                    ? "animate-shake border-destructive"
+                    : "border-border focus:border-primary"
                 }`}
                 autoFocus
               />
               {error && (
-                <p className="text-destructive text-sm animate-fade-in">{error}</p>
+                <p className="text-destructive text-sm animate-fade-in">
+                  {error}
+                </p>
               )}
             </div>
 
             {/* Progress indicator */}
             <div className="flex justify-center gap-2">
               {[0, 1, 2, 3].map((i) => (
-                <div 
+                <div
                   key={i}
                   className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                    pin.length > i ? 'bg-primary scale-110' : 'bg-muted-foreground/30'
+                    pin.length > i
+                      ? "bg-primary scale-110"
+                      : "bg-muted-foreground/30"
                   }`}
                 />
               ))}
@@ -143,7 +153,8 @@ export const PinProtection = ({ children }: { children: React.ReactNode }) => {
 
           {/* Hint */}
           <div className="text-xs text-muted-foreground/60 bg-muted/30 rounded-lg px-4 py-2">
-            💡 Hint: Today's PIN format is <span className="font-mono font-semibold text-primary">DDMM</span>
+            💡 Hint: Today's PIN format is{" "}
+            <span className="font-mono font-app text-primary">DDMM</span>
           </div>
         </div>
       </DialogContent>

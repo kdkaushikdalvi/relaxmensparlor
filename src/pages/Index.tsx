@@ -48,6 +48,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+/* -------------------- Types -------------------- */
 
 type DateGroup = "Today" | "Yesterday" | string;
 type SortType = "date" | "name" | "reminder" | "newest";
@@ -244,285 +252,149 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_20%_20%,hsl(var(--primary)/0.12),transparent_40%)]" />
-
       <Header />
 
       <main className="pb-24 relative z-10">
-        {/* Search */}
-        <div className="px-4 py-4 sticky top-[64px] z-30 backdrop-blur-xl">
-          <div className="glass rounded-2xl p-4 border border-primary/20 shadow-lg">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search by name or phone..."
-            />
-          </div>
-        </div>
+        {/* ===== Filters Accordion ===== */}
+        <div className="px-4 py-3 sticky top-[64px] z-30">
+          <Accordion type="single" collapsible>
+            <AccordionItem
+              value="filters"
+              className="border rounded-2xl shadow-lg"
+            >
+              <AccordionTrigger className="px-4 py-3">
+                <span className="font-app">🔍 Search, Filters & Sort</span>
+              </AccordionTrigger>
 
-        {/* Reminder Filters - Different background */}
-        <div className="px-4 pb-3">
-          <div className="rounded-2xl p-4 border border-primary/20 shadow-lg bg-[hsl(var(--reminder-section))]">
-            <div className="flex items-center gap-2 mb-3">
-              <Bell className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Reminders</span>
-            </div>
+              <AccordionContent className="p-4 space-y-4">
+                {/* Search */}
+                <SearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search by name or phone..."
+                />
 
-            <div className="flex gap-2 flex-wrap">
-              {REMINDER_CATEGORIES.map((cat) => {
-                const count = reminderCounts[cat.value];
-                const isActive = reminderFilter === cat.value;
-                const isUrgent =
-                  cat.value === "overdue" || cat.value === "today";
+                {/* Reminder Filters */}
+                <div className="rounded-xl p-4 border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Bell className="w-5 h-5 text-primary" />
+                    <span className="font-app">Reminders</span>
+                  </div>
 
-                return (
-                  <Button
-                    key={cat.value}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setReminderFilter(cat.value)}
-                    className={`
-                      rounded-full px-4 py-1.5 text-xs font-medium transition-all
-                      ${
-                        isActive
-                          ? isUrgent
-                            ? "bg-destructive text-white shadow-md scale-105"
-                            : "bg-primary text-white shadow-md scale-105"
-                          : isUrgent && count > 0
-                          ? "border border-destructive/40 text-destructive bg-destructive/5"
-                          : "border border-primary/20 text-muted-foreground hover:bg-primary/5"
-                      }
-                    `}
-                  >
-                    {cat.label} ({count})
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {REMINDER_CATEGORIES.map((cat) => {
+                      const count = reminderCounts[cat.value];
+                      const isActive = reminderFilter === cat.value;
 
-        {/* Bulk + Sort Bar */}
-        <div className="px-4 pb-3">
-          <div className="glass rounded-2xl p-3 flex items-center justify-between border border-primary/20 shadow-md">
-            <div className="flex items-center gap-2">
-              {bulkSelectMode ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSelectAll}
-                    className="text-xs gap-1"
-                  >
-                    {selectedIds.size === selectableCustomers.length ? (
-                      <CheckSquare className="w-4 h-4" />
-                    ) : (
-                      <Square className="w-4 h-4" />
-                    )}
-                    Select All
-                  </Button>
+                      return (
+                        <Button
+                          key={cat.value}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setReminderFilter(cat.value)}
+                          className={`rounded-full px-4 py-1.5 text-xs ${
+                            isActive ? "bg-primary text-white" : "border"
+                          }`}
+                        >
+                          {cat.label} ({count})
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                  <Button
-                    variant="default"
-                    size="sm"
-                    disabled={selectedIds.size === 0}
-                    onClick={handleBulkSendReminders}
-                    className="text-xs gap-1"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Send ({selectedIds.size})
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setBulkSelectMode(false);
-                      setSelectedIds(new Set());
-                    }}
-                    className="text-xs"
-                  >
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <>
+                {/* Bulk + Sort */}
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="text-sm text-muted-foreground">
                     {filteredCustomers.length} customers
                   </span>
-                  {selectableCustomers.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setBulkSelectMode(true)}
-                      className="text-xs gap-1"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Bulk Send
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-xs gap-1">
-                  <ArrowUpDown className="w-3 h-3" />
-                  Sort
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSortType("newest")}>
-                  Newest First
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType("reminder")}>
-                  Sort by Priority
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType("date")}>
-                  Sort by Visit Date
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortType("name")}>
-                  Sort by Name
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <ArrowUpDown className="w-4 h-4 mr-1" />
+                        Sort
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setSortType("newest")}>
+                        Newest First
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortType("reminder")}>
+                        Sort by Priority
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortType("date")}>
+                        Sort by Visit Date
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortType("name")}>
+                        Sort by Name
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
-        {/* Customer List - Different background */}
+        {/* ===== Customer List ===== */}
         <div className="px-4">
-          <div className="rounded-2xl p-4 bg-[hsl(var(--customer-section))] border border-primary/10">
-            {customers.length === 0 ? (
-              <EmptyState type="no-customers" />
-            ) : filteredCustomers.length === 0 ? (
-              <EmptyState type="no-results" searchQuery={searchQuery} />
-            ) : (
-              sortDateGroups(Object.keys(groupedCustomers)).map((group) => {
-                const groupCustomers = groupedCustomers[group];
-                if (!groupCustomers?.length) return null;
+          {customers.length === 0 ? (
+            <EmptyState type="no-customers" />
+          ) : filteredCustomers.length === 0 ? (
+            <EmptyState type="no-results" searchQuery={searchQuery} />
+          ) : (
+            sortDateGroups(Object.keys(groupedCustomers)).map((group) => {
+              const groupCustomers = groupedCustomers[group];
+              if (!groupCustomers?.length) return null;
 
-                return (
-                  <div key={group} className="mb-6">
-                    {/* Date Header */}
-                    <div className="sticky top-[180px] z-20 -mx-4 px-4 py-3">
-                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 backdrop-blur-xl shadow-lg">
-                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
-                        <div className="relative flex items-center gap-4 px-5 py-1">
-                          <div className="w-8 h-8 rounded-2xl bg-primary/20 flex items-center justify-center">
-                            <Calendar className="w-4 h-4 text-primary" />
-                          </div>
-                          <div className="flex items-center justify-between w-full">
-                            <div className="text-md font-bold">{group}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {groupCustomers.length} customers
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              return (
+                <div key={group} className="mb-6">
+                  <div className="font-bold text-lg mb-3">{group}</div>
 
-                    <div className="space-y-4 pt-3">
-                      {groupCustomers.map((customer, index) => {
-                        const isSelectable =
-                          canSendReminderForCategory(customer) &&
-                          !wasReminderSentToday(customer) &&
-                          isValidPhoneNumber(customer.mobileNumber);
-
-                        return (
-                          <CustomerCard
-                            key={customer.id}
-                            customer={customer}
-                            onClick={() => handleViewCustomer(customer)}
-                            onEdit={() => handleEditCustomer(customer)}
-                            onDelete={() => handleDeleteCustomer(customer)}
-                            style={{ animationDelay: `${index * 50}ms` }}
-                            selectable={bulkSelectMode && isSelectable}
-                            selected={selectedIds.has(customer.id)}
-                            onSelectChange={(selected) =>
-                              handleSelectChange(customer.id, selected)
-                            }
-                          />
-                        );
-                      })}
-                    </div>
+                  <div className="space-y-4">
+                    {groupCustomers.map((customer, index) => (
+                      <CustomerCard
+                        key={customer.id}
+                        customer={customer}
+                        onClick={() => handleViewCustomer(customer)}
+                        onEdit={() => handleEditCustomer(customer)}
+                        onDelete={() => handleDeleteCustomer(customer)}
+                      />
+                    ))}
                   </div>
-                );
-              })
-            )}
-          </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </main>
 
-      <div className="fixed bottom-6 right-6 z-40">
+      {/* ===== FAB ===== */}
+      <div className="fixed bottom-5 right-5 z-40">
         <Button
           onClick={() => navigate("/customer/new")}
-          className="
-      relative
-      h-14 px-7 rounded-full
-      bg-gradient-to-r from-primary to-purple-600
-      text-primary-foreground
-      shadow-2xl shadow-primary/40
-      flex items-center gap-3
-      font-semibold
-      tracking-wide
-
-      active:scale-95
-      transition-all duration-300 ease-out
-      hover:scale-105 hover:-translate-y-0.5
-    "
+          className="h-12 w-12 rounded-full bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/40 flex items-center justify-center"
         >
-          {/* Plus SVG */}
-          <span
-            className="
-      flex items-center justify-center
-      w-8 h-8 rounded-full
-      bg-white/15
-    "
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          </span>
-
-          <span className="font-bold">
-            <span className="absolute top-1 right-9 h-3 w-3 rounded-full bg-red-500 animate-ping opacity-75" />
-            <span className="absolute top-1 right-9 h-3 w-3 rounded-full bg-red-500" />
-            Add New
-          </span>
-
-          {/* Subtle highlight ring */}
-          <span className="pointer-events-none absolute inset-0 rounded-full border border-white/20" />
+          <Plus className="w-7 h-7 stroke-[3]" />
         </Button>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* ===== Delete Dialog ===== */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Customer</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-semibold">
-                {customerToDelete?.fullName}
-              </span>
-              ? This action cannot be undone.
+              <span className="font-app">{customerToDelete?.fullName}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-white"
             >
               Delete
             </AlertDialogAction>

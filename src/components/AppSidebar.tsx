@@ -110,7 +110,11 @@ export function AppSidebar() {
       interest: ["Haircut"],
       preferences: "Default test customer",
       createdAt: new Date().toISOString(),
-      reminderInterval: "none" as const,
+      updatedAt: new Date().toISOString(),
+      reminderInterval: "1week" as const,
+      reminderDate: new Date().toISOString().split("T")[0],
+      reminderSentDates: [],
+      reminderHistory: [],
     };
     localStorage.setItem(
       "relax-salon-customers",

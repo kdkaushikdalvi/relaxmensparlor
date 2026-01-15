@@ -7,10 +7,13 @@ import {
   Pencil,
   Trash2,
   AlertTriangle,
-  Settings,
   Globe,
   MessageSquare,
   Download,
+  History,
+  UserCircle,
+  RotateCcw,
+  Share2,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -46,11 +49,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
 const WEBSITE_URL = "https://relaxmensparlor.lovable.app";
 
@@ -67,6 +71,11 @@ export function AppSidebar() {
   const [editValue, setEditValue] = useState("");
   const [copied, setCopied] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  // Sheet states for each section
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -145,15 +154,9 @@ export function AppSidebar() {
   };
 
   const now = new Date();
-
-  const day = now
-    .toLocaleDateString("en-US", { weekday: "short" })
-    .toUpperCase();
-  const month = now
-    .toLocaleDateString("en-US", { month: "short" })
-    .toUpperCase();
+  const day = now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+  const month = now.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
   const dateNum = now.getDate();
-
   const shortDate = `${dateNum} ${month}, ${day}`;
 
   return (
@@ -161,23 +164,10 @@ export function AppSidebar() {
       {/* ===== Header ===== */}
       <SidebarHeader className="p-3">
         <div className="w-full">
-          <div
-            className="
-        w-full
-        px-4 py-3
-        rounded-2xl
-        border border-primary/30
-        bg-primary/5
-        shadow-sm
-        flex items-center justify-between
-      "
-          >
-            {/* Date */}
+          <div className="w-full px-4 py-3 rounded-2xl border border-primary/30 bg-primary/5 shadow-sm flex items-center justify-between">
             <p className="text-xl font-bold text-primary tracking-wide">
               {shortDate}
             </p>
-
-            {/* Calendar Icon */}
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <svg
                 viewBox="0 0 24 24"
@@ -199,11 +189,62 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3 pb-6">
-        <Accordion type="multiple" className="space-y-3">
-          <PremiumAccordion
-            title="Profile Settings"
-            icon={<Settings className="text-indigo-600" />}
-          >
+        <div className="space-y-2">
+          {/* Profile */}
+          <NavButton
+            icon={<UserCircle className="w-5 h-5 text-indigo-600" />}
+            label="Profile"
+            onClick={() => setProfileOpen(true)}
+          />
+
+          {/* Template */}
+          <NavButton
+            icon={<MessageSquare className="w-5 h-5 text-purple-600" />}
+            label="Template"
+            onClick={() => navigate("/message-templates")}
+          />
+
+          {/* History */}
+          <NavButton
+            icon={<History className="w-5 h-5 text-blue-600" />}
+            label="History"
+            onClick={() => navigate("/reminder-history")}
+          />
+
+          {/* Share */}
+          <NavButton
+            icon={<Share2 className="w-5 h-5 text-sky-600" />}
+            label="Share"
+            onClick={() => setShareOpen(true)}
+          />
+
+          {/* Reset */}
+          <NavButton
+            icon={<RotateCcw className="w-5 h-5 text-red-500" />}
+            label="Reset"
+            onClick={() => setResetOpen(true)}
+            variant="danger"
+          />
+
+          {/* Install App (conditional) */}
+          {installPrompt && (
+            <NavButton
+              icon={<Download className="w-5 h-5 text-green-600" />}
+              label="Install App"
+              onClick={handleInstallPWA}
+            />
+          )}
+        </div>
+      </SidebarContent>
+
+      {/* Profile Sheet */}
+      <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
+        <SheetContent side="left" className="w-80">
+          <SheetHeader>
+            <SheetTitle>Profile Settings</SheetTitle>
+            <SheetDescription>Manage your profile information</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-3">
             <SettingRow
               icon={<User className="text-blue-600" />}
               label="Owner"
@@ -216,86 +257,62 @@ export function AppSidebar() {
               value={profile.businessName}
               onEdit={() => startEditing("businessName")}
             />
-          </PremiumAccordion>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-          <PremiumAccordion
-            title="Share Website"
-            icon={<Globe className="text-sky-600" />}
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className="bg-white p-3 rounded-xl shadow">
-                <QRCodeSVG value={WEBSITE_URL} size={120} />
-              </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={copyToClipboard}
-              >
-                {copied ? "Copied!" : "Copy Link"}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={shareWebsite}
-              >
-                Share
-              </Button>
-              <Button
-                className="w-full"
-                onClick={() => window.open(WEBSITE_URL)}
-              >
-                Open Website
-              </Button>
+      {/* Share Sheet */}
+      <Sheet open={shareOpen} onOpenChange={setShareOpen}>
+        <SheetContent side="left" className="w-80">
+          <SheetHeader>
+            <SheetTitle>Share Website</SheetTitle>
+            <SheetDescription>Share your business with others</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <div className="bg-white p-3 rounded-xl shadow border">
+              <QRCodeSVG value={WEBSITE_URL} size={140} />
             </div>
-          </PremiumAccordion>
-
-          <PremiumAccordion
-            title="Message Templates"
-            icon={<MessageSquare className="text-purple-600" />}
-          >
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => navigate("/message-templates")}
+              onClick={copyToClipboard}
             >
-              Manage Templates
+              {copied ? "Copied!" : "Copy Link"}
             </Button>
-          </PremiumAccordion>
-
-          {installPrompt && (
-            <PremiumAccordion
-              title="Install App"
-              icon={<Download className="text-green-600" />}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={shareWebsite}
             >
-              <Button className="w-full" onClick={handleInstallPWA}>
-                Install Now
-              </Button>
-            </PremiumAccordion>
-          )}
+              Share
+            </Button>
+            <Button
+              className="w-full"
+              onClick={() => window.open(WEBSITE_URL)}
+            >
+              Open Website
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-          {/* Danger Zone */}
-          <AccordionItem value="danger" className="border-none">
-            <AccordionTrigger className="px-4 py-3 rounded-xl bg-red-50 border text-red-600">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                <span className="font-app">Reset</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-2 p-2">
-              <ConfirmReset label="Reset Profile" onConfirm={resetProfile} />
-              <ConfirmReset
-                label="Reset Customers"
-                onConfirm={resetCustomers}
-              />
-              <ConfirmReset
-                label="Reset Everything"
-                onConfirm={resetAll}
-                destructive
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </SidebarContent>
+      {/* Reset Sheet */}
+      <Sheet open={resetOpen} onOpenChange={setResetOpen}>
+        <SheetContent side="left" className="w-80">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Reset Options
+            </SheetTitle>
+            <SheetDescription>These actions cannot be undone</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-2">
+            <ConfirmReset label="Reset Profile" onConfirm={resetProfile} />
+            <ConfirmReset label="Reset Customers" onConfirm={resetCustomers} />
+            <ConfirmReset label="Reset Everything" onConfirm={resetAll} destructive />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -317,17 +334,26 @@ export function AppSidebar() {
 
 /* ============================= */
 
-function PremiumAccordion({ title, icon, children }: any) {
+function NavButton({ icon, label, onClick, variant }: { 
+  icon: React.ReactNode; 
+  label: string; 
+  onClick: () => void;
+  variant?: "danger";
+}) {
   return (
-    <AccordionItem value={title} className="border-none">
-      <AccordionTrigger className="px-4 py-3 rounded-xl bg-white border shadow-sm">
-        <div className="flex items-center gap-2 font-app font-app">
-          {icon}
-          <span>{title}</span>
-        </div>
-      </AccordionTrigger>
-      <AccordionContent className="p-2 space-y-2">{children}</AccordionContent>
-    </AccordionItem>
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
+        variant === "danger" 
+          ? "bg-red-50 border-red-200 hover:bg-red-100" 
+          : "bg-white hover:bg-gray-50"
+      }`}
+    >
+      {icon}
+      <span className={`font-app font-medium ${variant === "danger" ? "text-red-600" : "text-foreground"}`}>
+        {label}
+      </span>
+    </button>
   );
 }
 

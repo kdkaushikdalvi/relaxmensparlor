@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowRight,
-  ArrowLeft,
-  Save,
-  SkipForward,
-  Check,
-  Bell,
-  X,
-} from "lucide-react";
+import { ArrowRight, ArrowLeft, Save, Check, Bell, X } from "lucide-react";
 import {
   CustomerFormData,
   REMINDER_INTERVALS,
@@ -257,19 +249,6 @@ const CustomerFormPage = () => {
                 </button>
               ))}
             </div>
-
-            <textarea
-              value={formData.preferences}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  preferences: e.target.value,
-                }))
-              }
-              placeholder="काही नोंद? (ऐच्छिक)"
-              rows={3}
-              className="w-full rounded-xl border px-4 py-3 text-base"
-            />
           </div>
         );
     }

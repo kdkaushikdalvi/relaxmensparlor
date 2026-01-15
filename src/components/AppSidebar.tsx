@@ -23,6 +23,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ export function AppSidebar() {
   const { profile, updateProfile } = useProfile();
   const { resetSetup, resetAll, setupData } = useSetup();
   const { customers } = useCustomers();
+  const { toggleSidebar } = useSidebar();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editField, setEditField] = useState<
@@ -154,8 +156,8 @@ export function AppSidebar() {
   };
 
   const now = new Date();
-  const day = now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-  const month = now.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+  const day = now.toLocaleDateString("mr-IN", { weekday: "short" });
+  const month = now.toLocaleDateString("mr-IN", { month: "short" });
   const dateNum = now.getDate();
   const shortDate = `${dateNum} ${month}, ${day}`;
 
@@ -165,25 +167,18 @@ export function AppSidebar() {
       <SidebarHeader className="p-3">
         <div className="w-full">
           <div className="w-full px-4 py-3 rounded-2xl border border-primary/30 bg-primary/5 shadow-sm flex items-center justify-between">
+            <div className="relative">
+              {/* Glow */}
+              <div className="absolute inset-0 rounded-full bg-primary/40 blur-lg animate-pulse" />
+              <div className="absolute -inset-1 rounded-full border-2 border-dashed border-primary/50 animate-spin-slow" />
+              {/* Image */}
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/60 shadow-lg bg-background">
+                <img src={brandLogo} className="w-full h-full object-cover" />
+              </div>
+            </div>
             <p className="text-xl font-bold text-primary tracking-wide">
               {shortDate}
             </p>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg
-                viewBox="0 0 24 24"
-                className="w-5 h-5 text-primary"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-            </div>
           </div>
         </div>
       </SidebarHeader>
@@ -201,14 +196,20 @@ export function AppSidebar() {
           <NavButton
             icon={<MessageSquare className="w-5 h-5 text-purple-600" />}
             label="Template"
-            onClick={() => navigate("/message-templates")}
+            onClick={() => {
+              navigate("/message-templates");
+              toggleSidebar();
+            }}
           />
 
           {/* History */}
           <NavButton
             icon={<History className="w-5 h-5 text-blue-600" />}
             label="History"
-            onClick={() => navigate("/reminder-history")}
+            onClick={() => {
+              navigate("/reminder-history");
+              toggleSidebar();
+            }}
           />
 
           {/* Share */}
@@ -279,17 +280,10 @@ export function AppSidebar() {
             >
               {copied ? "Copied!" : "Copy Link"}
             </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={shareWebsite}
-            >
+            <Button variant="outline" className="w-full" onClick={shareWebsite}>
               Share
             </Button>
-            <Button
-              className="w-full"
-              onClick={() => window.open(WEBSITE_URL)}
-            >
+            <Button className="w-full" onClick={() => window.open(WEBSITE_URL)}>
               Open Website
             </Button>
           </div>
@@ -309,7 +303,11 @@ export function AppSidebar() {
           <div className="mt-6 space-y-2">
             <ConfirmReset label="Reset Profile" onConfirm={resetProfile} />
             <ConfirmReset label="Reset Customers" onConfirm={resetCustomers} />
-            <ConfirmReset label="Reset Everything" onConfirm={resetAll} destructive />
+            <ConfirmReset
+              label="Reset Everything"
+              onConfirm={resetAll}
+              destructive
+            />
           </div>
         </SheetContent>
       </Sheet>
@@ -334,9 +332,14 @@ export function AppSidebar() {
 
 /* ============================= */
 
-function NavButton({ icon, label, onClick, variant }: { 
-  icon: React.ReactNode; 
-  label: string; 
+function NavButton({
+  icon,
+  label,
+  onClick,
+  variant,
+}: {
+  icon: React.ReactNode;
+  label: string;
   onClick: () => void;
   variant?: "danger";
 }) {
@@ -344,13 +347,17 @@ function NavButton({ icon, label, onClick, variant }: {
     <button
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
-        variant === "danger" 
-          ? "bg-red-50 border-red-200 hover:bg-red-100" 
+        variant === "danger"
+          ? "bg-red-50 border-red-200 hover:bg-red-100"
           : "bg-white hover:bg-gray-50"
       }`}
     >
       {icon}
-      <span className={`font-app font-medium ${variant === "danger" ? "text-red-600" : "text-foreground"}`}>
+      <span
+        className={`font-app font-medium ${
+          variant === "danger" ? "text-red-600" : "text-foreground"
+        }`}
+      >
         {label}
       </span>
     </button>

@@ -8,7 +8,7 @@ const generateId = () => Math.random().toString(36).substring(2) + Date.now().to
 
 // Get sample customer using signup data
 const getSampleCustomer = (): Customer => {
-  let ownerName = 'Test Customer';
+  let ownerName = 'Kaushik Dalvi';
   let mobileNumber = '9960563128';
   
   try {

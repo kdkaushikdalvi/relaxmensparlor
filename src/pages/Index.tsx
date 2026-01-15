@@ -289,7 +289,7 @@ const Index = () => {
           <Accordion type="single" collapsible>
             <AccordionItem value="filters" className="border rounded-2xl shadow-lg">
               <AccordionTrigger className="px-4 py-3">
-                <span className="font-app no-underline">
+                <span className="font-app">
                   🔍 Search, Filters & Sort
                 </span>
               </AccordionTrigger>

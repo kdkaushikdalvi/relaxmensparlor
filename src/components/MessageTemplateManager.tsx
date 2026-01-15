@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Check,
-  Star,
-  MessageSquare,
-  X,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Star, X } from "lucide-react";
 import {
   useMessageTemplates,
   MessageTemplate,

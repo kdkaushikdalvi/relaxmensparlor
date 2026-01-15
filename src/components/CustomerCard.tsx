@@ -317,7 +317,7 @@ export function CustomerCard({
                     ) : (
                       <>
                         <MessageCircle className="w-3 h-3" />
-                        Remind
+                        Reminder
                       </>
                     )}
                   </Button>

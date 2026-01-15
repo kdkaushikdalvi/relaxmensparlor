@@ -12,16 +12,6 @@ export function Header() {
   const location = useLocation();
 
   const isHomePage = location.pathname === "/";
-  const isCustomerForm =
-    location.pathname === "/customer/new" ||
-    location.pathname.endsWith("/edit");
-
-  const getFormTitle = () => {
-    if (location.pathname === "/customer/new") {
-      return "Add Customer";
-    }
-    return "Edit Customer";
-  };
 
   const handleForceRefresh = () => {
     if ("caches" in window) {
@@ -53,24 +43,6 @@ export function Header() {
           >
             <Menu className="w-5 h-5 text-primary" />
           </Button>
-
-          {/* Logo */}
-          <div className="relative">
-            {/* Glow */}
-            <div className="absolute inset-0 rounded-full bg-primary/40 blur-lg animate-pulse" />
-
-            {/* Rotating ring */}
-            <div className="absolute -inset-1 rounded-full border-2 border-dashed border-primary/50 animate-spin-slow" />
-
-            {/* Image */}
-            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/60 shadow-lg bg-background">
-              <img
-                src={brandLogo}
-                alt={`${profile.businessName} Logo`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
 
           {/* Business Info */}
           <div className="leading-tight">

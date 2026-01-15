@@ -23,26 +23,22 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
   {
     id: 'default-marathi',
     name: 'मराठी टेम्पलेट',
-    message: `नमस्कार {customerName}! सर,
-
-आज तुमची अपॉइंटमेंट घ्यायची आहे का? 💈
-
-कृपया रिप्लाय करा किंवा कॉल करा.
-
-धन्यवाद! 🙏`,
+    message: 
+    `नमस्कार {customerName}! सर,
+    आज तुमची अपॉइंटमेंट घ्यायची आहे का?
+    कृपया रिप्लाय करा किंवा कॉल करा.
+    धन्यवाद! 🙏`,
     isDefault: true,
     createdAt: new Date().toISOString(),
   },
   {
     id: 'default-english',
-    name: 'English Template',
-    message: `Hello {customerName}!
-
-We'd love to see you today! 💈
-
-Please reply or call us to confirm.
-
-Thank you! 🙏`,
+    name: 'Test Template',
+    message: 
+    `Hello {customerName}!
+    We'd love to see you today! 💈
+    Please reply or call us to confirm.
+    Thank you! 🙏`,
     isDefault: false,
     createdAt: new Date().toISOString(),
   },

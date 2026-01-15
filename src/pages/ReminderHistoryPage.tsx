@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,11 @@ import { ReminderHistory } from "@/components/ReminderHistory";
 
 const ReminderHistoryPage = () => {
   const navigate = useNavigate();
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">

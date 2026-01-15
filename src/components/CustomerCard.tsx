@@ -99,6 +99,17 @@ export function CustomerCard({
   const reminderStatus = getReminderStatus(customer);
   const statusInfo = statusConfig[reminderStatus];
 
+  // Check if customer was added in the last 1 hour
+  const isRecentlyAdded = () => {
+    if (!customer.createdAt) return false;
+    const createdTime = new Date(customer.createdAt).getTime();
+    const now = Date.now();
+    const oneHourInMs = 60 * 60 * 1000;
+    return now - createdTime < oneHourInMs;
+  };
+
+  const isNewCustomer = isRecentlyAdded();
+
   const showReminderButton =
     (reminderDueToday || isOverdue) && customer.reminderDate;
 
@@ -148,9 +159,10 @@ export function CustomerCard({
         "gradient-card shadow-card",
         "transition-all duration-300 hover:shadow-elevated",
         "animate-slide-up group",
-        isHighlighted
+        isNewCustomer && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
+        !isNewCustomer && isHighlighted
           ? "border-primary/50 bg-primary/5"
-          : "border-border/30 hover:border-primary/40",
+          : !isNewCustomer && "border-border/30 hover:border-primary/40",
         selected && "ring-2 ring-primary border-primary",
         className
       )}

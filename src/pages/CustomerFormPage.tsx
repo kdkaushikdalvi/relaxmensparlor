@@ -84,6 +84,11 @@ const CustomerFormPage = () => {
 
   const [error, setError] = useState("");
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (customer) {
       setFormData({
@@ -290,7 +295,7 @@ const CustomerFormPage = () => {
               )}
             </Button>
             <span className="text-sm font-app">
-              {isEditing ? "Edit" : "Add"}
+              {isEditing ? "Edit" : "Add"} • {stepConfig.title}
             </span>
           </div>
 

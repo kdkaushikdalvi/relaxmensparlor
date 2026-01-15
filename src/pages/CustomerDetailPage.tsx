@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import {
@@ -36,6 +36,11 @@ const CustomerDetailPage = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const customer = id ? getCustomer(id) : undefined;
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   if (!customer) {
     return (

@@ -1,13 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Plus,
   ArrowUpDown,
-  Calendar,
   Bell,
   MessageCircle,
-  CheckSquare,
-  Square,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -136,6 +132,11 @@ const Index = () => {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
     null
   );
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("theme", "light");
@@ -375,16 +376,6 @@ const Index = () => {
           )}
         </div>
       </main>
-
-      {/* ===== FAB ===== */}
-      <div className="fixed bottom-5 right-5 z-40">
-        <Button
-          onClick={() => navigate("/customer/new")}
-          className="h-12 w-12 rounded-full bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/40 flex items-center justify-center"
-        >
-          <Plus className="w-7 h-7 stroke-[3]" />
-        </Button>
-      </div>
 
       {/* ===== Delete Dialog ===== */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

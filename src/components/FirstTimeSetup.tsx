@@ -7,7 +7,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { cn } from "@/lib/utils";
 import brandLogo from "@/assets/brand-logo-transparent.png";
 
-type SetupStep = "welcome" | "owner" | "business" | "mobile" | "complete";
+type SetupStep = "welcome" | "owner" | "mobile" | "business" | "complete";
 
 export function FirstTimeSetup() {
   const { completeSetup } = useSetup();
@@ -29,16 +29,16 @@ export function FirstTimeSetup() {
         setError("Please enter your name");
         return;
       }
-      setStep("business");
-    } else if (step === "business") {
-      if (!businessName.trim()) {
-        setError("Please enter your business name");
-        return;
-      }
       setStep("mobile");
     } else if (step === "mobile") {
       if (!mobileNumber.trim() || mobileNumber.length < 10) {
         setError("Please enter a valid mobile number");
+        return;
+      }
+      setStep("business");
+    } else if (step === "business") {
+      if (!businessName.trim()) {
+        setError("Please enter your business name");
         return;
       }
       setStep("complete");
@@ -120,33 +120,6 @@ export function FirstTimeSetup() {
             </div>
           )}
 
-          {step === "business" && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Store className="w-7 h-7 text-primary" />
-                </div>
-                <h2 className="text-xl font-display font-bold">
-                  Business Name
-                </h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  For messages & headers
-                </p>
-              </div>
-
-              <Input
-                autoFocus
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Shop name"
-                className={cn(
-                  "h-14 text-lg text-center",
-                  error && "border-destructive"
-                )}
-              />
-            </div>
-          )}
-
           {step === "mobile" && (
             <div className="space-y-6">
               <div className="text-center">
@@ -174,6 +147,33 @@ export function FirstTimeSetup() {
                   error && "border-destructive"
                 )}
                 maxLength={10}
+              />
+            </div>
+          )}
+
+          {step === "business" && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Store className="w-7 h-7 text-primary" />
+                </div>
+                <h2 className="text-xl font-display font-bold">
+                  Business Name
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  For messages & headers
+                </p>
+              </div>
+
+              <Input
+                autoFocus
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="Shop name"
+                className={cn(
+                  "h-14 text-lg text-center",
+                  error && "border-destructive"
+                )}
               />
             </div>
           )}
@@ -229,7 +229,7 @@ export function FirstTimeSetup() {
 
           {/* Step Indicators */}
           <div className="flex justify-center gap-2 mt-6">
-            {["welcome", "owner", "business", "mobile", "complete"].map(
+            {["welcome", "owner", "mobile", "business", "complete"].map(
               (s, i) => (
                 <div
                   key={s}

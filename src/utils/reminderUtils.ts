@@ -125,52 +125,22 @@ export function generateReminderMessage(
   offerText?: string,
   template?: MessageTemplate
 ): string {
-  const services =
-    customer.interest.length > 0 ? customer.interest.join(", ") : "आमच्या सेवा";
-
   // Get template from storage if not provided
   const activeTemplate = template || getDefaultTemplateFromStorage();
   
   if (activeTemplate) {
-    // Replace template variables
+    // Replace template variables - only customerName is supported
     let message = activeTemplate.message
-      .replace(/\{customerName\}/g, customer.fullName)
-      .replace(/\{businessName\}/g, businessName)
-      .replace(/\{services\}/g, services)
-      .replace(/\{offer\}/g, offerText ? `🎁 ऑफर: ${offerText}` : '');
+      .replace(/\{customerName\}/g, customer.fullName);
     
     return message;
   }
 
   // Fallback to default message
-  const getVisitText = (dateStr: string) => {
-    const today = new Date();
-    const visitDate = new Date(dateStr);
-
-    const isToday = today.toDateString() === visitDate.toDateString();
-
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-
-    const isTomorrow = tomorrow.toDateString() === visitDate.toDateString();
-
-    if (isToday) return "आज";
-    if (isTomorrow) return "उद्या";
-
-    return visitDate.toLocaleDateString("mr-IN", {
-      day: "numeric",
-      month: "long",
-    });
-  };
-
-  const visitText = getVisitText(customer.visitingDate);
-
   return `नमस्कार ${customer.fullName}! सर,
 
-*${businessName}* मध्ये ${visitText} तुमची अपॉइंटमेंट घ्यायची आहे का? 💈
+आज तुमची अपॉइंटमेंट घ्यायची आहे का? 💈
 
-सेवा: ${services}
-${offerText ? `🎁 ऑफर: ${offerText}\n` : ""}
 कृपया रिप्लाय करा किंवा कॉल करा.
 
 धन्यवाद! 🙏`;

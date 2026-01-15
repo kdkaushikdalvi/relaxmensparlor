@@ -12,9 +12,10 @@ export function Header() {
   const location = useLocation();
 
   const isHomePage = location.pathname === "/";
-  const isCustomerForm = location.pathname === "/customer/new" || location.pathname.endsWith("/edit");
+  const isCustomerForm =
+    location.pathname === "/customer/new" ||
+    location.pathname.endsWith("/edit");
 
-  // Get current step title for form page
   const getFormTitle = () => {
     if (location.pathname === "/customer/new") {
       return "Add Customer";
@@ -23,50 +24,45 @@ export function Header() {
   };
 
   const handleForceRefresh = () => {
-    // Clear all caches
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        names.forEach(name => {
-          caches.delete(name);
-        });
+    if ("caches" in window) {
+      caches.keys().then((names) => {
+        names.forEach((name) => caches.delete(name));
       });
     }
-    // Clear service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(registration => {
-          registration.unregister();
-        });
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
       });
     }
-    // Force reload
+
     window.location.reload();
   };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-primary/10 safe-top">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/60 border-b border-primary/10 shadow-lg shadow-black/5 safe-top">
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Left Section */}
+        {/* LEFT */}
         <div className="flex items-center gap-4">
           {/* Menu Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="w-11 h-11 rounded-xl border border-border/40 bg-background/60 shadow-sm hover:shadow-md transition-all"
+            className="w-11 h-11 rounded-xl border border-border/40 bg-background/60 shadow-sm hover:shadow-md transition-all active:scale-95"
           >
             <Menu className="w-5 h-5 text-primary" />
           </Button>
 
-          {/* Animated Logo */}
+          {/* Logo */}
           <div className="relative">
-            {/* Glow pulse */}
-            <div className="absolute inset-0 rounded-full bg-primary/30 blur-md animate-pulse" />
+            {/* Glow */}
+            <div className="absolute inset-0 rounded-full bg-primary/40 blur-lg animate-pulse" />
 
-            {/* Rotating dashed ring */}
+            {/* Rotating ring */}
             <div className="absolute -inset-1 rounded-full border-2 border-dashed border-primary/50 animate-spin-slow" />
 
-            {/* Logo container */}
+            {/* Image */}
             <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/60 shadow-lg bg-background">
               <img
                 src={brandLogo}
@@ -78,36 +74,57 @@ export function Header() {
 
           {/* Business Info */}
           <div className="leading-tight">
-            <h1 className="text-base font-app tracking-tight font-app uppercase">
+            <h1 className="font-app uppercase text-bold text-purple-600 text-bold">
               {profile.businessName}
             </h1>
-            <p className="text-xs text-muted-foreground font-app uppercase">
+            <p className="text-xs  uppercase text-pink-500 text-bold">
               {profile.ownerName}
             </p>
           </div>
         </div>
 
-        {/* Right Section */}
+        {/* RIGHT */}
         <div className="flex items-center gap-2">
-          {/* Force Refresh Button */}
+          {/* Force Refresh */}
           <Button
             variant="ghost"
             size="icon"
             onClick={handleForceRefresh}
-            className="w-10 h-10 rounded-xl"
             title="Force Refresh"
+            className="w-11 h-11 rounded-xl relative overflow-hidden transition-all duration-300 active:scale-90 hover:-translate-y-0.5"
+            style={{
+              background:
+                "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
+              boxShadow: "0 8px 20px hsla(269.8, 70.3%, 55.1%, 0.45)",
+            }}
           >
-            <RefreshCw className="w-4 h-4 text-muted-foreground" />
+            {/* Glow layer */}
+            <div className="absolute inset-0 bg-[hsl(269.8,70.3%,55.1%)] opacity-40 blur-lg" />
+
+            {/* Glass shine */}
+            <div className="absolute inset-0 bg-white/10" />
+
+            {/* Icon */}
+            <RefreshCw className="w-5 h-5 text-white relative z-10 transition-transform duration-300 group-hover:rotate-180" />
           </Button>
 
-          {/* Add Customer Button - Only on home page */}
+          {/* Add Button */}
           {isHomePage && (
             <Button
               onClick={() => navigate("/customer/new")}
-              className="h-10 px-4 rounded-xl bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/30"
+              className="w-11 h-11 rounded-xl relative overflow-hidden transition-all duration-300 active:scale-90 hover:-translate-y-0.5"
+              style={{
+                background:
+                  "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
+                boxShadow: "0 8px 20px hsla(269.8, 70.3%, 55.1%, 0.45)",
+              }}
+              title="Add Customer"
             >
-              <Plus className="w-5 h-5 mr-1" />
-              Add
+              {/* Glow */}
+              <div className="absolute inset-0 rounded-full bg-[hsl(269.8,70.3%,55.1%)] blur-md opacity-60 animate-pulse" />
+
+              {/* Icon */}
+              <Plus className="w-6 h-6 relative z-10" />
             </Button>
           )}
         </div>

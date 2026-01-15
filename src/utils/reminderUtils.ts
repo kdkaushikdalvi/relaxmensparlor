@@ -84,7 +84,9 @@ export function isReminderDueToday(customer: Customer): boolean {
 /**
  * Validate phone number (10 digits)
  */
-export function isValidPhoneNumber(phone: string): boolean {
+export function isValidPhoneNumber(phone?: string): boolean {
+  if (!phone) return false;
+
   const digitsOnly = phone.replace(/\D/g, "");
   return digitsOnly.length === 10;
 }
@@ -105,10 +107,10 @@ export function formatPhoneForWhatsApp(
  */
 function getDefaultTemplateFromStorage(): MessageTemplate | null {
   try {
-    const stored = localStorage.getItem('relax-salon-message-templates');
+    const stored = localStorage.getItem("relax-salon-message-templates");
     if (stored) {
       const templates: MessageTemplate[] = JSON.parse(stored);
-      return templates.find(t => t.isDefault) || templates[0] || null;
+      return templates.find((t) => t.isDefault) || templates[0] || null;
     }
   } catch {
     // Fall through to return null
@@ -127,12 +129,14 @@ export function generateReminderMessage(
 ): string {
   // Get template from storage if not provided
   const activeTemplate = template || getDefaultTemplateFromStorage();
-  
+
   if (activeTemplate) {
     // Replace template variables - only customerName is supported
-    let message = activeTemplate.message
-      .replace(/\{customerName\}/g, customer.fullName);
-    
+    let message = activeTemplate.message.replace(
+      /\{customerName\}/g,
+      customer.fullName
+    );
+
     return message;
   }
 
@@ -155,7 +159,12 @@ export function openWhatsAppReminder(
   template?: MessageTemplate
 ): void {
   const phone = formatPhoneForWhatsApp(customer.mobileNumber);
-  const message = generateReminderMessage(customer, businessName, undefined, template);
+  const message = generateReminderMessage(
+    customer,
+    businessName,
+    undefined,
+    template
+  );
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
   window.open(whatsappUrl, "_blank");

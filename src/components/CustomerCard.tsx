@@ -231,7 +231,7 @@ export function CustomerCard({
                   : getAvatarTextColor(customer.fullName)
               )}
             >
-              {customer.fullName.charAt(0).toUpperCase()}
+              {customer?.fullName?.charAt(0)?.toUpperCase()}
             </span>
           </div>
 
@@ -248,18 +248,18 @@ export function CustomerCard({
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mt-1 text-xs sm:text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5" />
-                {customer.mobileNumber}
+                <span className="text-green-700">{customer.mobileNumber}</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
-                {formattedDate}
+                <span className="text-orange-400">{formattedDate}</span>
               </span>
             </div>
 
             {/* Interests */}
-            {customer.interest.length > 0 && (
+            {customer?.interest?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
-                {customer.interest.slice(0, 2).map((interest) => (
+                {customer?.interest?.slice(0, 2)?.map((interest) => (
                   <Badge
                     key={interest}
                     variant="soft"

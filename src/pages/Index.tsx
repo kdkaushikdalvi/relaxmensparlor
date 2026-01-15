@@ -1,11 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowUpDown,
-  Bell,
-  MessageCircle,
-} from "lucide-react";
-import { format } from "date-fns";
+import { ArrowUpDown, Bell } from "lucide-react";
+import { format, isValid, parseISO } from "date-fns";
 import { useCustomers } from "@/hooks/useCustomers";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
@@ -53,35 +49,57 @@ import {
 
 /* -------------------- Types -------------------- */
 
-type DateGroup = "Today" | "Yesterday" | string;
+type DateGroup = "Today" | "Yesterday" | "Unknown Date" | string;
 type SortType = "date" | "name" | "reminder" | "newest";
 
-/* -------------------- Date Group Helpers -------------------- */
+/* -------------------- Date Helpers -------------------- */
 
-const getDateGroup = (dateString: string): DateGroup => {
-  const date = new Date(dateString);
+const safeParseDate = (dateString?: string): Date | null => {
+  if (!dateString) return null;
+
+  let d: Date;
+
+  try {
+    d = parseISO(dateString);
+  } catch {
+    d = new Date(dateString);
+  }
+
+  if (!isValid(d)) return null;
+  return d;
+};
+
+const getDateGroup = (dateString?: string): DateGroup => {
+  const date = safeParseDate(dateString);
+  if (!date) return "Unknown Date";
+
   const today = new Date();
   const yesterday = new Date();
 
-  yesterday.setDate(yesterday.getDate() - 1);
   today.setHours(0, 0, 0, 0);
+  yesterday.setDate(today.getDate() - 1);
   yesterday.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
 
-  if (date.getTime() === today.getTime()) return "Today";
-  if (date.getTime() === yesterday.getTime()) return "Yesterday";
-  return format(date, "dd MMM yyyy");
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+
+  if (d.getTime() === today.getTime()) return "Today";
+  if (d.getTime() === yesterday.getTime()) return "Yesterday";
+
+  return format(d, "dd MMM yyyy");
 };
 
 const groupCustomersByDate = (
   customers: Customer[]
 ): Record<string, Customer[]> => {
   const groups: Record<string, Customer[]> = {};
+
   customers.forEach((customer) => {
-    const group = getDateGroup(customer.visitingDate);
+    const group = getDateGroup(customer.visitingDate || customer.createdAt);
     if (!groups[group]) groups[group] = [];
     groups[group].push(customer);
   });
+
   return groups;
 };
 
@@ -91,9 +109,17 @@ const sortDateGroups = (groups: string[]): string[] => {
     if (b === "Today") return 1;
     if (a === "Yesterday") return -1;
     if (b === "Yesterday") return 1;
-    const dateA = new Date(a.split(" ").reverse().join(" "));
-    const dateB = new Date(b.split(" ").reverse().join(" "));
-    return dateB.getTime() - dateA.getTime();
+    if (a === "Unknown Date") return 1;
+    if (b === "Unknown Date") return -1;
+
+    const da = safeParseDate(a);
+    const db = safeParseDate(b);
+
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+
+    return db.getTime() - da.getTime();
   });
 };
 
@@ -105,12 +131,16 @@ const sortCustomers = (
 
   return [...customers].sort((a, b) => {
     if (sortType === "name") return a.fullName.localeCompare(b.fullName);
+
     if (sortType === "newest") {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      const da = safeParseDate(a.createdAt)?.getTime() || 0;
+      const db = safeParseDate(b.createdAt)?.getTime() || 0;
+      return db - da;
     }
-    return (
-      new Date(b.visitingDate).getTime() - new Date(a.visitingDate).getTime()
-    );
+
+    const da = safeParseDate(a.visitingDate)?.getTime() || 0;
+    const db = safeParseDate(b.visitingDate)?.getTime() || 0;
+    return db - da;
   });
 };
 
@@ -133,7 +163,6 @@ const Index = () => {
     null
   );
 
-  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -251,22 +280,14 @@ const Index = () => {
     setDeleteDialogOpen(true);
   };
 
-  const day = format(new Date(), "EEE"); // Sat
-  const dateNum = format(new Date(), "dd"); // 10
-  const month = format(new Date(), "MMM"); // Jan
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
       <Header />
 
       <main className="pb-24 relative z-10">
-        {/* ===== Filters Accordion ===== */}
         <div className="px-4 py-3 sticky top-[64px] z-30">
           <Accordion type="single" collapsible>
-            <AccordionItem
-              value="filters"
-              className="border rounded-2xl shadow-lg"
-            >
+            <AccordionItem value="filters" className="border rounded-2xl shadow-lg">
               <AccordionTrigger className="px-4 py-3">
                 <span className="font-app no-underline">
                   🔍 Search, Filters & Sort
@@ -274,14 +295,12 @@ const Index = () => {
               </AccordionTrigger>
 
               <AccordionContent className="p-4 space-y-4">
-                {/* Search */}
                 <SearchBar
                   value={searchQuery}
                   onChange={setSearchQuery}
                   placeholder="Search by name or phone..."
                 />
 
-                {/* Reminder Filters */}
                 <div className="rounded-xl p-4 border">
                   <div className="flex items-center gap-2 mb-3">
                     <Bell className="w-5 h-5 text-primary" />
@@ -310,7 +329,6 @@ const Index = () => {
                   </div>
                 </div>
 
-                {/* Bulk + Sort */}
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="text-sm text-muted-foreground">
                     {filteredCustomers.length} customers
@@ -344,7 +362,6 @@ const Index = () => {
           </Accordion>
         </div>
 
-        {/* ===== Customer List ===== */}
         <div className="px-4">
           {customers.length === 0 ? (
             <EmptyState type="no-customers" />
@@ -360,7 +377,7 @@ const Index = () => {
                   <div className="font-bold text-lg mb-3">{group}</div>
 
                   <div className="space-y-4">
-                    {groupCustomers.map((customer, index) => (
+                    {groupCustomers.map((customer) => (
                       <CustomerCard
                         key={customer.id}
                         customer={customer}
@@ -377,7 +394,6 @@ const Index = () => {
         </div>
       </main>
 
-      {/* ===== Delete Dialog ===== */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

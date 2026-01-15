@@ -294,7 +294,7 @@ const CustomerFormPage = () => {
                 <ArrowLeft className="w-6 h-6" />
               )}
             </Button>
-            <span className="text-sm font-app">
+            <span className="text-sm font-app flex justify-center items-center w-full text-[18px] font-bold text-purple-600">
               {isEditing ? "Edit" : "Add"} • {stepConfig.title}
             </span>
           </div>
@@ -322,17 +322,10 @@ const CustomerFormPage = () => {
 
       {/* Content */}
       <div className="flex-1 p-6 space-y-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-app">{stepConfig.title}</h2>
-          <p className="text-muted-foreground text-sm">{stepConfig.subtitle}</p>
-        </div>
-
         {renderStepContent()}
-
         {error && (
           <p className="text-sm text-destructive text-center">{error}</p>
         )}
-
         {/* Action Button */}
         <Button
           onClick={handleNext}

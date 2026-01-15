@@ -44,9 +44,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const VARIABLE_EXAMPLES: Record<string, string> = {
   customerName: "Rahul",
-  businessName: "Relax Men's Parlor",
-  services: "Haircut & Beard",
-  offer: "20% OFF",
 };
 
 export function MessageTemplateManager() {

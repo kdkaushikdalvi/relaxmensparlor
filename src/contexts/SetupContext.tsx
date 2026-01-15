@@ -60,8 +60,8 @@ export function SetupProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('relax-parlor-profile');
     localStorage.removeItem('relax-salon-customers');
-    localStorage.removeItem('app_pin_verified_date');
     localStorage.removeItem('message-templates');
+    localStorage.removeItem('relax-salon-message-templates');
     setSetupData(DEFAULT_SETUP);
     window.location.reload();
   };

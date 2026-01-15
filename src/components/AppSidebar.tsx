@@ -9,12 +9,9 @@ import {
   AlertTriangle,
   Settings,
   Globe,
-  Upload,
-  History,
   MessageSquare,
   Download,
 } from "lucide-react";
-import { format } from "date-fns";
 import { QRCodeSVG } from "qrcode.react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSetup } from "@/contexts/SetupContext";
@@ -26,7 +23,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MessageTemplateManager } from "./MessageTemplateManager";
 import brandLogo from "@/assets/brand-logo2.png";
 
 import {
@@ -257,19 +253,12 @@ export function AppSidebar() {
             title="Message Templates"
             icon={<MessageSquare className="text-purple-600" />}
           >
-            <MessageTemplateManager />
-          </PremiumAccordion>
-
-          <PremiumAccordion
-            title="Reminder History"
-            icon={<History className="text-orange-600" />}
-          >
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => navigate("/reminder-history")}
+              onClick={() => navigate("/message-templates")}
             >
-              View History
+              Manage Templates
             </Button>
           </PremiumAccordion>
 

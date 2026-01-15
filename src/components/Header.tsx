@@ -1,5 +1,5 @@
-import { Menu } from "lucide-react";
-import { format } from "date-fns";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Menu, Plus, RefreshCw } from "lucide-react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,40 @@ import brandLogo from "@/assets/brand-logo.png";
 export function Header() {
   const { profile } = useProfile();
   const { toggleSidebar } = useSidebar();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isHomePage = location.pathname === "/";
+  const isCustomerForm = location.pathname === "/customer/new" || location.pathname.endsWith("/edit");
+
+  // Get current step title for form page
+  const getFormTitle = () => {
+    if (location.pathname === "/customer/new") {
+      return "Add Customer";
+    }
+    return "Edit Customer";
+  };
+
+  const handleForceRefresh = () => {
+    // Clear all caches
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          caches.delete(name);
+        });
+      });
+    }
+    // Clear service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+          registration.unregister();
+        });
+      });
+    }
+    // Force reload
+    window.location.reload();
+  };
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-primary/10 safe-top">
@@ -51,6 +85,31 @@ export function Header() {
               {profile.ownerName}
             </p>
           </div>
+        </div>
+
+        {/* Right Section */}
+        <div className="flex items-center gap-2">
+          {/* Force Refresh Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleForceRefresh}
+            className="w-10 h-10 rounded-xl"
+            title="Force Refresh"
+          >
+            <RefreshCw className="w-4 h-4 text-muted-foreground" />
+          </Button>
+
+          {/* Add Customer Button - Only on home page */}
+          {isHomePage && (
+            <Button
+              onClick={() => navigate("/customer/new")}
+              className="h-10 px-4 rounded-xl bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/30"
+            >
+              <Plus className="w-5 h-5 mr-1" />
+              Add
+            </Button>
+          )}
         </div>
       </div>
     </header>

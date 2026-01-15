@@ -25,10 +25,8 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
     name: 'मराठी टेम्पलेट',
     message: `नमस्कार {customerName}! सर,
 
-*{businessName}* मध्ये आज तुमची अपॉइंटमेंट घ्यायची आहे का? 💈
+आज तुमची अपॉइंटमेंट घ्यायची आहे का? 💈
 
-सेवा: {services}
-{offer}
 कृपया रिप्लाय करा किंवा कॉल करा.
 
 धन्यवाद! 🙏`,
@@ -40,10 +38,8 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
     name: 'English Template',
     message: `Hello {customerName}!
 
-We'd love to see you at *{businessName}* today! 💈
+We'd love to see you today! 💈
 
-Services: {services}
-{offer}
 Please reply or call us to confirm.
 
 Thank you! 🙏`,

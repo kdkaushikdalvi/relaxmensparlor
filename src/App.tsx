@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { PinProtection } from "@/components/PinProtection";
 import { CustomerProvider } from "@/contexts/CustomerContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
@@ -16,6 +15,7 @@ import Index from "./pages/Index";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
 import CustomerFormPage from "./pages/CustomerFormPage";
 import ReminderHistoryPage from "./pages/ReminderHistoryPage";
+import MessageTemplatesPage from "./pages/MessageTemplatesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,17 +33,16 @@ function AppContent() {
         <div className="min-h-screen flex w-full">
           <AppSidebar />
           <main className="flex-1">
-            <PinProtection>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/customer/new" element={<CustomerFormPage />} />
-                <Route path="/customer/:id" element={<CustomerDetailPage />} />
-                <Route path="/customer/:id/edit" element={<CustomerFormPage />} />
-                <Route path="/reminder-history" element={<ReminderHistoryPage />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </PinProtection>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/customer/new" element={<CustomerFormPage />} />
+              <Route path="/customer/:id" element={<CustomerDetailPage />} />
+              <Route path="/customer/:id/edit" element={<CustomerFormPage />} />
+              <Route path="/reminder-history" element={<ReminderHistoryPage />} />
+              <Route path="/message-templates" element={<MessageTemplatesPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </main>
         </div>
       </SidebarProvider>

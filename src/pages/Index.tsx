@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpDown, Bell } from "lucide-react";
+import { ArrowUpDown, History } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCustomers } from "@/hooks/useCustomers";
 import { Header } from "@/components/Header";
@@ -8,6 +8,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { CustomerCard } from "@/components/CustomerCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Customer } from "@/types/customer";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +18,7 @@ import {
   filterByReminderCategory,
   getReminderCategoryCounts,
   sortByReminderPriority,
-  canSendReminderForCategory,
+  getTotalHistoryCount,
 } from "@/utils/reminderCategoryUtils";
 import {
   wasReminderSentToday,
@@ -176,6 +177,11 @@ const Index = () => {
     [customers]
   );
 
+  const totalHistoryCount = useMemo(
+    () => getTotalHistoryCount(customers),
+    [customers]
+  );
+
   const filteredCustomers = useMemo(() => {
     const searched = searchCustomers(searchQuery);
     const filtered = filterByReminderCategory(searched, reminderFilter);
@@ -186,25 +192,6 @@ const Index = () => {
     () => groupCustomersByDate(filteredCustomers),
     [filteredCustomers]
   );
-
-  const selectableCustomers = useMemo(
-    () =>
-      filteredCustomers.filter(
-        (c) =>
-          canSendReminderForCategory(c) &&
-          !wasReminderSentToday(c) &&
-          isValidPhoneNumber(c.mobileNumber)
-      ),
-    [filteredCustomers]
-  );
-
-  const handleSelectAll = useCallback(() => {
-    if (selectedIds.size === selectableCustomers.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(selectableCustomers.map((c) => c.id)));
-    }
-  }, [selectableCustomers, selectedIds]);
 
   const handleSelectChange = useCallback(
     (customerId: string, selected: boolean) => {
@@ -217,41 +204,6 @@ const Index = () => {
     },
     []
   );
-
-  const handleBulkSendReminders = useCallback(() => {
-    const today = format(new Date(), "yyyy-MM-dd");
-    let sentCount = 0;
-
-    selectedIds.forEach((id) => {
-      const customer = customers.find((c) => c.id === id);
-      if (
-        customer &&
-        canSendReminderForCategory(customer) &&
-        !wasReminderSentToday(customer)
-      ) {
-        updateCustomer(id, {
-          reminderSentDates: [...(customer.reminderSentDates || []), today],
-          reminderHistory: [
-            ...(customer.reminderHistory || []),
-            {
-              sentAt: new Date().toISOString(),
-              message: `WhatsApp reminder sent (bulk)`,
-            },
-          ],
-        });
-        openWhatsAppReminder(customer, profile.businessName);
-        sentCount++;
-      }
-    });
-
-    setSelectedIds(new Set());
-    setBulkSelectMode(false);
-
-    toast({
-      title: `${sentCount} reminder${sentCount !== 1 ? "s" : ""} sent`,
-      description: "WhatsApp windows opened for selected customers.",
-    });
-  }, [selectedIds, customers, updateCustomer, profile.businessName, toast]);
 
   const handleDeleteConfirm = useCallback(() => {
     if (customerToDelete) {
@@ -303,14 +255,15 @@ const Index = () => {
 
                 <div className="rounded-xl p-4 border">
                   <div className="flex items-center gap-2 mb-3">
-                    <Bell className="w-5 h-5 text-primary" />
-                    <span className="font-app">Reminders</span>
+                    <History className="w-5 h-5 text-primary" />
+                    <span className="font-app">Filter</span>
                   </div>
 
                   <div className="flex gap-2 flex-wrap">
                     {REMINDER_CATEGORIES.map((cat) => {
                       const count = reminderCounts[cat.value];
                       const isActive = reminderFilter === cat.value;
+                      const showHistoryBadge = cat.value === 'sent';
 
                       return (
                         <Button
@@ -318,11 +271,19 @@ const Index = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => setReminderFilter(cat.value)}
-                          className={`rounded-full px-4 py-1.5 text-xs ${
+                          className={`rounded-full px-4 py-1.5 text-xs relative ${
                             isActive ? "bg-primary text-white" : "border"
                           }`}
                         >
                           {cat.label} ({count})
+                          {showHistoryBadge && totalHistoryCount > 0 && (
+                            <Badge 
+                              variant="secondary" 
+                              className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-primary-foreground"
+                            >
+                              {totalHistoryCount}
+                            </Badge>
+                          )}
                         </Button>
                       );
                     })}

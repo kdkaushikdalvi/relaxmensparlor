@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, ArrowLeft, Save, Check, Bell, X } from "lucide-react";
+import { ArrowRight, ArrowLeft, Save, Check, X } from "lucide-react";
 import {
   CustomerFormData,
-  REMINDER_INTERVALS,
   ReminderInterval,
 } from "@/types/customer";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -11,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { calculateReminderDate } from "@/utils/reminderUtils";
 
 export const INTEREST_OPTIONS = [
   // ⭐ Priority services
@@ -29,9 +27,9 @@ export const INTEREST_OPTIONS = [
   "थ्रेडिंग",
 ] as const;
 
-type FormStep = "basic" | "reminder" | "interests";
+type FormStep = "basic" | "interests";
 
-const STEPS: FormStep[] = ["basic", "reminder", "interests"];
+const STEPS: FormStep[] = ["basic", "interests"];
 
 const STEP_CONFIG: Record<
   FormStep,
@@ -41,11 +39,6 @@ const STEP_CONFIG: Record<
     title: "Details",
     subtitle: "Name & mobile",
     required: true,
-  },
-  reminder: {
-    title: "Reminder",
-    subtitle: "When to remind?",
-    required: false,
   },
   interests: {
     title: "Services",
@@ -189,40 +182,6 @@ const CustomerFormPage = () => {
               placeholder="10-digit Mobile Number"
               className={cn("h-14 text-lg", error && "border-destructive")}
             />
-          </div>
-        );
-
-      case "reminder":
-        return (
-          <div className="flex flex-wrap gap-3 justify-center">
-            {REMINDER_INTERVALS.map((interval) => (
-              <button
-                key={interval.value}
-                type="button"
-                onClick={() => {
-                  const reminderDate = calculateReminderDate(
-                    formData.visitingDate,
-                    interval.value
-                  );
-                  setFormData((prev) => ({
-                    ...prev,
-                    reminderInterval: interval.value,
-                    reminderDate,
-                  }));
-                }}
-                className={cn(
-                  "px-5 py-3 rounded-full text-base font-app",
-                  formData.reminderInterval === interval.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                )}
-              >
-                {formData.reminderInterval === interval.value && (
-                  <Bell className="w-4 h-4 inline mr-1" />
-                )}
-                {interval.label}
-              </button>
-            ))}
           </div>
         );
 

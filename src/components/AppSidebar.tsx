@@ -1,13 +1,9 @@
-// AppSidebar.tsx
+// AppSidebar.tsx - Simplified navigation with page routes
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  User,
-  Store,
-  Pencil,
   Trash2,
   AlertTriangle,
-  Globe,
   MessageSquare,
   Download,
   History,
@@ -15,27 +11,15 @@ import {
   RotateCcw,
   Share2,
 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
-import { useProfile } from "@/contexts/ProfileContext";
 import { useSetup } from "@/contexts/SetupContext";
-import { useCustomers } from "@/hooks/useCustomers";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import brandLogo from "@/assets/brand-logo2.png";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 
 import {
   AlertDialog,
@@ -57,26 +41,12 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 
-const WEBSITE_URL = "https://relaxmensparlor.lovable.app";
-
 export function AppSidebar() {
   const navigate = useNavigate();
-  const { profile, updateProfile } = useProfile();
   const { resetSetup, resetAll, setupData } = useSetup();
-  const { customers } = useCustomers();
   const { toggleSidebar } = useSidebar();
 
-  const [editOpen, setEditOpen] = useState(false);
-  const [editField, setEditField] = useState<
-    "ownerName" | "businessName" | null
-  >(null);
-  const [editValue, setEditValue] = useState("");
-  const [copied, setCopied] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
-
-  // Sheet states for each section
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
   useEffect(() => {
@@ -88,19 +58,6 @@ export function AppSidebar() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  const startEditing = (field: "ownerName" | "businessName") => {
-    setEditField(field);
-    setEditValue(profile[field]);
-    setEditOpen(true);
-  };
-
-  const saveEdit = () => {
-    if (editField && editValue.trim()) {
-      updateProfile({ [editField]: editValue.trim() });
-    }
-    setEditOpen(false);
-  };
-
   const resetProfile = () => {
     localStorage.removeItem("relax-salon-setup");
     localStorage.removeItem("relax-parlor-profile");
@@ -111,11 +68,11 @@ export function AppSidebar() {
   const resetCustomers = () => {
     const defaultCustomer = {
       id: crypto.randomUUID(),
-      fullName: setupData.ownerName || "Test Customer",
+      fullName: setupData.ownerName || "New Customer",
       mobileNumber: setupData.mobileNumber || "9999999999",
       visitingDate: new Date().toISOString().split("T")[0],
       interest: ["Haircut"],
-      preferences: "Default test customer",
+      preferences: "",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       reminderInterval: "1week" as const,
@@ -137,29 +94,16 @@ export function AppSidebar() {
     if (outcome === "accepted") setInstallPrompt(null);
   };
 
-  const copyToClipboard = async () => {
-    await navigator.clipboard.writeText(WEBSITE_URL);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const shareWebsite = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: profile.businessName,
-        text: `Check out ${profile.businessName}!`,
-        url: WEBSITE_URL,
-      });
-    } else {
-      copyToClipboard();
-    }
-  };
-
   const now = new Date();
   const day = now.toLocaleDateString("mr-IN", { weekday: "short" });
   const month = now.toLocaleDateString("mr-IN", { month: "short" });
   const dateNum = now.getDate();
   const shortDate = `${dateNum} ${month}, ${day}`;
+
+  const navigateTo = (path: string) => {
+    navigate(path);
+    toggleSidebar();
+  };
 
   return (
     <Sidebar className="font-app border-r bg-gradient-to-b from-white to-white">
@@ -185,41 +129,35 @@ export function AppSidebar() {
 
       <SidebarContent className="px-3 pb-6">
         <div className="space-y-2">
-          {/* Profile */}
+          {/* Profile - navigates to page */}
           <NavButton
             icon={<UserCircle className="w-5 h-5 text-indigo-600" />}
             label="Profile"
-            onClick={() => setProfileOpen(true)}
+            onClick={() => navigateTo("/profile")}
           />
 
-          {/* Template */}
+          {/* Template - navigates to page */}
           <NavButton
             icon={<MessageSquare className="w-5 h-5 text-purple-600" />}
             label="Template"
-            onClick={() => {
-              navigate("/message-templates");
-              toggleSidebar();
-            }}
+            onClick={() => navigateTo("/message-templates")}
           />
 
-          {/* History */}
+          {/* History - navigates to page */}
           <NavButton
             icon={<History className="w-5 h-5 text-blue-600" />}
             label="History"
-            onClick={() => {
-              navigate("/reminder-history");
-              toggleSidebar();
-            }}
+            onClick={() => navigateTo("/reminder-history")}
           />
 
-          {/* Share */}
+          {/* Share - navigates to page */}
           <NavButton
             icon={<Share2 className="w-5 h-5 text-sky-600" />}
             label="Share"
-            onClick={() => setShareOpen(true)}
+            onClick={() => navigateTo("/share")}
           />
 
-          {/* Reset */}
+          {/* Reset - opens sheet */}
           <NavButton
             icon={<RotateCcw className="w-5 h-5 text-red-500" />}
             label="Reset"
@@ -237,58 +175,6 @@ export function AppSidebar() {
           )}
         </div>
       </SidebarContent>
-
-      {/* Profile Sheet */}
-      <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
-        <SheetContent side="left" className="w-80">
-          <SheetHeader>
-            <SheetTitle>Profile Settings</SheetTitle>
-            <SheetDescription>Manage your profile information</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-3">
-            <SettingRow
-              icon={<User className="text-blue-600" />}
-              label="Owner"
-              value={profile.ownerName}
-              onEdit={() => startEditing("ownerName")}
-            />
-            <SettingRow
-              icon={<Store className="text-emerald-600" />}
-              label="Business"
-              value={profile.businessName}
-              onEdit={() => startEditing("businessName")}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Share Sheet */}
-      <Sheet open={shareOpen} onOpenChange={setShareOpen}>
-        <SheetContent side="left" className="w-80">
-          <SheetHeader>
-            <SheetTitle>Share Website</SheetTitle>
-            <SheetDescription>Share your business with others</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <div className="bg-white p-3 rounded-xl shadow border">
-              <QRCodeSVG value={WEBSITE_URL} size={140} />
-            </div>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={copyToClipboard}
-            >
-              {copied ? "Copied!" : "Copy Link"}
-            </Button>
-            <Button variant="outline" className="w-full" onClick={shareWebsite}>
-              Share
-            </Button>
-            <Button className="w-full" onClick={() => window.open(WEBSITE_URL)}>
-              Open Website
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
 
       {/* Reset Sheet */}
       <Sheet open={resetOpen} onOpenChange={setResetOpen}>
@@ -311,21 +197,6 @@ export function AppSidebar() {
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit</DialogTitle>
-            <DialogDescription>Update value</DialogDescription>
-          </DialogHeader>
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-          />
-          <Button onClick={saveEdit}>Save</Button>
-        </DialogContent>
-      </Dialog>
     </Sidebar>
   );
 }
@@ -361,25 +232,6 @@ function NavButton({
         {label}
       </span>
     </button>
-  );
-}
-
-function SettingRow({ icon, label, value, onEdit }: any) {
-  return (
-    <div className="flex items-center justify-between p-3 rounded-xl bg-white border">
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
-          {icon}
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">{label}</p>
-          <p className="font-app">{value}</p>
-        </div>
-      </div>
-      <Button size="icon" variant="ghost" onClick={onEdit}>
-        <Pencil className="w-4 h-4 text-gray-600" />
-      </Button>
-    </div>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Check, Star, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Pencil, Trash2, Check, Star, X, ArrowLeft } from "lucide-react";
 import {
   useMessageTemplates,
   MessageTemplate,
@@ -9,13 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +32,10 @@ const VARIABLE_EXAMPLES: Record<string, string> = {
   customerName: "Rahul",
 };
 
+type ViewMode = "list" | "edit" | "create";
+
 export function MessageTemplateManager() {
+  const navigate = useNavigate();
   const {
     templates,
     addTemplate,
@@ -48,24 +45,30 @@ export function MessageTemplateManager() {
   } = useMessageTemplates();
   const { toast } = useToast();
 
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] =
-    useState<MessageTemplate | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [editingTemplate, setEditingTemplate] = useState<MessageTemplate | null>(null);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleOpenCreate = () => {
+  const handleCreate = () => {
     setEditingTemplate(null);
     setName("");
     setMessage("");
-    setEditDialogOpen(true);
+    setViewMode("create");
   };
 
-  const handleOpenEdit = (template: MessageTemplate) => {
+  const handleEdit = (template: MessageTemplate) => {
     setEditingTemplate(template);
     setName(template.name);
     setMessage(template.message);
-    setEditDialogOpen(true);
+    setViewMode("edit");
+  };
+
+  const handleCancel = () => {
+    setViewMode("list");
+    setEditingTemplate(null);
+    setName("");
+    setMessage("");
   };
 
   const handleSave = () => {
@@ -86,7 +89,7 @@ export function MessageTemplateManager() {
       toast({ title: "Template created" });
     }
 
-    setEditDialogOpen(false);
+    handleCancel();
   };
 
   const handleDelete = (id: string) => {
@@ -121,52 +124,130 @@ export function MessageTemplateManager() {
 
   const usedVariables = Array.from(new Set(message.match(/{\w+}/g) || []));
 
+  // Edit/Create View
+  if (viewMode === "edit" || viewMode === "create") {
+    return (
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleCancel}
+            className="h-10 w-10 rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h2 className="text-lg font-app">
+            {viewMode === "edit" ? "Edit Template" : "Create Template"}
+          </h2>
+        </div>
+
+        {/* Form */}
+        <div className="space-y-4">
+          <div className="bg-card rounded-xl border p-4 space-y-3">
+            <label className="text-sm font-app">Template Name</label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Birthday Offer"
+              className="h-12"
+            />
+          </div>
+
+          <div className="bg-card rounded-xl border p-4 space-y-3">
+            <label className="text-sm font-app">Message</label>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Hi {customerName}, we'd love to see you again!"
+              rows={6}
+              className="resize-none"
+            />
+
+            {/* Used variables */}
+            {usedVariables.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {usedVariables.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => removeVariable(v)}
+                    className="text-xs px-2 py-1 rounded-md bg-primary/10 border hover:bg-destructive/10 flex items-center gap-1"
+                    title="Click to remove"
+                  >
+                    {v}
+                    <X className="w-3 h-3" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Variables */}
+          <div className="p-4 rounded-xl bg-muted/40 border space-y-3">
+            <p className="text-sm font-app">Insert Variables</p>
+            <div className="flex flex-wrap gap-2">
+              {Object.keys(VARIABLE_EXAMPLES).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => insertVariable(key)}
+                  className="px-3 py-2 rounded-lg bg-background border text-sm hover:bg-primary/10 transition"
+                >
+                  {`{${key}}`}
+                </button>
+              ))}
+            </div>
+
+            {/* Preview */}
+            {message && (
+              <div className="mt-3 p-3 rounded-lg bg-background border">
+                <p className="text-xs text-muted-foreground mb-1">Preview:</p>
+                <p className="text-sm text-foreground whitespace-pre-wrap">
+                  {renderPreview()}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={handleCancel} className="flex-1 h-12">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="flex-1 h-12 gap-2">
+              <Check className="w-4 h-4" />
+              {viewMode === "edit" ? "Update" : "Create"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // List View
   return (
     <div className="space-y-4">
-      {/* ================= Header ================= */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <Button size="sm" onClick={handleOpenCreate} className="gap-1">
+        <p className="text-sm text-muted-foreground">
+          {templates.length} template{templates.length !== 1 ? "s" : ""}
+        </p>
+        <Button size="sm" onClick={handleCreate} className="gap-1">
           <Plus className="w-4 h-4" />
           New
         </Button>
       </div>
 
-      {/* ================= Variables ================= */}
-      <div className="p-3 rounded-xl bg-muted/40 border space-y-2">
-        <p className="text-xs font-app">Click to insert variables:</p>
-
-        <div className="flex flex-wrap gap-2">
-          {Object.keys(VARIABLE_EXAMPLES).map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => insertVariable(key)}
-              className="px-2 py-1 rounded-md bg-background border text-xs hover:bg-primary/10 transition"
-            >
-              {`{${key}}`}
-            </button>
-          ))}
-        </div>
-
-        {/* Preview */}
-        {message && (
-          <div className="mt-2 text-xs p-2 rounded-md bg-background border">
-            <p className="text-muted-foreground mb-1">Preview (example):</p>
-            <p className="text-foreground whitespace-pre-wrap">
-              {renderPreview()}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* ================= Template List ================= */}
-      <ScrollArea className="h-[300px]">
-        <div className="space-y-3 pr-4">
+      {/* Template List */}
+      <ScrollArea className="h-[400px]">
+        <div className="space-y-3 pr-2">
           {templates.map((template) => (
             <div
               key={template.id}
               className={cn(
-                "p-4 rounded-xl border bg-card/50 hover:bg-card transition-colors",
+                "p-4 rounded-xl border bg-card hover:bg-card/80 transition-colors",
                 template.isDefault && "border-primary/50 bg-primary/5"
               )}
             >
@@ -192,7 +273,7 @@ export function MessageTemplateManager() {
                       size="icon"
                       variant="ghost"
                       onClick={() => handleSetDefault(template.id)}
-                      className="h-8 w-8"
+                      className="h-9 w-9"
                       title="Set as default"
                     >
                       <Star className="w-4 h-4" />
@@ -202,8 +283,8 @@ export function MessageTemplateManager() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => handleOpenEdit(template)}
-                    className="h-8 w-8"
+                    onClick={() => handleEdit(template)}
+                    className="h-9 w-9"
                   >
                     <Pencil className="w-4 h-4" />
                   </Button>
@@ -213,7 +294,7 @@ export function MessageTemplateManager() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-destructive"
+                        className="h-9 w-9 text-destructive"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -242,73 +323,6 @@ export function MessageTemplateManager() {
           ))}
         </div>
       </ScrollArea>
-
-      {/* ================= Edit/Create Dialog ================= */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-lg rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingTemplate ? "Edit Template" : "Create Template"}
-            </DialogTitle>
-            <DialogDescription>
-              Create a reusable message template for WhatsApp reminders
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-app mb-2 block">
-                Template Name
-              </label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Birthday Offer"
-                className="h-11"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-app mb-2 block">Message</label>
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Hi {customerName}, welcome to {businessName}. Enjoy {offer}!"
-                rows={6}
-                className="resize-none"
-              />
-
-              {/* Used variables */}
-              {usedVariables.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {usedVariables.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => removeVariable(v)}
-                      className="text-xs px-2 py-1 rounded-md bg-primary/10 border hover:bg-destructive/10 flex items-center gap-1"
-                      title="Click to remove"
-                    >
-                      {v}
-                      <X className="w-3 h-3" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="gap-1">
-              <Check className="w-4 h-4" />
-              {editingTemplate ? "Update" : "Create"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

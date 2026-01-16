@@ -9,6 +9,7 @@ import {
   Clock,
   Pencil,
   Trash2,
+  History,
 } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { Badge } from "@/components/ui/badge";
@@ -16,16 +17,14 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
-  canSendReminderToday,
-  wasReminderSentToday,
-  isReminderDueToday,
-  isReminderOverdue,
   isValidPhoneNumber,
   openWhatsAppReminder,
 } from "@/utils/reminderUtils";
 import {
   getReminderStatus,
   ReminderStatus,
+  getLastReminderTimeAgo,
+  getSentRemindersCount,
 } from "@/utils/reminderCategoryUtils";
 import { getAvatarGradient, getAvatarTextColor } from "@/utils/avatarColors";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -91,13 +90,11 @@ export function CustomerCard({
     ? format(new Date(customer.visitingDate), "MMM d, yyyy")
     : "No date set";
 
-  const canSendReminder = canSendReminderToday(customer);
-  const reminderSentToday = wasReminderSentToday(customer);
-  const reminderDueToday = isReminderDueToday(customer);
-  const isOverdue = isReminderOverdue(customer);
   const hasValidPhone = isValidPhoneNumber(customer.mobileNumber);
   const reminderStatus = getReminderStatus(customer);
   const statusInfo = statusConfig[reminderStatus];
+  const lastReminderTimeAgo = getLastReminderTimeAgo(customer);
+  const sentCount = getSentRemindersCount(customer);
 
   // Check if customer was added in the last 1 hour
   const isRecentlyAdded = () => {
@@ -109,9 +106,6 @@ export function CustomerCard({
   };
 
   const isNewCustomer = isRecentlyAdded();
-
-  const showReminderButton =
-    (reminderDueToday || isOverdue) && customer.reminderDate;
 
   const handleSendReminder = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -218,7 +212,7 @@ export function CustomerCard({
           <div
             className={cn(
               "flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300",
-              isOverdue
+              reminderStatus === "overdue"
                 ? "bg-destructive/20"
                 : getAvatarGradient(customer.fullName)
             )}
@@ -226,7 +220,7 @@ export function CustomerCard({
             <span
               className={cn(
                 "text-base sm:text-lg font-display font-app",
-                isOverdue
+                reminderStatus === "overdue"
                   ? "text-destructive"
                   : getAvatarTextColor(customer.fullName)
               )}
@@ -256,6 +250,19 @@ export function CustomerCard({
               </span>
             </div>
 
+            {/* Last Reminder Sent */}
+            {lastReminderTimeAgo && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                <History className="w-3.5 h-3.5" />
+                <span>Last reminder: {lastReminderTimeAgo}</span>
+                {sentCount > 1 && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">
+                    {sentCount} sent
+                  </Badge>
+                )}
+              </div>
+            )}
+
             {/* Interests */}
             {customer?.interest?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -280,8 +287,8 @@ export function CustomerCard({
             )}
 
             {/* Reminder Status & Button */}
-            {customer.reminderDate && reminderStatus !== "none" && (
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 pt-2 border-t border-border/30">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 pt-2 border-t border-border/30">
+              {customer.reminderDate && reminderStatus !== "none" && (
                 <Badge
                   variant="outline"
                   className={cn(
@@ -297,33 +304,20 @@ export function CustomerCard({
                     </span>
                   )}
                 </Badge>
+              )}
 
-                {showReminderButton && (
-                  <Button
-                    size="sm"
-                    variant={reminderSentToday ? "outline" : "default"}
-                    disabled={reminderSentToday || !hasValidPhone}
-                    onClick={handleSendReminder}
-                    className={cn(
-                      "h-7 sm:h-8 gap-1 text-[10px] sm:text-xs",
-                      reminderSentToday && "opacity-60"
-                    )}
-                  >
-                    {reminderSentToday ? (
-                      <>
-                        <CheckCircle className="w-3 h-3" />
-                        Sent
-                      </>
-                    ) : (
-                      <>
-                        <MessageCircle className="w-3 h-3" />
-                        Reminder
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            )}
+              {/* Always show Send Reminder button */}
+              <Button
+                size="sm"
+                variant="default"
+                disabled={!hasValidPhone}
+                onClick={handleSendReminder}
+                className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs"
+              >
+                <MessageCircle className="w-3 h-3" />
+                Reminder
+              </Button>
+            </div>
           </div>
         </div>
       </button>

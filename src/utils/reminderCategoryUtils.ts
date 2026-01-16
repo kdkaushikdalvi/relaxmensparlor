@@ -1,7 +1,7 @@
-import { parseISO, isToday, isBefore, isAfter, startOfToday, endOfWeek, endOfMonth, endOfYear, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
+import { parseISO, isToday, isBefore, startOfToday, formatDistanceToNow } from 'date-fns';
 import { Customer } from '@/types/customer';
 
-export type ReminderCategory = 'all' | 'today' | 'overdue' | 'week' | 'month' | 'year';
+export type ReminderCategory = 'all' | 'active' | 'sent';
 
 export interface ReminderCategoryConfig {
   value: ReminderCategory;
@@ -11,51 +11,53 @@ export interface ReminderCategoryConfig {
 
 export const REMINDER_CATEGORIES: ReminderCategoryConfig[] = [
   { value: 'all', label: 'All', priority: 0 },
-  { value: 'today', label: 'Today Due', priority: 1 },
-  { value: 'overdue', label: 'Overdue', priority: 2 },
-  { value: 'week', label: 'This Week', priority: 3 },
-  { value: 'month', label: 'This Month', priority: 4 },
-  { value: 'year', label: 'This Year', priority: 5 },
+  { value: 'active', label: 'Active Reminders', priority: 1 },
+  { value: 'sent', label: 'Sent', priority: 2 },
 ];
 
 /**
- * Get the reminder category for a customer
+ * Check if customer has sent reminder history
  */
-export function getCustomerReminderCategory(customer: Customer): ReminderCategory | null {
-  if (!customer.reminderDate) return null;
+export function hasSentReminders(customer: Customer): boolean {
+  return (customer.reminderHistory?.length || 0) > 0;
+}
+
+/**
+ * Check if customer has active (pending) reminders
+ */
+export function hasActiveReminder(customer: Customer): boolean {
+  if (!customer.reminderDate) return false;
   
-  const reminderDate = parseISO(customer.reminderDate);
-  const today = startOfToday();
+  const today = new Date().toISOString().split('T')[0];
+  const wasSentToday = customer.reminderSentDates?.includes(today);
   
-  // Check if overdue (before today)
-  if (isBefore(reminderDate, today)) {
-    return 'overdue';
+  // Active if not sent today
+  return !wasSentToday;
+}
+
+/**
+ * Get time since last reminder was sent
+ */
+export function getLastReminderTimeAgo(customer: Customer): string | null {
+  if (!customer.reminderHistory?.length) return null;
+  
+  // Get the most recent reminder
+  const lastReminder = customer.reminderHistory[customer.reminderHistory.length - 1];
+  if (!lastReminder?.sentAt) return null;
+  
+  try {
+    const sentDate = parseISO(lastReminder.sentAt);
+    return formatDistanceToNow(sentDate, { addSuffix: true });
+  } catch {
+    return null;
   }
-  
-  // Check if today
-  if (isToday(reminderDate)) {
-    return 'today';
-  }
-  
-  // Check if this week
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
-  if (!isAfter(reminderDate, weekEnd)) {
-    return 'week';
-  }
-  
-  // Check if this month
-  const monthEnd = endOfMonth(today);
-  if (!isAfter(reminderDate, monthEnd)) {
-    return 'month';
-  }
-  
-  // Check if this year
-  const yearEnd = endOfYear(today);
-  if (!isAfter(reminderDate, yearEnd)) {
-    return 'year';
-  }
-  
-  return null;
+}
+
+/**
+ * Get count of sent reminders for history badge
+ */
+export function getSentRemindersCount(customer: Customer): number {
+  return customer.reminderHistory?.length || 0;
 }
 
 /**
@@ -65,19 +67,11 @@ export function filterByReminderCategory(customers: Customer[], category: Remind
   if (category === 'all') return customers;
   
   return customers.filter(customer => {
-    const customerCategory = getCustomerReminderCategory(customer);
-    
     switch (category) {
-      case 'today':
-        return customerCategory === 'today';
-      case 'overdue':
-        return customerCategory === 'overdue';
-      case 'week':
-        return customerCategory === 'today' || customerCategory === 'week';
-      case 'month':
-        return customerCategory === 'today' || customerCategory === 'week' || customerCategory === 'month';
-      case 'year':
-        return customerCategory !== null;
+      case 'active':
+        return hasActiveReminder(customer);
+      case 'sent':
+        return hasSentReminders(customer);
       default:
         return true;
     }
@@ -90,31 +84,16 @@ export function filterByReminderCategory(customers: Customer[], category: Remind
 export function getReminderCategoryCounts(customers: Customer[]): Record<ReminderCategory, number> {
   const counts: Record<ReminderCategory, number> = {
     all: customers.length,
-    today: 0,
-    overdue: 0,
-    week: 0,
-    month: 0,
-    year: 0,
+    active: 0,
+    sent: 0,
   };
   
   customers.forEach(customer => {
-    const category = getCustomerReminderCategory(customer);
-    if (category === 'today') {
-      counts.today++;
-      counts.week++;
-      counts.month++;
-      counts.year++;
-    } else if (category === 'overdue') {
-      counts.overdue++;
-    } else if (category === 'week') {
-      counts.week++;
-      counts.month++;
-      counts.year++;
-    } else if (category === 'month') {
-      counts.month++;
-      counts.year++;
-    } else if (category === 'year') {
-      counts.year++;
+    if (hasActiveReminder(customer)) {
+      counts.active++;
+    }
+    if (hasSentReminders(customer)) {
+      counts.sent++;
     }
   });
   
@@ -122,11 +101,20 @@ export function getReminderCategoryCounts(customers: Customer[]): Record<Reminde
 }
 
 /**
+ * Get total history count across all customers
+ */
+export function getTotalHistoryCount(customers: Customer[]): number {
+  return customers.reduce((total, customer) => {
+    return total + (customer.reminderHistory?.length || 0);
+  }, 0);
+}
+
+/**
  * Check if reminder can be sent (today or overdue)
  */
 export function canSendReminderForCategory(customer: Customer): boolean {
-  const category = getCustomerReminderCategory(customer);
-  return category === 'today' || category === 'overdue';
+  // Always allow sending reminders
+  return true;
 }
 
 /**
@@ -140,13 +128,14 @@ export function getReminderStatus(customer: Customer): ReminderStatus {
   const today = new Date().toISOString().split('T')[0];
   const wasSentToday = customer.reminderSentDates?.includes(today);
   
-  const category = getCustomerReminderCategory(customer);
+  const reminderDate = parseISO(customer.reminderDate);
+  const todayStart = startOfToday();
   
-  if (category === 'today') {
+  if (isToday(reminderDate)) {
     return wasSentToday ? 'sent-today' : 'pending';
   }
   
-  if (category === 'overdue') {
+  if (isBefore(reminderDate, todayStart)) {
     return 'overdue';
   }
   

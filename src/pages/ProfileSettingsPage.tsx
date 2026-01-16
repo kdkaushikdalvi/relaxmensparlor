@@ -52,11 +52,11 @@ const ProfileSettingsPage = () => {
               variant="ghost"
               size="icon"
               onClick={() => navigate(-1)}
-              className="h-12 w-12 rounded-full bg-primary/10 hover:bg-primary/20"
+              className="h-12 w-12 rounded-full bg-primary/20 hover:bg-primary/20"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-6 h-6 text-white" />
             </Button>
-            <h1 className="text-lg font-app">Profile Settings</h1>
+            <h1 className="text-lg font-app text-white">Profile Settings</h1>
           </div>
           <Button onClick={handleSave} className="gap-2">
             <Check className="w-4 h-4" />

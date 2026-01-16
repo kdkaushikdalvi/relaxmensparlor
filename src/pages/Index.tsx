@@ -239,11 +239,12 @@ const Index = () => {
       <main className="pb-24 relative z-10">
         <div className="px-4 py-3 sticky top-[64px] z-30">
           <Accordion type="single" collapsible>
-            <AccordionItem value="filters" className="border rounded-2xl shadow-lg">
+            <AccordionItem
+              value="filters"
+              className="border rounded-2xl shadow-lg"
+            >
               <AccordionTrigger className="px-4 py-3">
-                <span className="font-app">
-                  🔍 Search, Filters & Sort
-                </span>
+                <span className="font-app">🔍 Search, Filters & Sort</span>
               </AccordionTrigger>
 
               <AccordionContent className="p-4 space-y-4">
@@ -263,7 +264,7 @@ const Index = () => {
                     {REMINDER_CATEGORIES.map((cat) => {
                       const count = reminderCounts[cat.value];
                       const isActive = reminderFilter === cat.value;
-                      const showHistoryBadge = cat.value === 'sent';
+                      const showHistoryBadge = cat.value === "sent";
 
                       return (
                         <Button
@@ -277,8 +278,8 @@ const Index = () => {
                         >
                           {cat.label} ({count})
                           {showHistoryBadge && totalHistoryCount > 0 && (
-                            <Badge 
-                              variant="secondary" 
+                            <Badge
+                              variant="secondary"
                               className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-primary-foreground"
                             >
                               {totalHistoryCount}
@@ -335,7 +336,7 @@ const Index = () => {
 
               return (
                 <div key={group} className="mb-6">
-                  <div className="font-bold text-lg mb-3">{group}</div>
+                  <div className="font-app text-lg mb-3">{group}</div>
 
                   <div className="space-y-4">
                     {groupCustomers.map((customer) => (

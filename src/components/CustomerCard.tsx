@@ -153,7 +153,8 @@ export function CustomerCard({
         "gradient-card shadow-card",
         "transition-all duration-300 hover:shadow-elevated",
         "animate-slide-up group",
-        isNewCustomer && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
+        isNewCustomer &&
+          "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
         !isNewCustomer && isHighlighted
           ? "border-primary/50 bg-primary/5"
           : !isNewCustomer && "border-border/30 hover:border-primary/40",
@@ -244,25 +245,7 @@ export function CustomerCard({
                 <Phone className="w-3.5 h-3.5" />
                 <span className="text-green-700">{customer.mobileNumber}</span>
               </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                <span className="text-orange-400">{formattedDate}</span>
-              </span>
             </div>
-
-            {/* Last Reminder Sent */}
-            {lastReminderTimeAgo && (
-              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
-                <History className="w-3.5 h-3.5" />
-                <span>Last reminder: {lastReminderTimeAgo}</span>
-                {sentCount > 1 && (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">
-                    {sentCount} sent
-                  </Badge>
-                )}
-              </div>
-            )}
-
             {/* Interests */}
             {customer?.interest?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -281,6 +264,24 @@ export function CustomerCard({
                     className="text-[10px] sm:text-xs px-2 py-0.5"
                   >
                     +{customer.interest.length - 2}
+                  </Badge>
+                )}
+              </div>
+            )}
+            {/* Last Reminder Sent */}
+            {lastReminderTimeAgo && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                <History className="w-3.5 h-3.5" />
+                <span className="text-orange-400">
+                  Last reminder: &nbsp;
+                  <span className="text-red-800">{lastReminderTimeAgo}</span>
+                </span>
+                {sentCount > 1 && (
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0 ml-1"
+                  >
+                    {sentCount} sent
                   </Badge>
                 )}
               </div>
@@ -307,16 +308,28 @@ export function CustomerCard({
               )}
 
               {/* Always show Send Reminder button */}
-              <Button
-                size="sm"
-                variant="default"
-                disabled={!hasValidPhone}
-                onClick={handleSendReminder}
-                className="h-7 sm:h-8 gap-1 text-[10px] sm:text-xs"
+
+              <div
+                onClick={hasValidPhone ? handleSendReminder : undefined}
+                className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] sm:text-xs rounded-full border transition-all duration-200 select-none
+              ${
+                hasValidPhone
+                ? "cursor-pointer bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:scale-105 active:scale-95"
+                : "cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200"
+              }
+              `}
               >
                 <MessageCircle className="w-3 h-3" />
-                Reminder
-              </Button>
+                <span>Reminder</span>
+
+                {/* Subtle pulse dot */}
+                {hasValidPhone && (
+                  <span className="relative flex h-2 w-2 ml-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

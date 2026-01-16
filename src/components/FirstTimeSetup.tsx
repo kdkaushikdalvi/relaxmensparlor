@@ -72,10 +72,10 @@ export function FirstTimeSetup() {
                 <span className="text-sm font-app text-primary">Welcome</span>
               </div>
 
-              <h1 className="text-3xl font-display font-bold">Let's Start!</h1>
+              <h1 className="text-3xl font-display font-app">Let's Start!</h1>
 
               <p className="text-muted-foreground">
-                Quick setup. Manage customers & send reminders.
+                Quick setup. Manage customers & Send reminders.
               </p>
 
               <div className="grid grid-cols-3 gap-3 pt-4">
@@ -101,10 +101,7 @@ export function FirstTimeSetup() {
                 <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <User className="w-7 h-7 text-primary" />
                 </div>
-                <h2 className="text-xl font-display font-bold">Your Name</h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Shown in profile
-                </p>
+                <h2 className="text-xl font-display font-app">Your Name</h2>
               </div>
 
               <Input
@@ -126,14 +123,10 @@ export function FirstTimeSetup() {
                 <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Phone className="w-7 h-7 text-primary" />
                 </div>
-                <h2 className="text-xl font-display font-bold">
+                <h2 className="text-xl font-display font-app">
                   Mobile Number
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  For test customer
-                </p>
               </div>
-
               <Input
                 autoFocus
                 type="tel"
@@ -157,12 +150,9 @@ export function FirstTimeSetup() {
                 <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Store className="w-7 h-7 text-primary" />
                 </div>
-                <h2 className="text-xl font-display font-bold">
+                <h2 className="text-xl font-display font-app">
                   Business Name
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  For messages & headers
-                </p>
               </div>
 
               <Input
@@ -184,7 +174,7 @@ export function FirstTimeSetup() {
                 <Check className="w-8 h-8 text-green-500" />
               </div>
 
-              <h2 className="text-xl font-display font-bold">All Set!</h2>
+              <h2 className="text-xl font-display font-app">All Set!</h2>
 
               <div className="space-y-2 text-left p-3 rounded-2xl bg-muted/50 text-sm">
                 <div className="flex items-center gap-3">

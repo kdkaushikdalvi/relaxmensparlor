@@ -120,7 +120,7 @@ export function AppSidebar() {
                 <img src={brandLogo} className="w-full h-full object-cover" />
               </div>
             </div>
-            <p className="text-xl font-bold text-primary tracking-wide">
+            <p className="text-xl font-app text-primary tracking-wide">
               {shortDate}
             </p>
           </div>

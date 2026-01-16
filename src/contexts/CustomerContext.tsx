@@ -1,16 +1,24 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Customer, CustomerFormData } from '@/types/customer';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import { Customer, CustomerFormData } from "@/types/customer";
 
-const STORAGE_KEY = 'relax-salon-customers';
-const SETUP_KEY = 'relax-salon-setup';
+const STORAGE_KEY = "relax-salon-customers";
+const SETUP_KEY = "relax-salon-setup";
 
-const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
+const generateId = () =>
+  Math.random().toString(36).substring(2) + Date.now().toString(36);
 
 // Get sample customer using signup data
 const getSampleCustomer = (): Customer => {
-  let ownerName = 'Sample Customer';
-  let mobileNumber = '9999999999';
-  
+  let ownerName = "Sample Customer";
+  let mobileNumber = "9999999999";
+
   try {
     const setupData = localStorage.getItem(SETUP_KEY);
     if (setupData) {
@@ -21,18 +29,18 @@ const getSampleCustomer = (): Customer => {
   } catch {
     // Use defaults
   }
-  
+
   return {
-    id: 'sample-customer-1',
+    id: "sample-customer-1",
     fullName: ownerName,
     mobileNumber: mobileNumber,
-    interest: ['Haircut', 'Facial'],
-    preferences: 'Prefers appointments in evening',
-    visitingDate: new Date().toISOString().split('T')[0],
+    interest: ["Haircut", "Facial"],
+    preferences: "Prefers appointments in evening",
+    visitingDate: new Date().toISOString().split("T")[0],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    reminderInterval: '1week',
-    reminderDate: new Date().toISOString().split('T')[0],
+    reminderInterval: "1week",
+    reminderDate: new Date().toISOString().split("T")[0],
     reminderSentDates: [],
     reminderHistory: [],
   };
@@ -62,13 +70,13 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored);
         setCustomers(parsed);
       } catch (error) {
-        console.error('Failed to parse customers from localStorage:', error);
+        console.error("Failed to parse customers from localStorage:", error);
         // If no customers, add sample using signup data
-        setCustomers([getSampleCustomer()]);
+        // setCustomers([getSampleCustomer()]);
       }
     } else {
       // First time user - add sample customer using signup data
-      setCustomers([getSampleCustomer()]);
+      // setCustomers([getSampleCustomer()]);
     }
     setIsLoading(false);
   }, []);
@@ -90,32 +98,35 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       reminderSentDates: [],
       reminderHistory: [],
     };
-    setCustomers(prev => [newCustomer, ...prev]);
+    setCustomers((prev) => [newCustomer, ...prev]);
     return newCustomer;
   }, []);
 
-  const updateCustomer = useCallback((id: string, data: Partial<Customer>): Customer | null => {
-    let updatedCustomer: Customer | null = null;
-    setCustomers(prev =>
-      prev.map(customer => {
-        if (customer.id === id) {
-          updatedCustomer = {
-            ...customer,
-            ...data,
-            updatedAt: new Date().toISOString(),
-          };
-          return updatedCustomer;
-        }
-        return customer;
-      })
-    );
-    return updatedCustomer;
-  }, []);
+  const updateCustomer = useCallback(
+    (id: string, data: Partial<Customer>): Customer | null => {
+      let updatedCustomer: Customer | null = null;
+      setCustomers((prev) =>
+        prev.map((customer) => {
+          if (customer.id === id) {
+            updatedCustomer = {
+              ...customer,
+              ...data,
+              updatedAt: new Date().toISOString(),
+            };
+            return updatedCustomer;
+          }
+          return customer;
+        })
+      );
+      return updatedCustomer;
+    },
+    []
+  );
 
   const deleteCustomer = useCallback((id: string): boolean => {
     let deleted = false;
-    setCustomers(prev => {
-      const index = prev.findIndex(c => c.id === id);
+    setCustomers((prev) => {
+      const index = prev.findIndex((c) => c.id === id);
       if (index !== -1) {
         deleted = true;
         return [...prev.slice(0, index), ...prev.slice(index + 1)];
@@ -125,29 +136,38 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     return deleted;
   }, []);
 
-  const getCustomer = useCallback((id: string): Customer | undefined => {
-    return customers.find(c => c.id === id);
-  }, [customers]);
+  const getCustomer = useCallback(
+    (id: string): Customer | undefined => {
+      return customers.find((c) => c.id === id);
+    },
+    [customers]
+  );
 
-  const searchCustomers = useCallback((query: string): Customer[] => {
-    if (!query.trim()) return customers;
-    const lowerQuery = query.toLowerCase().trim();
-    return customers.filter(c =>
-      c.fullName.toLowerCase().includes(lowerQuery) ||
-      c.mobileNumber.includes(lowerQuery)
-    );
-  }, [customers]);
+  const searchCustomers = useCallback(
+    (query: string): Customer[] => {
+      if (!query.trim()) return customers;
+      const lowerQuery = query.toLowerCase().trim();
+      return customers.filter(
+        (c) =>
+          c.fullName.toLowerCase().includes(lowerQuery) ||
+          c.mobileNumber.includes(lowerQuery)
+      );
+    },
+    [customers]
+  );
 
   return (
-    <CustomerContext.Provider value={{
-      customers,
-      isLoading,
-      addCustomer,
-      updateCustomer,
-      deleteCustomer,
-      getCustomer,
-      searchCustomers,
-    }}>
+    <CustomerContext.Provider
+      value={{
+        customers,
+        isLoading,
+        addCustomer,
+        updateCustomer,
+        deleteCustomer,
+        getCustomer,
+        searchCustomers,
+      }}
+    >
       {children}
     </CustomerContext.Provider>
   );
@@ -156,7 +176,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
 export function useCustomers() {
   const context = useContext(CustomerContext);
   if (!context) {
-    throw new Error('useCustomers must be used within a CustomerProvider');
+    throw new Error("useCustomers must be used within a CustomerProvider");
   }
   return context;
 }

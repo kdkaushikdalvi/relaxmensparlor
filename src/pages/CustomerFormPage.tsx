@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Save, Check, X } from "lucide-react";
-import {
-  CustomerFormData,
-  ReminderInterval,
-} from "@/types/customer";
+import { CustomerFormData, ReminderInterval } from "@/types/customer";
 import { useCustomers } from "@/hooks/useCustomers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -232,8 +229,8 @@ const CustomerFormPage = () => {
                 <ArrowLeft className="w-6 h-6" />
               )}
             </Button>
-            <span className="text-sm font-app flex justify-center items-center w-full text-[18px] font-bold text-purple-600">
-              {isEditing ? "Edit" : "Add"} • {stepConfig.title}
+            <span className="text-xl font-app flex justify-center items-center w-full text-[18px] font-app text-purple-600">
+              {isEditing ? "Edit" : "Add"}  {stepConfig.title}
             </span>
           </div>
 

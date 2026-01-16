@@ -11,8 +11,8 @@ interface ProfileContextType {
 }
 
 const DEFAULT_PROFILE: Profile = {
-  ownerName: 'Test Test',
-  businessName: `Test Test`,
+  ownerName: '',
+  businessName: '',
 };
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);

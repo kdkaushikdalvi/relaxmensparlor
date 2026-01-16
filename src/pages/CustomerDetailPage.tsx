@@ -154,6 +154,19 @@ const CustomerDetailPage = () => {
               <p className="font-app text-foreground">{formattedDate}</p>
             </div>
           </div>
+
+          {/* Last Reminder Sent */}
+          {customer.reminderHistory && customer.reminderHistory.length > 0 && (
+            <div className="p-4 rounded-xl border bg-card flex items-center gap-3">
+              <Clock className="w-5 h-5 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">Last Reminder Sent</p>
+                <p className="font-app text-foreground">
+                  {format(new Date(customer.reminderHistory[customer.reminderHistory.length - 1].sentAt), "MMM d, yyyy 'at' h:mm a")}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Interests */}

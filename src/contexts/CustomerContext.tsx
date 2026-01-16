@@ -8,8 +8,8 @@ const generateId = () => Math.random().toString(36).substring(2) + Date.now().to
 
 // Get sample customer using signup data
 const getSampleCustomer = (): Customer => {
-  let ownerName = 'Kaushik Dalvi';
-  let mobileNumber = '9960563128';
+  let ownerName = 'Sample Customer';
+  let mobileNumber = '9999999999';
   
   try {
     const setupData = localStorage.getItem(SETUP_KEY);

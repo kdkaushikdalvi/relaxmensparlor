@@ -16,6 +16,8 @@ import CustomerDetailPage from "./pages/CustomerDetailPage";
 import CustomerFormPage from "./pages/CustomerFormPage";
 import ReminderHistoryPage from "./pages/ReminderHistoryPage";
 import MessageTemplatesPage from "./pages/MessageTemplatesPage";
+import ProfileSettingsPage from "./pages/ProfileSettingsPage";
+import SharePage from "./pages/SharePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,8 @@ function AppContent() {
               <Route path="/customer/:id/edit" element={<CustomerFormPage />} />
               <Route path="/reminder-history" element={<ReminderHistoryPage />} />
               <Route path="/message-templates" element={<MessageTemplatesPage />} />
+              <Route path="/profile" element={<ProfileSettingsPage />} />
+              <Route path="/share" element={<SharePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,7 +1,7 @@
 import { parseISO, isToday, isBefore, startOfToday, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { Customer } from '@/types/customer';
 
-export type ReminderCategory = 'yet-to-send' | 'sent-today' | '3-days' | '7-days' | '2-weeks' | '4-weeks';
+export type ReminderCategory = 'all' | 'yet-to-send' | 'sent-today' | '3-days' | '7-days' | '2-weeks' | '4-weeks';
 
 export interface ReminderCategoryConfig {
   value: ReminderCategory;
@@ -10,6 +10,7 @@ export interface ReminderCategoryConfig {
 }
 
 export const REMINDER_CATEGORIES: ReminderCategoryConfig[] = [
+  { value: 'all', label: 'All', priority: -1 },
   { value: 'yet-to-send', label: 'Yet to be Sent', priority: 0 },
   { value: 'sent-today', label: 'Sent Today', priority: 1 },
   { value: '3-days', label: '3 Days Ago', priority: 2 },
@@ -98,6 +99,8 @@ export function getSentRemindersCount(customer: Customer): number {
 export function filterByReminderCategory(customers: Customer[], category: ReminderCategory): Customer[] {
   return customers.filter(customer => {
     switch (category) {
+      case 'all':
+        return true;
       case 'yet-to-send':
         return !hasSentReminders(customer);
       case 'sent-today':
@@ -121,6 +124,7 @@ export function filterByReminderCategory(customers: Customer[], category: Remind
  */
 export function getReminderCategoryCounts(customers: Customer[]): Record<ReminderCategory, number> {
   const counts: Record<ReminderCategory, number> = {
+    'all': 0,
     'yet-to-send': 0,
     'sent-today': 0,
     '3-days': 0,
@@ -128,6 +132,8 @@ export function getReminderCategoryCounts(customers: Customer[]): Record<Reminde
     '2-weeks': 0,
     '4-weeks': 0,
   };
+  
+  counts['all'] = customers.length;
   
   customers.forEach(customer => {
     if (!hasSentReminders(customer)) {

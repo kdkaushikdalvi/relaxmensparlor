@@ -172,249 +172,259 @@ export function MessageTemplateManager() {
 
   const usedVariables = Array.from(new Set(message.match(/{\w+}/g) || []));
 
+  // Shared Preview Dialog component
+  const PreviewDialog = () => (
+    <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Message Preview</DialogTitle>
+        </DialogHeader>
+        <div className="p-4 rounded-lg bg-muted/50 border">
+          <p className="text-sm whitespace-pre-wrap">{renderPreview(previewMessage)}</p>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          <p className="font-app mb-1">Variables used:</p>
+          <div className="flex flex-wrap gap-1">
+            {TEMPLATE_VARIABLES.map((v) => (
+              <span key={v.key} className="px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                {`{${v.key}}`} → {v.key === "ShopName" && profile.businessName ? profile.businessName : v.key === "OwnerName" && profile.ownerName ? profile.ownerName : v.example}
+              </span>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   // Edit/Create View
   if (viewMode === "edit" || viewMode === "create") {
     return (
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCancel}
-            className="h-10 w-10 rounded-full"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h2 className="text-lg font-app">
-            {viewMode === "edit" ? "Edit Template" : "Create Template"}
-          </h2>
-        </div>
-
-        {/* Form */}
+      <>
         <div className="space-y-4">
-          <div className="bg-card rounded-xl border p-4 space-y-3">
-            <label className="text-sm font-app">Template Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Birthday Offer"
-              className="h-12"
-            />
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCancel}
+              className="h-10 w-10 rounded-full"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h2 className="text-lg font-app">
+              {viewMode === "edit" ? "Edit Template" : "Create Template"}
+            </h2>
           </div>
 
-          <div className="bg-card rounded-xl border p-4 space-y-4">
-            <label className="text-sm font-app">Message</label>
-            <Textarea
-              ref={textareaRef}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Hi {CustomerName}, we'd love to see you again!"
-              rows={6}
-              className="resize-none"
-            />
-
-            {/* Insert Variables */}
-            <div className="space-y-2">
-              <p className="text-sm font-app text-muted-foreground">Click to insert variable:</p>
-              <div className="flex flex-wrap gap-2">
-                {TEMPLATE_VARIABLES.map((variable) => (
-                  <button
-                    key={variable.key}
-                    type="button"
-                    onClick={() => insertVariable(variable)}
-                    className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors flex items-center gap-1.5"
-                  >
-                    <Plus className="w-3 h-3" />
-                    {`{${variable.key}}`}
-                  </button>
-                ))}
-              </div>
+          {/* Form */}
+          <div className="space-y-4">
+            <div className="bg-card rounded-xl border p-4 space-y-3">
+              <label className="text-sm font-app">Template Name</label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Birthday Offer"
+                className="h-12"
+              />
             </div>
 
-            {/* Used variables with remove option */}
-            {usedVariables.length > 0 && (
+            <div className="bg-card rounded-xl border p-4 space-y-4">
+              <label className="text-sm font-app">Message</label>
+              <Textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Hi {CustomerName}, we'd love to see you again!"
+                rows={6}
+                className="resize-none"
+              />
+
+              {/* Insert Variables */}
               <div className="space-y-2">
-                <p className="text-sm font-app text-muted-foreground">Used variables (click to remove):</p>
+                <p className="text-sm font-app text-muted-foreground">Click to insert variable:</p>
                 <div className="flex flex-wrap gap-2">
-                  {usedVariables.map((v) => (
+                  {TEMPLATE_VARIABLES.map((variable) => (
                     <button
-                      key={v}
+                      key={variable.key}
                       type="button"
-                      onClick={() => removeVariable(v)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors flex items-center gap-1.5"
-                      title="Click to remove"
+                      onClick={() => insertVariable(variable)}
+                      className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors flex items-center gap-1.5"
                     >
-                      {v}
-                      <X className="w-3 h-3" />
+                      <Plus className="w-3 h-3" />
+                      {`{${variable.key}}`}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Preview button */}
-            {message && (
+              {/* Used variables with remove option */}
+              {usedVariables.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-app text-muted-foreground">Used variables (click to remove):</p>
+                  <div className="flex flex-wrap gap-2">
+                    {usedVariables.map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => removeVariable(v)}
+                        className="text-xs px-3 py-1.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors flex items-center gap-1.5"
+                        title="Click to remove"
+                      >
+                        {v}
+                        <X className="w-3 h-3" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preview button */}
+              {message && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePreview(message)}
+                  className="gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Preview Message
+                </Button>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
-                onClick={() => handlePreview(message)}
-                className="gap-2"
+                onClick={handleCancel}
+                className="flex-1 h-12"
               >
-                <Eye className="w-4 h-4" />
-                Preview Message
+                Cancel
               </Button>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              className="flex-1 h-12"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="flex-1 h-12 gap-2">
-              <Check className="w-4 h-4" />
-              {viewMode === "edit" ? "Update" : "Create"}
-            </Button>
+              <Button onClick={handleSave} className="flex-1 h-12 gap-2">
+                <Check className="w-4 h-4" />
+                {viewMode === "edit" ? "Update" : "Create"}
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+        
+        <PreviewDialog />
+      </>
     );
   }
 
   // List View
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {templates.length} template{templates.length !== 1 ? "s" : ""}
-        </p>
-        <Button size="sm" onClick={handleCreate} className="gap-1">
-          <Plus className="w-4 h-4" />
-          New
-        </Button>
-      </div>
+    <>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {templates.length} template{templates.length !== 1 ? "s" : ""}
+          </p>
+          <Button size="sm" onClick={handleCreate} className="gap-1">
+            <Plus className="w-4 h-4" />
+            New
+          </Button>
+        </div>
 
-      {/* Template List */}
-      <ScrollArea className="h-[400px]">
-        <div className="space-y-3 pr-2">
-          {templates.map((template) => (
-            <div
-              key={template.id}
-              className={cn(
-                "p-4 rounded-xl border bg-card hover:bg-card/80 transition-colors",
-                template.isDefault && "border-primary/50 bg-primary/5"
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-app truncate">{template.name}</h4>
-                    {template.isDefault && (
-                      <Badge variant="secondary" className="text-xs gap-1">
-                        <Star className="w-3 h-3 fill-current" />
-                        Default
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                    {template.message}
-                  </p>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => handlePreview(template.message)}
-                    className="px-0 h-auto text-xs text-primary mt-1 gap-1"
-                  >
-                    <Eye className="w-3 h-3" />
-                    Preview
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {!template.isDefault && (
+        {/* Template List */}
+        <ScrollArea className="h-[400px]">
+          <div className="space-y-3 pr-2">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className={cn(
+                  "p-4 rounded-xl border bg-card hover:bg-card/80 transition-colors",
+                  template.isDefault && "border-primary/50 bg-primary/5"
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-app truncate">{template.name}</h4>
+                      {template.isDefault && (
+                        <Badge variant="secondary" className="text-xs gap-1">
+                          <Star className="w-3 h-3 fill-current" />
+                          Default
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {template.message}
+                    </p>
                     <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleSetDefault(template.id)}
-                      className="h-9 w-9"
-                      title="Set as default"
+                      variant="link"
+                      size="sm"
+                      onClick={() => handlePreview(template.message)}
+                      className="px-0 h-auto text-xs text-primary mt-1 gap-1"
                     >
-                      <Star className="w-4 h-4" />
+                      <Eye className="w-3 h-3" />
+                      Preview
                     </Button>
-                  )}
+                  </div>
 
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleEdit(template)}
-                    className="h-9 w-9"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {!template.isDefault && (
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-9 w-9 text-destructive"
+                        onClick={() => handleSetDefault(template.id)}
+                        className="h-9 w-9"
+                        title="Set as default"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Star className="w-4 h-4" />
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Template</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{template.name}"?
-                          This cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(template.id)}
+                    )}
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleEdit(template)}
+                      className="h-9 w-9"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 text-destructive"
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{template.name}"?
+                            This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(template.id)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-      {/* Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Message Preview</DialogTitle>
-          </DialogHeader>
-          <div className="p-4 rounded-lg bg-muted/50 border">
-            <p className="text-sm whitespace-pre-wrap">{renderPreview(previewMessage)}</p>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            <p className="font-app mb-1">Variables used:</p>
-            <div className="flex flex-wrap gap-1">
-              {TEMPLATE_VARIABLES.map((v) => (
-                <span key={v.key} className="px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                  {`{${v.key}}`} → {v.key === "ShopName" && profile.businessName ? profile.businessName : v.key === "OwnerName" && profile.ownerName ? profile.ownerName : v.example}
-                </span>
-              ))}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+      <PreviewDialog />
+    </>
   );
 }

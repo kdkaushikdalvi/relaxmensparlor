@@ -318,18 +318,18 @@ export function CustomerCard({
     focus:outline-none focus:ring-2 focus:ring-offset-1
     ${
       hasValidPhone
-        ? "cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:shadow-sm hover:ring-2 hover:ring-blue-200 active:bg-blue-200"
+        ? "cursor-pointer bg-green-500 text-white border-green-200 hover:bg-green-100 hover:shadow-sm hover:ring-2 hover:ring-green-200 active:bg-green-200"
         : "cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 opacity-70"
     }`}
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                <span className="leading-none">Reminder</span>
-
+                <span className="leading-none">WhatsApp</span>
+                
                 {/* Pulse dot */}
                 {hasValidPhone && (
                   <span className="relative flex h-2 w-2 ml-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
                   </span>
                 )}
               </div>

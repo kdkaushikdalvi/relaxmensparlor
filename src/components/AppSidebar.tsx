@@ -95,10 +95,12 @@ export function AppSidebar() {
   };
 
   const now = new Date();
-  const day = now.toLocaleDateString("mr-IN", { weekday: "short" });
-  const month = now.toLocaleDateString("mr-IN", { month: "short" });
+
+  const day = now.toLocaleDateString("mr-IN", { weekday: "long" });
+  const month = now.toLocaleDateString("mr-IN", { month: "long" });
   const dateNum = now.getDate();
-  const shortDate = `${dateNum} ${month}, ${day}`;
+  const formattedDate = `${dateNum} ${month}
+                         ${day}`;
 
   const navigateTo = (path: string) => {
     navigate(path);
@@ -116,12 +118,12 @@ export function AppSidebar() {
               <div className="absolute inset-0 rounded-full bg-primary/40 blur-lg animate-pulse" />
               <div className="absolute -inset-1 rounded-full border-2 border-dashed border-primary/50 animate-spin-slow" />
               {/* Image */}
-              <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/60 shadow-lg bg-background">
+              <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-primary/60 shadow-lg bg-background">
                 <img src={brandLogo} className="w-full h-full object-cover" />
               </div>
             </div>
-            <p className="text-xl font-app text-primary tracking-wide">
-              {shortDate}
+            <p className="text-xl font-app tracking-wide ml-4 bg-gradient-to-r from-pink-500 via-blue-800 to-red-800 bg-clip-text text-transparent">
+              {formattedDate}
             </p>
           </div>
         </div>
@@ -164,15 +166,12 @@ export function AppSidebar() {
             onClick={() => setResetOpen(true)}
             variant="danger"
           />
-
           {/* Install App (conditional) */}
-          {installPrompt && (
-            <NavButton
-              icon={<Download className="w-5 h-5 text-green-600" />}
-              label="Install App"
-              onClick={handleInstallPWA}
-            />
-          )}
+          <NavButton
+            icon={<Download className="w-5 h-5 text-green-600" />}
+            label="Install App"
+            onClick={handleInstallPWA}
+          />
         </div>
       </SidebarContent>
 

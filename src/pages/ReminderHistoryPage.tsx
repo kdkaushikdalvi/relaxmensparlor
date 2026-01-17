@@ -21,12 +21,11 @@ const ReminderHistoryPage = () => {
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="text-[hsl(var(--header-foreground))]"
+            className="h-12 w-12 rounded-full bg-primary/20 hover:bg-primary/20"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-white" />
           </Button>
           <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-primary" />
             <h1 className="text-lg font-app text-[hsl(var(--header-foreground))]">
               Reminder History
             </h1>

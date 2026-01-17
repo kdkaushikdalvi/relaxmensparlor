@@ -44,19 +44,18 @@ const SharePage = () => {
   return (
     <div className="min-h-screen from-background via-background to-primary/5">
       {/* Header */}
-      <div className="sticky top-0 z-50 ">
-        <div className="flex items-center gap-3 px-4 py-3">
+      <div className="sticky top-0 z-50 bg-[hsl(var(--header-bg))] border-b">
+      <div className="flex items-center justify-left px-4 py-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="h-12 w-12 rounded-full bg-primary/10 hover:bg-primary/20"
+             className="h-12 w-12 rounded-full bg-primary/20 hover:bg-primary/20"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-white" />
           </Button>
           <div className="flex items-center gap-2">
-            <Share2 className="w-5 h-5 text-primary" />
-            <h1 className="text-lg font-app">Share Website</h1>
+            <h1 className="text-lg font-app text-white ml-6">Share Website</h1>
           </div>
         </div>
       </div>

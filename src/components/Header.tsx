@@ -32,11 +32,10 @@ export function Header() {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map((r) => r.unregister()));
     }
+    setIsRefreshing(false);
 
     // Reload app
     window.location.reload();
-    setIsRefreshing(false);
-
   };
 
   return (

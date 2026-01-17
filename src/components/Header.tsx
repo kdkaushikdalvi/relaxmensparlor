@@ -35,6 +35,8 @@ export function Header() {
 
     // Reload app
     window.location.reload();
+    setIsRefreshing(false);
+
   };
 
   return (

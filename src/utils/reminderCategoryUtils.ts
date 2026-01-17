@@ -1,7 +1,7 @@
-import { parseISO, isToday, isBefore, startOfToday, formatDistanceToNow } from 'date-fns';
+import { parseISO, isToday, isBefore, startOfToday, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { Customer } from '@/types/customer';
 
-export type ReminderCategory = 'all' | 'active' | 'sent';
+export type ReminderCategory = 'yet-to-send' | 'sent-today' | '3-days' | '7-days' | '2-weeks' | '4-weeks';
 
 export interface ReminderCategoryConfig {
   value: ReminderCategory;
@@ -10,10 +10,29 @@ export interface ReminderCategoryConfig {
 }
 
 export const REMINDER_CATEGORIES: ReminderCategoryConfig[] = [
-  { value: 'all', label: 'All', priority: 0 },
-  { value: 'active', label: 'Active Reminders', priority: 1 },
-  { value: 'sent', label: 'Sent', priority: 2 },
+  { value: 'yet-to-send', label: 'Yet to be Sent', priority: 0 },
+  { value: 'sent-today', label: 'Sent Today', priority: 1 },
+  { value: '3-days', label: '3 Days Ago', priority: 2 },
+  { value: '7-days', label: '7 Days Ago', priority: 3 },
+  { value: '2-weeks', label: '2 Weeks Ago', priority: 4 },
+  { value: '4-weeks', label: '4 Weeks Ago', priority: 5 },
 ];
+
+/**
+ * Get last sent date from reminder history
+ */
+export function getLastSentDate(customer: Customer): Date | null {
+  if (!customer.reminderHistory?.length) return null;
+  
+  const lastReminder = customer.reminderHistory[customer.reminderHistory.length - 1];
+  if (!lastReminder?.sentAt) return null;
+  
+  try {
+    return parseISO(lastReminder.sentAt);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Check if customer has sent reminder history
@@ -23,16 +42,30 @@ export function hasSentReminders(customer: Customer): boolean {
 }
 
 /**
- * Check if customer has active (pending) reminders
+ * Check if customer has active (pending) reminders - never sent any reminder
  */
 export function hasActiveReminder(customer: Customer): boolean {
-  if (!customer.reminderDate) return false;
+  return !hasSentReminders(customer);
+}
+
+/**
+ * Check if reminder was sent today
+ */
+export function wasSentToday(customer: Customer): boolean {
+  const lastSent = getLastSentDate(customer);
+  if (!lastSent) return false;
+  return isToday(lastSent);
+}
+
+/**
+ * Check if reminder was sent within a specific day range
+ */
+export function wasSentInRange(customer: Customer, minDays: number, maxDays: number): boolean {
+  const lastSent = getLastSentDate(customer);
+  if (!lastSent) return false;
   
-  const today = new Date().toISOString().split('T')[0];
-  const wasSentToday = customer.reminderSentDates?.includes(today);
-  
-  // Active if not sent today
-  return !wasSentToday;
+  const daysDiff = differenceInDays(new Date(), lastSent);
+  return daysDiff >= minDays && daysDiff <= maxDays;
 }
 
 /**
@@ -41,7 +74,6 @@ export function hasActiveReminder(customer: Customer): boolean {
 export function getLastReminderTimeAgo(customer: Customer): string | null {
   if (!customer.reminderHistory?.length) return null;
   
-  // Get the most recent reminder
   const lastReminder = customer.reminderHistory[customer.reminderHistory.length - 1];
   if (!lastReminder?.sentAt) return null;
   
@@ -61,17 +93,23 @@ export function getSentRemindersCount(customer: Customer): number {
 }
 
 /**
- * Filter customers by reminder category
+ * Filter customers by reminder category based on last sent date
  */
 export function filterByReminderCategory(customers: Customer[], category: ReminderCategory): Customer[] {
-  if (category === 'all') return customers;
-  
   return customers.filter(customer => {
     switch (category) {
-      case 'active':
-        return hasActiveReminder(customer);
-      case 'sent':
-        return hasSentReminders(customer);
+      case 'yet-to-send':
+        return !hasSentReminders(customer);
+      case 'sent-today':
+        return wasSentToday(customer);
+      case '3-days':
+        return wasSentInRange(customer, 2, 4); // 2-4 days ago
+      case '7-days':
+        return wasSentInRange(customer, 5, 9); // 5-9 days ago
+      case '2-weeks':
+        return wasSentInRange(customer, 10, 18); // ~2 weeks
+      case '4-weeks':
+        return wasSentInRange(customer, 19, 35); // ~4 weeks
       default:
         return true;
     }
@@ -83,17 +121,27 @@ export function filterByReminderCategory(customers: Customer[], category: Remind
  */
 export function getReminderCategoryCounts(customers: Customer[]): Record<ReminderCategory, number> {
   const counts: Record<ReminderCategory, number> = {
-    all: customers.length,
-    active: 0,
-    sent: 0,
+    'yet-to-send': 0,
+    'sent-today': 0,
+    '3-days': 0,
+    '7-days': 0,
+    '2-weeks': 0,
+    '4-weeks': 0,
   };
   
   customers.forEach(customer => {
-    if (hasActiveReminder(customer)) {
-      counts.active++;
-    }
-    if (hasSentReminders(customer)) {
-      counts.sent++;
+    if (!hasSentReminders(customer)) {
+      counts['yet-to-send']++;
+    } else if (wasSentToday(customer)) {
+      counts['sent-today']++;
+    } else if (wasSentInRange(customer, 2, 4)) {
+      counts['3-days']++;
+    } else if (wasSentInRange(customer, 5, 9)) {
+      counts['7-days']++;
+    } else if (wasSentInRange(customer, 10, 18)) {
+      counts['2-weeks']++;
+    } else if (wasSentInRange(customer, 19, 35)) {
+      counts['4-weeks']++;
     }
   });
   
@@ -113,7 +161,6 @@ export function getTotalHistoryCount(customers: Customer[]): number {
  * Check if reminder can be sent (today or overdue)
  */
 export function canSendReminderForCategory(customer: Customer): boolean {
-  // Always allow sending reminders
   return true;
 }
 
@@ -126,13 +173,13 @@ export function getReminderStatus(customer: Customer): ReminderStatus {
   if (!customer.reminderDate) return 'none';
   
   const today = new Date().toISOString().split('T')[0];
-  const wasSentToday = customer.reminderSentDates?.includes(today);
+  const wasSentTodayFlag = customer.reminderSentDates?.includes(today);
   
   const reminderDate = parseISO(customer.reminderDate);
   const todayStart = startOfToday();
   
   if (isToday(reminderDate)) {
-    return wasSentToday ? 'sent-today' : 'pending';
+    return wasSentTodayFlag ? 'sent-today' : 'pending';
   }
   
   if (isBefore(reminderDate, todayStart)) {
@@ -161,7 +208,6 @@ export function sortByReminderPriority(customers: Customer[]): Customer[] {
     const priorityDiff = priorityOrder[statusA] - priorityOrder[statusB];
     if (priorityDiff !== 0) return priorityDiff;
     
-    // Secondary sort by reminder date
     if (a.reminderDate && b.reminderDate) {
       return new Date(a.reminderDate).getTime() - new Date(b.reminderDate).getTime();
     }

@@ -257,6 +257,29 @@ const Index = () => {
                   onChange={setSearchQuery}
                   placeholder="Search by name or phone..."
                 />
+                <div className="rounded-xl border">
+                  <div className="flex gap-2 py-2 flex-wrap ml-2">
+                    {REMINDER_CATEGORIES.map((cat) => {
+                      const count = reminderCounts[cat.value];
+                      const isActive = reminderFilter === cat.value;
+                      return (
+                        <Button
+                          key={cat.value}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setReminderFilter(cat.value)}
+                          className={`rounded-full px-4 py-1.5 text-xs relative ${
+                            isActive
+                              ? "bg-primary text-primary-foreground"
+                              : "border"
+                          }`}
+                        >
+                          {cat.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="text-sm text-muted-foreground">
                     {filteredCustomers.length} customers
@@ -289,27 +312,7 @@ const Index = () => {
             </AccordionItem>
           </Accordion>
         </div>
-        <div className="rounded-xl mx-6 py-2 mb-2 border">
-          <div className="flex gap-2 py-2 flex-wrap ml-2">
-            {REMINDER_CATEGORIES.map((cat) => {
-              const count = reminderCounts[cat.value];
-              const isActive = reminderFilter === cat.value;
-              return (
-                <Button
-                  key={cat.value}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setReminderFilter(cat.value)}
-                  className={`rounded-full px-4 py-1.5 text-xs relative ${
-                    isActive ? "bg-primary text-primary-foreground" : "border"
-                  }`}
-                >
-                  {cat.label}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
+
         <div className="px-4">
           {customers.length === 0 ? (
             <EmptyState type="no-customers" />

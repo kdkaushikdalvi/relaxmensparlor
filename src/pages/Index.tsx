@@ -18,7 +18,6 @@ import {
   filterByReminderCategory,
   getReminderCategoryCounts,
   sortByReminderPriority,
-  getTotalHistoryCount,
 } from "@/utils/reminderCategoryUtils";
 import {
   wasReminderSentToday,
@@ -155,7 +154,7 @@ const Index = () => {
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [reminderFilter, setReminderFilter] = useState<ReminderCategory>("all");
+  const [reminderFilter, setReminderFilter] = useState<ReminderCategory>("yet-to-send");
   const [sortType, setSortType] = useState<SortType>("newest");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
@@ -174,11 +173,6 @@ const Index = () => {
 
   const reminderCounts = useMemo(
     () => getReminderCategoryCounts(customers),
-    [customers]
-  );
-
-  const totalHistoryCount = useMemo(
-    () => getTotalHistoryCount(customers),
     [customers]
   );
 
@@ -264,7 +258,7 @@ const Index = () => {
                     {REMINDER_CATEGORIES.map((cat) => {
                       const count = reminderCounts[cat.value];
                       const isActive = reminderFilter === cat.value;
-                      const showHistoryBadge = cat.value === "sent";
+                      const showBadge = cat.value === "yet-to-send" && count > 0;
 
                       return (
                         <Button
@@ -273,16 +267,16 @@ const Index = () => {
                           size="sm"
                           onClick={() => setReminderFilter(cat.value)}
                           className={`rounded-full px-4 py-1.5 text-xs relative ${
-                            isActive ? "bg-primary text-white" : "border"
+                            isActive ? "bg-primary text-primary-foreground" : "border"
                           }`}
                         >
-                          {cat.label} ({count})
-                          {showHistoryBadge && totalHistoryCount > 0 && (
+                          {cat.label}
+                          {showBadge && (
                             <Badge
                               variant="secondary"
-                              className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-primary-foreground"
+                              className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0 min-w-[18px] h-[18px] flex items-center justify-center bg-destructive text-destructive-foreground"
                             >
-                              {totalHistoryCount}
+                              {count}
                             </Badge>
                           )}
                         </Button>

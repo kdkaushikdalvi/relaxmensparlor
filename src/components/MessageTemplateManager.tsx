@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Check, Star, X, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Star, X, ArrowLeft, Eye } from "lucide-react";
 import {
   useMessageTemplates,
   MessageTemplate,
 } from "@/contexts/MessageTemplateContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,16 +22,31 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 /* ============================= */
-/* Variable Examples */
+/* Template Variables */
 /* ============================= */
 
-const VARIABLE_EXAMPLES: Record<string, string> = {
-  customerName: "Rahul",
-};
+interface TemplateVariable {
+  key: string;
+  label: string;
+  example: string;
+}
+
+const TEMPLATE_VARIABLES: TemplateVariable[] = [
+  { key: "CustomerName", label: "Customer Name", example: "Rahul" },
+  { key: "ShopName", label: "Shop Name", example: "Relax Men's Parlor" },
+  { key: "OwnerName", label: "Owner Name", example: "John" },
+  { key: "LastVisit", label: "Last Visit", example: "15 Jan 2025" },
+];
 
 type ViewMode = "list" | "edit" | "create";
 
@@ -43,13 +59,17 @@ export function MessageTemplateManager() {
     deleteTemplate,
     setDefaultTemplate,
   } = useMessageTemplates();
+  const { profile } = useProfile();
   const { toast } = useToast();
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [editingTemplate, setEditingTemplate] =
     useState<MessageTemplate | null>(null);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewMessage, setPreviewMessage] = useState("");
 
   const handleCreate = () => {
     setEditingTemplate(null);
@@ -107,20 +127,47 @@ export function MessageTemplateManager() {
   /* Variable Helpers */
   /* ============================= */
 
-  const insertVariable = (key: string) => {
-    setMessage((m) => (m ? `${m} {${key}}` : `{${key}}`));
+  const insertVariable = (variable: TemplateVariable) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = message;
+      const insertion = `{${variable.key}}`;
+      const newText = text.substring(0, start) + insertion + text.substring(end);
+      setMessage(newText);
+      // Reset cursor position after insertion
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + insertion.length, start + insertion.length);
+      }, 0);
+    } else {
+      setMessage((m) => (m ? `${m} {${variable.key}}` : `{${variable.key}}`));
+    }
   };
 
   const removeVariable = (variable: string) => {
     setMessage((m) => m.replace(variable, "").replace(/\s+/g, " ").trim());
   };
 
-  const renderPreview = () => {
-    let preview = message || "";
-    Object.entries(VARIABLE_EXAMPLES).forEach(([k, v]) => {
-      preview = preview.split(`{${k}}`).join(v);
+  const renderPreview = (text: string) => {
+    let preview = text || "";
+    TEMPLATE_VARIABLES.forEach((v) => {
+      let value = v.example;
+      // Use actual profile data if available
+      if (v.key === "ShopName" && profile.businessName) {
+        value = profile.businessName;
+      } else if (v.key === "OwnerName" && profile.ownerName) {
+        value = profile.ownerName;
+      }
+      preview = preview.split(`{${v.key}}`).join(value);
     });
     return preview;
+  };
+
+  const handlePreview = (templateMessage: string) => {
+    setPreviewMessage(templateMessage);
+    setPreviewOpen(true);
   };
 
   const usedVariables = Array.from(new Set(message.match(/{\w+}/g) || []));
@@ -156,27 +203,46 @@ export function MessageTemplateManager() {
             />
           </div>
 
-          <div className="bg-card rounded-xl border p-4 space-y-3">
+          <div className="bg-card rounded-xl border p-4 space-y-4">
             <label className="text-sm font-app">Message</label>
             <Textarea
+              ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Hi {customerName}, we'd love to see you again!"
+              placeholder="Hi {CustomerName}, we'd love to see you again!"
               rows={6}
               className="resize-none"
             />
 
-            {/* Used variables */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <p className="text-sm font-app">Remove:</p>
-              {usedVariables.length > 0 && (
+            {/* Insert Variables */}
+            <div className="space-y-2">
+              <p className="text-sm font-app text-muted-foreground">Click to insert variable:</p>
+              <div className="flex flex-wrap gap-2">
+                {TEMPLATE_VARIABLES.map((variable) => (
+                  <button
+                    key={variable.key}
+                    type="button"
+                    onClick={() => insertVariable(variable)}
+                    className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors flex items-center gap-1.5"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {`{${variable.key}}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Used variables with remove option */}
+            {usedVariables.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-app text-muted-foreground">Used variables (click to remove):</p>
                 <div className="flex flex-wrap gap-2">
                   {usedVariables.map((v) => (
                     <button
                       key={v}
                       type="button"
                       onClick={() => removeVariable(v)}
-                      className="text-xs px-2 py-1 rounded-md bg-red-500 text-white borde flex items-center gap-1"
+                      className="text-xs px-3 py-1.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 transition-colors flex items-center gap-1.5"
                       title="Click to remove"
                     >
                       {v}
@@ -184,34 +250,21 @@ export function MessageTemplateManager() {
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2 items-center">
-              <p className="text-sm font-app">Insert: &nbsp; &nbsp;</p>
-              {Object.keys(VARIABLE_EXAMPLES).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => insertVariable(key)}
-                  className="text-xs px-2 py-1 rounded-md bg-green-500 text-white border flex items-center gap-1"
-                >
-                  {`{${key}}`}
-                  <Plus className="w-3 h-3" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Variables */}
-          <div className="p-4 rounded-xl bg-muted/40 border space-y-3">
-            {/* Preview */}
-            {message && (
-              <div className="mt-3 p-3 rounded-lg bg-background border">
-                <p className="text-xs text-muted-foreground mb-1">Preview:</p>
-                <p className="text-sm text-foreground whitespace-pre-wrap">
-                  {renderPreview()}
-                </p>
               </div>
+            )}
+
+            {/* Preview button */}
+            {message && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handlePreview(message)}
+                className="gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Preview Message
+              </Button>
             )}
           </div>
 
@@ -273,6 +326,15 @@ export function MessageTemplateManager() {
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                     {template.message}
                   </p>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => handlePreview(template.message)}
+                    className="px-0 h-auto text-xs text-primary mt-1 gap-1"
+                  >
+                    <Eye className="w-3 h-3" />
+                    Preview
+                  </Button>
                 </div>
 
                 <div className="flex items-center gap-1 flex-shrink-0">
@@ -331,6 +393,28 @@ export function MessageTemplateManager() {
           ))}
         </div>
       </ScrollArea>
+
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message Preview</DialogTitle>
+          </DialogHeader>
+          <div className="p-4 rounded-lg bg-muted/50 border">
+            <p className="text-sm whitespace-pre-wrap">{renderPreview(previewMessage)}</p>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            <p className="font-app mb-1">Variables used:</p>
+            <div className="flex flex-wrap gap-1">
+              {TEMPLATE_VARIABLES.map((v) => (
+                <span key={v.key} className="px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                  {`{${v.key}}`} → {v.key === "ShopName" && profile.businessName ? profile.businessName : v.key === "OwnerName" && profile.ownerName ? profile.ownerName : v.example}
+                </span>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

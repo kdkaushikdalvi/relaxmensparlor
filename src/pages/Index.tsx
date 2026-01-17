@@ -154,7 +154,7 @@ const Index = () => {
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [reminderFilter, setReminderFilter] = useState<ReminderCategory>("yet-to-send");
+  const [reminderFilter, setReminderFilter] = useState<ReminderCategory>("all");
   const [sortType, setSortType] = useState<SortType>("newest");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
@@ -170,6 +170,16 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem("theme", "light");
   }, []);
+
+  // Auto-switch from "All" to "Yet to be Sent" after 10 seconds
+  useEffect(() => {
+    if (reminderFilter === "all") {
+      const timer = setTimeout(() => {
+        setReminderFilter("yet-to-send");
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [reminderFilter]);
 
   const reminderCounts = useMemo(
     () => getReminderCategoryCounts(customers),

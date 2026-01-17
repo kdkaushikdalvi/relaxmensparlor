@@ -68,7 +68,7 @@ export function Header() {
 
             {/* Business Info */}
             <div className="leading-tight">
-              <h1 className=" text-xl font-app uppercase text-bold bg-gradient-to-r from-pink-500 via-blue-800 to-red-800 bg-clip-text text-transparent loading-glow">
+              <h1 className=" text-lg font-app uppercase text-bold bg-gradient-to-r from-pink-500 via-blue-800 to-red-800 bg-clip-text text-transparent loading-glow">
                 {profile.businessName}
               </h1>
               <p className="text-xs uppercase bg-gradient-to-r from-green-800 via-blue-800 to-red-800 bg-clip-text text-transparent">
@@ -78,19 +78,26 @@ export function Header() {
           </div>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {/* Force Refresh */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleForceRefresh}
-              disabled={isRefreshing}
+            <div
+              onClick={!isRefreshing ? handleForceRefresh : undefined}
               title="Force Refresh"
-              className="w-11 h-11 rounded-xl relative overflow-hidden transition-all duration-300 active:scale-90 hover:-translate-y-0.5 disabled:opacity-70"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (!isRefreshing && (e.key === "Enter" || e.key === " ")) {
+                  handleForceRefresh();
+                }
+              }}
+              className={`w-8 h-8 rounded-xl relative overflow-hidden flex items-center justify-center
+    transition-all duration-300 active:scale-90 hover:-translate-y-0.5
+    ${isRefreshing ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
               style={{
                 background:
                   "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
                 boxShadow: "0 8px 20px hsla(269.8, 70.3%, 55.1%, 0.45)",
+                pointerEvents: isRefreshing ? "none" : "auto",
               }}
             >
               {/* Glow */}
@@ -101,30 +108,31 @@ export function Header() {
 
               {/* Icon */}
               <RefreshCw
-                className={`w-5 h-5 text-white relative z-10 ${
+                className={`w-4 h-4 text-white relative z-10 ${
                   isRefreshing ? "animate-spin" : ""
                 }`}
               />
-            </Button>
+            </div>
 
             {/* Add Button */}
             {isHomePage && (
-              <Button
+              <div
                 onClick={() => navigate("/customer/new")}
-                className="w-11 h-11 rounded-xl relative overflow-hidden transition-all duration-300 active:scale-90 hover:-translate-y-0.5"
+                title="Add Customer"
+                className="w-8 h-8 rounded-lg relative overflow-hidden cursor-pointer flex items-center justify-center
+                         transition-all duration-200 active:scale-90 hover:-translate-y-0.5"
                 style={{
                   background:
                     "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
-                  boxShadow: "0 8px 20px hsla(269.8, 70.3%, 55.1%, 0.45)",
+                  boxShadow: "0 4px 10px hsla(269.8, 70.3%, 55.1%, 0.4)",
                 }}
-                title="Add Customer"
               >
                 {/* Glow */}
-                <div className="absolute inset-0 rounded-full bg-[hsl(269.8,70.3%,55.1%)] blur-md opacity-60 animate-pulse" />
+                <div className="absolute inset-0 rounded-lg bg-[hsl(269.8,70.3%,55.1%)] blur-sm opacity-50" />
 
                 {/* Icon */}
-                <Plus className="w-6 h-6 relative z-10" />
-              </Button>
+                <Plus className="w-3.5 h-3.5 relative z-10 text-white pointer-events-none" />
+              </div>
             )}
           </div>
         </div>

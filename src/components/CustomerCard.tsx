@@ -281,7 +281,27 @@ export function CustomerCard({
 
             {/* Reminder Status & Button */}
             <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border/30">
-              {/* Left side: Status badges */}
+              <div
+                onClick={hasValidPhone ? handleSendReminder : undefined}
+                className={`inline-flex shrink-0 items-center justify-center gap-1.5 h-7 px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-all duration-200 select-none
+    focus:outline-none focus:ring-2 focus:ring-offset-1
+    ${
+      hasValidPhone
+        ? "cursor-pointer bg-green-500 text-white border-green-200 hover:bg-green-100 hover:shadow-sm hover:ring-2 hover:ring-green-200 active:bg-green-200"
+        : "cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 opacity-70"
+    }`}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="leading-none">WhatsApp</span>
+
+                {/* Pulse dot */}
+                {hasValidPhone && (
+                  <span className="relative flex h-2 w-2 ml-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 min-w-0">
                 {sentCount > 0 && (
                   <Badge
@@ -308,29 +328,6 @@ export function CustomerCard({
                       </span>
                     )}
                   </Badge>
-                )}
-              </div>
-
-              {/* Right side: Reminder button */}
-              <div
-                onClick={hasValidPhone ? handleSendReminder : undefined}
-                className={`inline-flex shrink-0 items-center justify-center gap-1.5 h-7 px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-all duration-200 select-none
-    focus:outline-none focus:ring-2 focus:ring-offset-1
-    ${
-      hasValidPhone
-        ? "cursor-pointer bg-green-500 text-white border-green-200 hover:bg-green-100 hover:shadow-sm hover:ring-2 hover:ring-green-200 active:bg-green-200"
-        : "cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 opacity-70"
-    }`}
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span className="leading-none">WhatsApp</span>
-                
-                {/* Pulse dot */}
-                {hasValidPhone && (
-                  <span className="relative flex h-2 w-2 ml-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                  </span>
                 )}
               </div>
             </div>

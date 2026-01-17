@@ -276,56 +276,59 @@ export function CustomerCard({
                   Last reminder: &nbsp;
                   <span className="text-red-800">{lastReminderTimeAgo}</span>
                 </span>
-                {sentCount > 1 && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] px-1.5 py-0 ml-1"
-                  >
-                    {sentCount} sent
-                  </Badge>
-                )}
               </div>
             )}
 
             {/* Reminder Status & Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 pt-2 border-t border-border/30">
-              {customer.reminderDate && reminderStatus !== "none" && (
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-[10px] sm:text-xs gap-1 border w-fit",
-                    statusInfo.className
-                  )}
-                >
-                  <statusInfo.icon className="w-3 h-3" />
-                  {statusInfo.label}
-                  {reminderStatus === "upcoming" && (
-                    <span className="ml-1">
-                      {format(new Date(customer.reminderDate), "dd MMM")}
-                    </span>
-                  )}
-                </Badge>
-              )}
+            <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border/30">
+              {/* Left side: Status badges */}
+              <div className="flex items-center gap-2 min-w-0">
+                {sentCount > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="text-[11px] px-1.5 py-0 shrink-0"
+                  >
+                    {sentCount} Sent
+                  </Badge>
+                )}
 
-              {/* Always show Send Reminder button */}
+                {customer.reminderDate && reminderStatus !== "none" && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[10px] sm:text-xs gap-1 border w-fit shrink-0",
+                      statusInfo.className
+                    )}
+                  >
+                    <statusInfo.icon className="w-3 h-3" />
+                    {statusInfo.label}
+                    {reminderStatus === "upcoming" && (
+                      <span className="ml-1">
+                        {format(new Date(customer.reminderDate), "dd MMM")}
+                      </span>
+                    )}
+                  </Badge>
+                )}
+              </div>
 
+              {/* Right side: Reminder button */}
               <div
                 onClick={hasValidPhone ? handleSendReminder : undefined}
-                className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] sm:text-xs rounded-full border transition-all duration-200 select-none
-              ${
-                hasValidPhone
-                ? "cursor-pointer bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:scale-105 active:scale-95"
-                : "cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200"
-              }
-              `}
+                className={`inline-flex shrink-0 items-center justify-center gap-1.5 h-7 px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-all duration-200 select-none
+    focus:outline-none focus:ring-2 focus:ring-offset-1
+    ${
+      hasValidPhone
+        ? "cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:shadow-sm hover:ring-2 hover:ring-blue-200 active:bg-blue-200"
+        : "cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 opacity-70"
+    }`}
               >
-                <MessageCircle className="w-3 h-3" />
-                <span>Reminder</span>
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span className="leading-none">Reminder</span>
 
-                {/* Subtle pulse dot */}
+                {/* Pulse dot */}
                 {hasValidPhone && (
                   <span className="relative flex h-2 w-2 ml-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                   </span>
                 )}

@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 export interface MessageTemplate {
   id: string;
@@ -17,14 +23,13 @@ interface MessageTemplateContextType {
   setDefaultTemplate: (id: string) => void;
 }
 
-const STORAGE_KEY = 'relax-salon-message-templates';
+const STORAGE_KEY = "relax-salon-message-templates";
 
 const DEFAULT_TEMPLATES: MessageTemplate[] = [
   {
-    id: 'default-marathi',
-    name: 'मराठी टेम्पलेट',
-    message: 
-    `नमस्कार {customerName}! सर,
+    id: "default-marathi",
+    name: "मराठी टेम्पलेट",
+    message: `नमस्कार {customerName},
     आज तुमची अपॉइंटमेंट घ्यायची आहे का?
     कृपया रिप्लाय करा किंवा कॉल करा.
     धन्यवाद! 🙏`,
@@ -32,11 +37,10 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'default-english',
-    name: 'Test Template',
-    message: 
-    `Hello {customerName}!
-    We'd love to see you today! 💈
+    id: "default-english",
+    name: "Test Template",
+    message: `Hello {customerName}!
+    We'd love to see you today!
     Please reply or call us to confirm.
     Thank you! 🙏`,
     isDefault: false,
@@ -44,7 +48,9 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
   },
 ];
 
-const MessageTemplateContext = createContext<MessageTemplateContextType | undefined>(undefined);
+const MessageTemplateContext = createContext<
+  MessageTemplateContextType | undefined
+>(undefined);
 
 export function MessageTemplateProvider({ children }: { children: ReactNode }) {
   const [templates, setTemplates] = useState<MessageTemplate[]>(() => {
@@ -71,28 +77,26 @@ export function MessageTemplateProvider({ children }: { children: ReactNode }) {
       isDefault: false,
       createdAt: new Date().toISOString(),
     };
-    setTemplates(prev => [...prev, newTemplate]);
+    setTemplates((prev) => [...prev, newTemplate]);
     return newTemplate;
   };
 
   const updateTemplate = (id: string, data: Partial<MessageTemplate>) => {
-    setTemplates(prev =>
-      prev.map(t => (t.id === id ? { ...t, ...data } : t))
+    setTemplates((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...data } : t))
     );
   };
 
   const deleteTemplate = (id: string) => {
-    setTemplates(prev => prev.filter(t => t.id !== id));
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
   const getDefaultTemplate = (): MessageTemplate | undefined => {
-    return templates.find(t => t.isDefault) || templates[0];
+    return templates.find((t) => t.isDefault) || templates[0];
   };
 
   const setDefaultTemplate = (id: string) => {
-    setTemplates(prev =>
-      prev.map(t => ({ ...t, isDefault: t.id === id }))
-    );
+    setTemplates((prev) => prev.map((t) => ({ ...t, isDefault: t.id === id })));
   };
 
   return (
@@ -114,7 +118,9 @@ export function MessageTemplateProvider({ children }: { children: ReactNode }) {
 export function useMessageTemplates() {
   const context = useContext(MessageTemplateContext);
   if (!context) {
-    throw new Error('useMessageTemplates must be used within a MessageTemplateProvider');
+    throw new Error(
+      "useMessageTemplates must be used within a MessageTemplateProvider"
+    );
   }
   return context;
 }

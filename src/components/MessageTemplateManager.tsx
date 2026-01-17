@@ -46,7 +46,8 @@ export function MessageTemplateManager() {
   const { toast } = useToast();
 
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [editingTemplate, setEditingTemplate] = useState<MessageTemplate | null>(null);
+  const [editingTemplate, setEditingTemplate] =
+    useState<MessageTemplate | null>(null);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
 
@@ -166,40 +167,43 @@ export function MessageTemplateManager() {
             />
 
             {/* Used variables */}
-            {usedVariables.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {usedVariables.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => removeVariable(v)}
-                    className="text-xs px-2 py-1 rounded-md bg-primary/10 border hover:bg-destructive/10 flex items-center gap-1"
-                    title="Click to remove"
-                  >
-                    {v}
-                    <X className="w-3 h-3" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Variables */}
-          <div className="p-4 rounded-xl bg-muted/40 border space-y-3">
-            <p className="text-sm font-app">Insert Variables</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              <p className="text-sm font-app">Remove:</p>
+              {usedVariables.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {usedVariables.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => removeVariable(v)}
+                      className="text-xs px-2 py-1 rounded-md bg-red-500 text-white borde flex items-center gap-1"
+                      title="Click to remove"
+                    >
+                      {v}
+                      <X className="w-3 h-3" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <p className="text-sm font-app">Insert: &nbsp; &nbsp;</p>
               {Object.keys(VARIABLE_EXAMPLES).map((key) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => insertVariable(key)}
-                  className="px-3 py-2 rounded-lg bg-background border text-sm hover:bg-primary/10 transition"
+                  className="text-xs px-2 py-1 rounded-md bg-green-500 text-white border flex items-center gap-1"
                 >
                   {`{${key}}`}
+                  <Plus className="w-3 h-3" />
                 </button>
               ))}
             </div>
+          </div>
 
+          {/* Variables */}
+          <div className="p-4 rounded-xl bg-muted/40 border space-y-3">
             {/* Preview */}
             {message && (
               <div className="mt-3 p-3 rounded-lg bg-background border">
@@ -213,7 +217,11 @@ export function MessageTemplateManager() {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button variant="outline" onClick={handleCancel} className="flex-1 h-12">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="flex-1 h-12"
+            >
               Cancel
             </Button>
             <Button onClick={handleSave} className="flex-1 h-12 gap-2">

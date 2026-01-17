@@ -68,7 +68,7 @@ export function Header() {
 
             {/* Business Info */}
             <div className="leading-tight">
-              <h1 className="font-app uppercase text-bold bg-gradient-to-r from-pink-500 via-blue-800 to-red-800 bg-clip-text text-transparent loading-glow">
+              <h1 className=" text-xl font-app uppercase text-bold bg-gradient-to-r from-pink-500 via-blue-800 to-red-800 bg-clip-text text-transparent loading-glow">
                 {profile.businessName}
               </h1>
               <p className="text-xs uppercase bg-gradient-to-r from-green-800 via-blue-800 to-red-800 bg-clip-text text-transparent">

@@ -7,6 +7,7 @@ export interface ReminderHistory {
 
 export interface Customer {
   id: string;
+  customerId: number; // Auto-incrementing ID starting from 1
   fullName: string;
   mobileNumber: string;
   interest: string[];
@@ -21,7 +22,7 @@ export interface Customer {
   reminderHistory?: ReminderHistory[];
 }
 
-export type CustomerFormData = Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'reminderHistory' | 'reminderSentDates'>;
+export type CustomerFormData = Omit<Customer, 'id' | 'customerId' | 'createdAt' | 'updatedAt' | 'reminderHistory' | 'reminderSentDates'>;
 
 export const INTEREST_OPTIONS = [
   'Haircut',

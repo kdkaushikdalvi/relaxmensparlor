@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface CustomerCardProps {
   customer: Customer;
+  displayId?: number; // Display ID for the card
   onClick: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -73,6 +74,7 @@ const statusConfig: Record<
 
 export function CustomerCard({
   customer,
+  displayId,
   onClick,
   onEdit,
   onDelete,
@@ -209,24 +211,24 @@ export function CustomerCard({
             </div>
           )}
 
-          {/* Multi-Color Avatar */}
+          {/* Customer ID Badge */}
           <div
             className={cn(
-              "flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300",
+              "flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-glow transition-all duration-300 border-2",
               reminderStatus === "overdue"
-                ? "bg-destructive/20"
-                : getAvatarGradient(customer.fullName)
+                ? "bg-destructive/20 border-destructive/50"
+                : "bg-primary/10 border-primary/30"
             )}
           >
             <span
               className={cn(
-                "text-base sm:text-lg font-display font-app",
+                "text-lg sm:text-xl font-bold font-display",
                 reminderStatus === "overdue"
                   ? "text-destructive"
-                  : getAvatarTextColor(customer.fullName)
+                  : "text-primary"
               )}
             >
-              {customer?.fullName?.charAt(0)?.toUpperCase()}
+              {displayId ?? customer.customerId ?? '-'}
             </span>
           </div>
 

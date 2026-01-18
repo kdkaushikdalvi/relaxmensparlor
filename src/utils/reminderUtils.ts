@@ -119,6 +119,21 @@ function getDefaultTemplateFromStorage(): MessageTemplate | null {
 }
 
 /**
+ * Get profile data from localStorage
+ */
+function getProfileFromStorage(): { ownerName: string; businessName: string } {
+  try {
+    const stored = localStorage.getItem("relax-parlor-profile");
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Fall through
+  }
+  return { ownerName: "", businessName: "" };
+}
+
+/**
  * Generate WhatsApp reminder message using template
  */
 export function generateReminderMessage(
@@ -129,13 +144,28 @@ export function generateReminderMessage(
 ): string {
   // Get template from storage if not provided
   const activeTemplate = template || getDefaultTemplateFromStorage();
+  const profileData = getProfileFromStorage();
 
   if (activeTemplate) {
-    // Replace template variables - only customerName is supported
-    let message = activeTemplate.message.replace(
-      /\{customerName\}/g,
-      customer.fullName
-    );
+    // Replace all template variables
+    let message = activeTemplate.message;
+    
+    // Replace {CustomerName} - case insensitive
+    message = message.replace(/\{CustomerName\}/gi, customer.fullName);
+    
+    // Replace {ShopName} - case insensitive
+    message = message.replace(/\{ShopName\}/gi, profileData.businessName || businessName || "our shop");
+    
+    // Replace {OwnerName} - case insensitive
+    message = message.replace(/\{OwnerName\}/gi, profileData.ownerName || "");
+    
+    // Replace {LastVisit} - case insensitive
+    if (customer.visitingDate) {
+      const visitDate = format(parseISO(customer.visitingDate), "dd MMM yyyy");
+      message = message.replace(/\{LastVisit\}/gi, visitDate);
+    } else {
+      message = message.replace(/\{LastVisit\}/gi, "");
+    }
 
     return message;
   }

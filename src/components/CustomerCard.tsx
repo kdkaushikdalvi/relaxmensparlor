@@ -211,24 +211,23 @@ export function CustomerCard({
             </div>
           )}
 
-          {/* Customer ID Badge */}
           <div
             className={cn(
-              "flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-glow transition-all duration-300 border-2",
+              "flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300",
               reminderStatus === "overdue"
-                ? "bg-destructive/20 border-destructive/50"
-                : "bg-primary/10 border-primary/30"
+                ? "bg-destructive/20"
+                : getAvatarGradient(customer.fullName)
             )}
           >
             <span
               className={cn(
-                "text-lg sm:text-xl font-bold font-display",
+                "text-base sm:text-lg font-display font-app",
                 reminderStatus === "overdue"
                   ? "text-destructive"
-                  : "text-primary"
+                  : getAvatarTextColor(customer.fullName)
               )}
             >
-              {displayId ?? customer.customerId ?? '-'}
+              {displayId ?? customer.customerId ?? "-"}
             </span>
           </div>
 

@@ -50,7 +50,7 @@ import {
 /* -------------------- Types -------------------- */
 
 type DateGroup = "Today" | "Yesterday" | "Unknown Date" | string;
-type SortType = "date" | "name" | "reminder" | "newest";
+type SortType = "customerId" | "name";
 
 /* -------------------- Date Helpers -------------------- */
 
@@ -127,20 +127,13 @@ const sortCustomers = (
   customers: Customer[],
   sortType: SortType
 ): Customer[] => {
-  if (sortType === "reminder") return sortByReminderPriority(customers);
-
   return [...customers].sort((a, b) => {
     if (sortType === "name") return a.fullName.localeCompare(b.fullName);
 
-    if (sortType === "newest") {
-      const da = safeParseDate(a.createdAt)?.getTime() || 0;
-      const db = safeParseDate(b.createdAt)?.getTime() || 0;
-      return db - da;
-    }
-
-    const da = safeParseDate(a.visitingDate)?.getTime() || 0;
-    const db = safeParseDate(b.visitingDate)?.getTime() || 0;
-    return db - da;
+    // Default: sort by customer ID (ascending - 1, 2, 3...)
+    const idA = a.customerId || 0;
+    const idB = b.customerId || 0;
+    return idA - idB;
   });
 };
 
@@ -155,7 +148,7 @@ const Index = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [reminderFilter, setReminderFilter] = useState<ReminderCategory>("all");
-  const [sortType, setSortType] = useState<SortType>("newest");
+  const [sortType, setSortType] = useState<SortType>("customerId");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -293,17 +286,11 @@ const Index = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setSortType("newest")}>
-                        Newest First
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSortType("reminder")}>
-                        Sort by Priority
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSortType("date")}>
-                        Sort by Visit Date
+                      <DropdownMenuItem onClick={() => setSortType("customerId")}>
+                        By Customer ID
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setSortType("name")}>
-                        Sort by Name
+                        By Name
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -328,10 +315,11 @@ const Index = () => {
                   <div className="font-app text-lg mb-3">{group}</div>
 
                   <div className="space-y-4">
-                    {groupCustomers.map((customer) => (
+                    {groupCustomers.map((customer, index) => (
                       <CustomerCard
                         key={customer.id}
                         customer={customer}
+                        displayId={customer.customerId}
                         onClick={() => handleViewCustomer(customer)}
                         onEdit={() => handleEditCustomer(customer)}
                         onDelete={() => handleDeleteCustomer(customer)}

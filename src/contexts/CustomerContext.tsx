@@ -32,6 +32,7 @@ const getSampleCustomer = (): Customer => {
 
   return {
     id: "sample-customer-1",
+    customerId: 1,
     fullName: ownerName,
     mobileNumber: mobileNumber,
     interest: ["Haircut", "Facial"],
@@ -90,9 +91,12 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
 
   const addCustomer = useCallback((data: CustomerFormData): Customer => {
     const now = new Date().toISOString();
+    // Calculate next customer ID (max existing + 1, or 1 if no customers)
+    const maxCustomerId = customers.reduce((max, c) => Math.max(max, c.customerId || 0), 0);
     const newCustomer: Customer = {
       ...data,
       id: generateId(),
+      customerId: maxCustomerId + 1,
       createdAt: now,
       updatedAt: now,
       reminderSentDates: [],
@@ -100,7 +104,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     };
     setCustomers((prev) => [newCustomer, ...prev]);
     return newCustomer;
-  }, []);
+  }, [customers]);
 
   const updateCustomer = useCallback(
     (id: string, data: Partial<Customer>): Customer | null => {

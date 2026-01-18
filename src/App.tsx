@@ -8,6 +8,7 @@ import { CustomerProvider } from "@/contexts/CustomerContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { SetupProvider, useSetup } from "@/contexts/SetupContext";
 import { MessageTemplateProvider } from "@/contexts/MessageTemplateContext";
+import { ServicesProvider } from "@/contexts/ServicesContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { FirstTimeSetup } from "@/components/FirstTimeSetup";
@@ -60,13 +61,15 @@ const App = () => (
       <TooltipProvider>
         <SetupProvider>
           <ProfileProvider>
-            <CustomerProvider>
-              <MessageTemplateProvider>
-                <Toaster />
-                <Sonner />
-                <AppContent />
-              </MessageTemplateProvider>
-            </CustomerProvider>
+            <ServicesProvider>
+              <CustomerProvider>
+                <MessageTemplateProvider>
+                  <Toaster />
+                  <Sonner />
+                  <AppContent />
+                </MessageTemplateProvider>
+              </CustomerProvider>
+            </ServicesProvider>
           </ProfileProvider>
         </SetupProvider>
       </TooltipProvider>

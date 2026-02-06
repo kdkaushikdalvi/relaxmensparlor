@@ -53,6 +53,7 @@ const CustomerFormPage = () => {
   const [editServiceName, setEditServiceName] = useState("");
 
   const [currentStep, setCurrentStep] = useState<FormStep>("basic");
+  const [customerId, setCustomerId] = useState<string>("");
   const [formData, setFormData] = useState<CustomerFormData>({
     fullName: "",
     mobileNumber: "",
@@ -72,6 +73,7 @@ const CustomerFormPage = () => {
 
   useEffect(() => {
     if (customer) {
+      setCustomerId(customer.customerId?.toString() || "");
       setFormData({
         fullName: customer.fullName,
         mobileNumber: customer.mobileNumber,
@@ -108,6 +110,12 @@ const CustomerFormPage = () => {
     return true;
   };
 
+  // Handle customer ID input (max 4 digits, numeric only)
+  const handleCustomerIdChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 4);
+    setCustomerId(digitsOnly);
+  };
+
   const handlePhoneChange = (value: string) => {
     const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
     setFormData((prev) => ({ ...prev, mobileNumber: digitsOnly }));
@@ -115,14 +123,24 @@ const CustomerFormPage = () => {
 
   const handleSubmit = () => {
     if (isEditing && customer) {
-      updateCustomer(customer.id, formData);
+      // Include customerId in update if provided
+      const updateData: any = { ...formData };
+      if (customerId) {
+        updateData.customerId = parseInt(customerId, 10);
+      }
+      updateCustomer(customer.id, updateData);
       toast({
         title: "Customer updated",
         description: `${formData.fullName} updated successfully.`,
       });
       navigate(`/customer/${customer.id}`);
     } else {
-      addCustomer(formData);
+      // For new customers, pass customerId if provided
+      const newCustomer = addCustomer(formData);
+      // Update with custom ID if provided
+      if (customerId) {
+        updateCustomer(newCustomer.id, { customerId: parseInt(customerId, 10) });
+      }
       toast({
         title: "Customer added",
         description: `${formData.fullName} added successfully.`,
@@ -193,6 +211,22 @@ const CustomerFormPage = () => {
       case "basic":
         return (
           <div className="space-y-4">
+            {/* Customer ID - Editable, max 4 digits */}
+            <div className="flex items-center gap-3">
+              <div className="w-16 h-14 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={customerId}
+                  onChange={(e) => handleCustomerIdChange(e.target.value)}
+                  placeholder="#"
+                  maxLength={4}
+                  className="h-12 text-lg font-bold text-center border-0 bg-transparent p-0 w-full"
+                />
+              </div>
+              <span className="text-sm text-muted-foreground">Customer ID (optional, max 4 digits)</span>
+            </div>
+
             <Input
               autoFocus
               value={formData.fullName}

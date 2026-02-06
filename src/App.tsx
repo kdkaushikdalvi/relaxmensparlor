@@ -18,6 +18,7 @@ import CustomerFormPage from "./pages/CustomerFormPage";
 import ReminderHistoryPage from "./pages/ReminderHistoryPage";
 import MessageTemplatesPage from "./pages/MessageTemplatesPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
+import ServicesPage from "./pages/ServicesPage";
 import SharePage from "./pages/SharePage";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ function AppContent() {
               <Route path="/reminder-history" element={<ReminderHistoryPage />} />
               <Route path="/message-templates" element={<MessageTemplatesPage />} />
               <Route path="/profile" element={<ProfileSettingsPage />} />
+              <Route path="/services" element={<ServicesPage />} />
               <Route path="/share" element={<SharePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

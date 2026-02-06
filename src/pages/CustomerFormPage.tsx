@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, ArrowLeft, Save, Check, X, Plus, Pencil, Trash2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, Save, Check } from "lucide-react";
 import { CustomerFormData, ReminderInterval } from "@/types/customer";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useServices } from "@/contexts/ServicesContext";
@@ -8,13 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 
 type FormStep = "basic" | "interests";
 
@@ -40,17 +33,14 @@ const CustomerFormPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { getCustomer, addCustomer, updateCustomer } = useCustomers();
-  const { services, addService, updateService, deleteService } = useServices();
+  const { getServiceNames } = useServices();
   const { toast } = useToast();
 
   const customer = id ? getCustomer(id) : undefined;
   const isEditing = !!customer;
 
-  // Service management state
-  const [showAddService, setShowAddService] = useState(false);
-  const [newServiceName, setNewServiceName] = useState("");
-  const [editingService, setEditingService] = useState<string | null>(null);
-  const [editServiceName, setEditServiceName] = useState("");
+  // Get active service names for the form
+  const serviceNames = getServiceNames();
 
   const [currentStep, setCurrentStep] = useState<FormStep>("basic");
   const [customerId, setCustomerId] = useState<string>("");
@@ -173,39 +163,6 @@ const CustomerFormPage = () => {
     }));
   };
 
-  const handleAddService = () => {
-    if (newServiceName.trim()) {
-      addService(newServiceName.trim());
-      setNewServiceName("");
-      setShowAddService(false);
-      toast({ title: "Service added" });
-    }
-  };
-
-  const handleEditService = () => {
-    if (editingService && editServiceName.trim()) {
-      updateService(editingService, editServiceName.trim());
-      setEditingService(null);
-      setEditServiceName("");
-      toast({ title: "Service updated" });
-    }
-  };
-
-  const handleDeleteService = (service: string) => {
-    deleteService(service);
-    // Also remove from selected interests
-    setFormData((prev) => ({
-      ...prev,
-      interest: prev.interest.filter((i) => i !== service),
-    }));
-    toast({ title: "Service deleted" });
-  };
-
-  const startEditService = (service: string) => {
-    setEditingService(service);
-    setEditServiceName(service);
-  };
-
   const renderStepContent = () => {
     switch (currentStep) {
       case "basic":
@@ -252,73 +209,41 @@ const CustomerFormPage = () => {
         return (
           <div className="space-y-5">
             <div className="flex flex-wrap gap-3 justify-center">
-              {services.map((interest) => (
-                <div key={interest} className="relative group">
-                  <button
-                    type="button"
-                    onClick={() => toggleInterest(interest)}
-                    className={cn(
-                      "px-5 py-3 rounded-full text-base font-app pr-16",
-                      formData.interest.includes(interest)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    )}
-                  >
-                    {formData.interest.includes(interest) && (
-                      <Check className="w-4 h-4 inline mr-1" />
-                    )}
-                    {interest}
-                  </button>
-                  {/* Edit/Delete buttons */}
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-0.5">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startEditService(interest);
-                      }}
-                      className="p-1.5 rounded-full hover:bg-primary/20"
-                    >
-                      <Pencil className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteService(interest);
-                      }}
-                      className="p-1.5 rounded-full hover:bg-destructive/20 text-destructive"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
+              {serviceNames.map((serviceName) => (
+                <button
+                  key={serviceName}
+                  type="button"
+                  onClick={() => toggleInterest(serviceName)}
+                  className={cn(
+                    "px-5 py-3 rounded-full text-base font-app",
+                    formData.interest.includes(serviceName)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  )}
+                >
+                  {formData.interest.includes(serviceName) && (
+                    <Check className="w-4 h-4 inline mr-1" />
+                  )}
+                  {serviceName}
+                </button>
               ))}
             </div>
             
-            {/* Add new service button */}
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddService(true)}
-                className="gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add New Service
-              </Button>
-            </div>
+            {serviceNames.length === 0 && (
+              <p className="text-center text-muted-foreground">
+                No active services available. Enable services in Settings → Services.
+              </p>
+            )}
           </div>
         );
     }
   };
 
   return (
-    <div className="min-h-screen  flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[hsl(var(--header-bg))] border-b">
-      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             {/* Back/Close Button - Always visible */}
             <Button
@@ -334,12 +259,12 @@ const CustomerFormPage = () => {
               )}
             </Button>
             <span className="text-xl font-app flex justify-center items-center w-full text-[18px] font-app text-purple-600">
-              {isEditing ? "Edit" : "Add"}  {stepConfig.title}
+              {isEditing ? "Edit" : "Add"} {stepConfig.title}
             </span>
           </div>
 
           {!stepConfig.required && (
-            <Button variant="ghost" size="sm" onClick={handleSkip}  className="h-12 w-12 rounded-full bg-primary/20 hover:bg-primary/20 text-white">
+            <Button variant="ghost" size="sm" onClick={handleSkip} className="h-12 w-12 rounded-full bg-primary/20 hover:bg-primary/20 text-white">
               Skip
             </Button>
           )}
@@ -381,48 +306,6 @@ const CustomerFormPage = () => {
           )}
         </Button>
       </div>
-
-      {/* Add Service Dialog */}
-      <Dialog open={showAddService} onOpenChange={setShowAddService}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New Service</DialogTitle>
-          </DialogHeader>
-          <Input
-            value={newServiceName}
-            onChange={(e) => setNewServiceName(e.target.value)}
-            placeholder="Service name"
-            className="h-12"
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddService(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddService}>Add</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Service Dialog */}
-      <Dialog open={!!editingService} onOpenChange={(open) => !open && setEditingService(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Service</DialogTitle>
-          </DialogHeader>
-          <Input
-            value={editServiceName}
-            onChange={(e) => setEditServiceName(e.target.value)}
-            placeholder="Service name"
-            className="h-12"
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingService(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditService}>Update</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

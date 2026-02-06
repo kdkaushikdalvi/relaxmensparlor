@@ -10,6 +10,7 @@ import {
   UserCircle,
   RotateCcw,
   Share2,
+  Scissors,
 } from "lucide-react";
 import { useSetup } from "@/contexts/SetupContext";
 import {
@@ -150,6 +151,13 @@ export function AppSidebar() {
             icon={<History className="w-5 h-5 text-blue-600" />}
             label="History"
             onClick={() => navigateTo("/reminder-history")}
+          />
+
+          {/* Services - navigates to page */}
+          <NavButton
+            icon={<Scissors className="w-5 h-5 text-amber-600" />}
+            label="Services"
+            onClick={() => navigateTo("/services")}
           />
 
           {/* Share - navigates to page */}

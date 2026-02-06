@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Info, RotateCcw } from "lucide-react";
+import { ArrowLeft, Plus, RotateCcw } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -15,11 +15,19 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useServices } from "@/contexts/ServicesContext";
+import { useServices, Service } from "@/contexts/ServicesContext";
 import { ServiceCard } from "@/components/ServiceCard";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,9 +42,12 @@ import {
 
 const ServicesPage = () => {
   const navigate = useNavigate();
-  const { services, reorderServices, toggleServiceStatus, resetToDefaults } = useServices();
+  const { services, addService, updateService, deleteService, reorderServices, toggleServiceStatus, resetToDefaults } = useServices();
   const { toast } = useToast();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newServiceName, setNewServiceName] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -73,11 +84,43 @@ const ServicesPage = () => {
     }
   };
 
+  const handleAddService = () => {
+    const trimmed = newServiceName.trim();
+    if (trimmed) {
+      addService(trimmed);
+      setNewServiceName("");
+      setShowAddDialog(false);
+      toast({ title: "Service added" });
+    }
+  };
+
+  const handleUpdate = (id: string, updates: Partial<Service>) => {
+    updateService(id, updates);
+    toast({ title: "Service updated" });
+  };
+
+  const handleDelete = (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteService(deleteConfirmId);
+      if (selectedId === deleteConfirmId) {
+        setSelectedId(null);
+      }
+      setDeleteConfirmId(null);
+      toast({ title: "Service deleted" });
+    }
+  };
+
   const handleReset = () => {
     resetToDefaults();
     setSelectedId(null);
     toast({ title: "Services reset to defaults" });
   };
+
+  const serviceToDelete = deleteConfirmId ? services.find(s => s.id === deleteConfirmId) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
@@ -97,16 +140,14 @@ const ServicesPage = () => {
           </div>
           
           <div className="flex gap-2">
-            {selectedId && (
-              <Button 
-                onClick={handleToggleStatus} 
-                size="sm" 
-                variant="secondary"
-                className="text-xs"
-              >
-                Toggle Status
-              </Button>
-            )}
+            <Button 
+              onClick={() => setShowAddDialog(true)} 
+              size="sm" 
+              className="gap-1.5"
+            >
+              <Plus className="w-4 h-4" />
+              Add
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10 text-white/80 hover:text-white hover:bg-white/10">
@@ -132,10 +173,9 @@ const ServicesPage = () => {
 
       {/* Helper Text */}
       <div className="px-4 py-3 bg-muted/50 border-b">
-        <div className="flex items-start gap-2 text-sm text-muted-foreground">
-          <Info className="w-4 h-4 mt-0.5 shrink-0" />
-          <p>Services are predefined and cannot be modified. Drag to reorder or tap to select and toggle status.</p>
-        </div>
+        <p className="text-sm text-muted-foreground text-center">
+          Tap name to edit • Drag to reorder • Tap card to select
+        </p>
       </div>
 
       {/* Services List */}
@@ -156,21 +196,78 @@ const ServicesPage = () => {
                   service={service}
                   isSelected={selectedId === service.id}
                   onSelect={handleSelect}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
                 />
               ))}
             </SortableContext>
           </DndContext>
+
+          {services.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="text-lg font-app">No services added yet</p>
+              <Button onClick={() => setShowAddDialog(true)} className="mt-4 gap-2">
+                <Plus className="w-4 h-4" />
+                Add First Service
+              </Button>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
-      {/* Selection Info */}
+      {/* Selection Actions */}
       {selectedId && (
         <div className="sticky bottom-0 p-4 bg-background border-t">
-          <p className="text-center text-sm text-muted-foreground">
-            Tap "Toggle Status" to activate/deactivate the selected service
-          </p>
+          <Button 
+            onClick={handleToggleStatus} 
+            className="w-full"
+            variant="outline"
+          >
+            Toggle Active/Inactive
+          </Button>
         </div>
       )}
+
+      {/* Add Service Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Service</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={newServiceName}
+            onChange={(e) => setNewServiceName(e.target.value)}
+            placeholder="Service name"
+            className="h-12"
+            onKeyDown={(e) => e.key === 'Enter' && handleAddService()}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddService}>Add</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{serviceToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

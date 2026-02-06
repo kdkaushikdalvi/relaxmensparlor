@@ -39,10 +39,12 @@ export const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: str
 
 interface ServicesContextType {
   services: Service[];
+  addService: (name: string) => void;
+  updateService: (id: string, updates: Partial<Service>) => void;
+  deleteService: (id: string) => void;
   reorderServices: (activeId: string, overId: string) => void;
   toggleServiceStatus: (id: string) => void;
   resetToDefaults: () => void;
-  // Legacy support for customer form
   getServiceNames: () => string[];
 }
 
@@ -56,7 +58,6 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        // Validate structure
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
           return parsed;
         }
@@ -70,6 +71,27 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
   }, [services]);
+
+  const addService = (name: string) => {
+    const newService: Service = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      description: 'New service',
+      icon: 'Star',
+      status: 'active',
+    };
+    setServices(prev => [...prev, newService]);
+  };
+
+  const updateService = (id: string, updates: Partial<Service>) => {
+    setServices(prev =>
+      prev.map(s => (s.id === id ? { ...s, ...updates } : s))
+    );
+  };
+
+  const deleteService = (id: string) => {
+    setServices(prev => prev.filter(s => s.id !== id));
+  };
 
   const reorderServices = (activeId: string, overId: string) => {
     setServices(prev => {
@@ -103,6 +125,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   return (
     <ServicesContext.Provider value={{ 
       services, 
+      addService,
+      updateService,
+      deleteService,
       reorderServices, 
       toggleServiceStatus, 
       resetToDefaults,

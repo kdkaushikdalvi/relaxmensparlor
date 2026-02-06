@@ -1,39 +1,67 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Scissors, Sparkles, Palette, Hand, Smile, Droplets, Heart, Star, Zap, Eye } from 'lucide-react';
 
-const DEFAULT_SERVICES = [
-  "हेअर कट",
-  "दाढी",
-  "कोरीव दाढी",
-  "हेअर कलर",
-  "मसाज",
-  "फेशियल",
-  "स्पा",
-  "मेकअप",
-  "हेअर ट्रीटमेंट",
-  "वॅक्सिंग",
-  "थ्रेडिंग",
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  status: 'active' | 'inactive';
+}
+
+const DEFAULT_SERVICES: Service[] = [
+  { id: '1', name: 'हेअर कट', description: 'Professional haircut and styling', icon: 'Scissors', status: 'active' },
+  { id: '2', name: 'दाढी', description: 'Classic shave with hot towel', icon: 'Sparkles', status: 'active' },
+  { id: '3', name: 'कोरीव दाढी', description: 'Precision beard trimming and shaping', icon: 'Star', status: 'active' },
+  { id: '4', name: 'हेअर कलर', description: 'Hair coloring and highlights', icon: 'Palette', status: 'active' },
+  { id: '5', name: 'मसाज', description: 'Relaxing head and body massage', icon: 'Hand', status: 'active' },
+  { id: '6', name: 'फेशियल', description: 'Deep cleansing facial treatment', icon: 'Smile', status: 'active' },
+  { id: '7', name: 'स्पा', description: 'Premium spa experience', icon: 'Droplets', status: 'active' },
+  { id: '8', name: 'मेकअप', description: 'Professional makeup services', icon: 'Heart', status: 'inactive' },
+  { id: '9', name: 'हेअर ट्रीटमेंट', description: 'Hair treatment and conditioning', icon: 'Zap', status: 'active' },
+  { id: '10', name: 'वॅक्सिंग', description: 'Waxing and hair removal', icon: 'Star', status: 'inactive' },
+  { id: '11', name: 'थ्रेडिंग', description: 'Eyebrow and facial threading', icon: 'Eye', status: 'active' },
 ];
 
+// Icon mapping for rendering
+export const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Scissors,
+  Sparkles,
+  Palette,
+  Hand,
+  Smile,
+  Droplets,
+  Heart,
+  Star,
+  Zap,
+  Eye,
+};
+
 interface ServicesContextType {
-  services: string[];
-  addService: (service: string) => void;
-  updateService: (oldService: string, newService: string) => void;
-  deleteService: (service: string) => void;
+  services: Service[];
+  reorderServices: (activeId: string, overId: string) => void;
+  toggleServiceStatus: (id: string) => void;
   resetToDefaults: () => void;
+  // Legacy support for customer form
+  getServiceNames: () => string[];
 }
 
 const ServicesContext = createContext<ServicesContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'relax-salon-services';
+const STORAGE_KEY = 'relax-salon-services-v2';
 
 export function ServicesProvider({ children }: { children: ReactNode }) {
-  const [services, setServices] = useState<string[]>(() => {
+  const [services, setServices] = useState<Service[]>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        // Validate structure
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
+          return parsed;
+        }
       } catch {
-        return DEFAULT_SERVICES;
+        // Fall through to defaults
       }
     }
     return DEFAULT_SERVICES;
@@ -43,30 +71,43 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
   }, [services]);
 
-  const addService = (service: string) => {
-    const trimmed = service.trim();
-    if (trimmed && !services.includes(trimmed)) {
-      setServices(prev => [...prev, trimmed]);
-    }
+  const reorderServices = (activeId: string, overId: string) => {
+    setServices(prev => {
+      const oldIndex = prev.findIndex(s => s.id === activeId);
+      const newIndex = prev.findIndex(s => s.id === overId);
+      
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      
+      const newServices = [...prev];
+      const [removed] = newServices.splice(oldIndex, 1);
+      newServices.splice(newIndex, 0, removed);
+      
+      return newServices;
+    });
   };
 
-  const updateService = (oldService: string, newService: string) => {
-    const trimmed = newService.trim();
-    if (trimmed && !services.includes(trimmed)) {
-      setServices(prev => prev.map(s => s === oldService ? trimmed : s));
-    }
-  };
-
-  const deleteService = (service: string) => {
-    setServices(prev => prev.filter(s => s !== service));
+  const toggleServiceStatus = (id: string) => {
+    setServices(prev => 
+      prev.map(s => s.id === id ? { ...s, status: s.status === 'active' ? 'inactive' : 'active' } : s)
+    );
   };
 
   const resetToDefaults = () => {
     setServices(DEFAULT_SERVICES);
   };
 
+  const getServiceNames = () => {
+    return services.filter(s => s.status === 'active').map(s => s.name);
+  };
+
   return (
-    <ServicesContext.Provider value={{ services, addService, updateService, deleteService, resetToDefaults }}>
+    <ServicesContext.Provider value={{ 
+      services, 
+      reorderServices, 
+      toggleServiceStatus, 
+      resetToDefaults,
+      getServiceNames 
+    }}>
       {children}
     </ServicesContext.Provider>
   );

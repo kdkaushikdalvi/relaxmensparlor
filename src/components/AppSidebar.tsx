@@ -11,8 +11,10 @@ import {
   RotateCcw,
   Share2,
   Scissors,
+  LogOut,
 } from "lucide-react";
 import { useSetup } from "@/contexts/SetupContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -45,6 +47,7 @@ import {
 export function AppSidebar() {
   const navigate = useNavigate();
   const { resetSetup, resetAll, setupData } = useSetup();
+  const { signOut } = useAuth();
   const { toggleSidebar } = useSidebar();
 
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -179,6 +182,15 @@ export function AppSidebar() {
             icon={<Download className="w-5 h-5 text-green-600" />}
             label="Install App"
             onClick={handleInstallPWA}
+          />
+          {/* Sign Out */}
+          <NavButton
+            icon={<LogOut className="w-5 h-5 text-gray-600" />}
+            label="Sign Out"
+            onClick={async () => {
+              await signOut();
+              toggleSidebar();
+            }}
           />
         </div>
       </SidebarContent>

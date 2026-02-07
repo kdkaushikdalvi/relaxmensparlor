@@ -59,7 +59,7 @@ export function ServiceCard({ service, isSelected, onSelect, onUpdate, onDelete 
       ref={setNodeRef}
       style={style}
       className={cn(
-        "bg-card rounded-xl border p-4 flex items-center gap-3 transition-all duration-200",
+        "bg-card rounded-xl border p-3 sm:p-4 flex items-center gap-2 sm:gap-3 transition-all duration-200 w-full overflow-hidden",
         "hover:border-primary/30 hover:shadow-sm",
         isSelected && "ring-2 ring-primary border-primary bg-primary/5",
         isDragging && "opacity-50 shadow-lg scale-[1.02]"
@@ -73,17 +73,17 @@ export function ServiceCard({ service, isSelected, onSelect, onUpdate, onDelete 
         className="touch-none p-2 -m-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
-        <GripVertical className="w-5 h-5" />
+        <GripVertical className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
 
       {/* Icon */}
       <div className={cn(
-        "w-11 h-11 rounded-full flex items-center justify-center shrink-0",
+        "w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shrink-0",
         service.status === 'active' 
           ? "bg-primary/10 text-primary" 
           : "bg-muted text-muted-foreground"
       )}>
-        <IconComponent className="w-5 h-5" />
+        <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
 
       {/* Content */}

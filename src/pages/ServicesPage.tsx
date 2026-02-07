@@ -123,7 +123,7 @@ const ServicesPage = () => {
   const serviceToDelete = deleteConfirmId ? services.find(s => s.id === deleteConfirmId) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[hsl(var(--header-bg))] border-b">
         <div className="flex items-center justify-between px-4 py-3">

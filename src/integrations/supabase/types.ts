@@ -27,6 +27,7 @@ export type Database = {
           reminder_interval: string | null
           reminder_sent_dates: string[] | null
           updated_at: string
+          user_id: string | null
           visiting_date: string
         }
         Insert: {
@@ -41,6 +42,7 @@ export type Database = {
           reminder_interval?: string | null
           reminder_sent_dates?: string[] | null
           updated_at?: string
+          user_id?: string | null
           visiting_date?: string
         }
         Update: {
@@ -55,6 +57,7 @@ export type Database = {
           reminder_interval?: string | null
           reminder_sent_dates?: string[] | null
           updated_at?: string
+          user_id?: string | null
           visiting_date?: string
         }
         Relationships: []
@@ -68,6 +71,7 @@ export type Database = {
           mobile_number: string
           owner_name: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           business_name?: string
@@ -77,6 +81,7 @@ export type Database = {
           mobile_number?: string
           owner_name?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           business_name?: string
@@ -86,6 +91,7 @@ export type Database = {
           mobile_number?: string
           owner_name?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -96,6 +102,7 @@ export type Database = {
           id: string
           message: string
           sent_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -103,6 +110,7 @@ export type Database = {
           id?: string
           message?: string
           sent_at: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -110,6 +118,7 @@ export type Database = {
           id?: string
           message?: string
           sent_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -130,6 +139,7 @@ export type Database = {
           name: string
           sort_order: number
           status: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -139,6 +149,7 @@ export type Database = {
           name: string
           sort_order?: number
           status?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -148,6 +159,7 @@ export type Database = {
           name?: string
           sort_order?: number
           status?: string
+          user_id?: string | null
         }
         Relationships: []
       }

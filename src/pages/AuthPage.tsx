@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, Lock, LogIn, UserPlus, Loader2 } from 'lucide-react';
+import { Phone, Lock, LogIn, UserPlus, Loader2, User, Store } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import brandLogo from '@/assets/brand-logo-transparent.png';
 
 const AuthPage = () => {
@@ -13,6 +14,8 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (authLoading) {
@@ -43,8 +46,19 @@ const AuthPage = () => {
       return;
     }
 
+    if (!isLogin) {
+      if (!ownerName.trim()) {
+        toast({ title: 'Please enter your name', variant: 'destructive' });
+        return;
+      }
+      if (!businessName.trim()) {
+        toast({ title: 'Please enter your shop name', variant: 'destructive' });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
-    const email = toEmail(mobile);
+    const email = toEmail(cleaned);
 
     try {
       if (isLogin) {
@@ -63,6 +77,28 @@ const AuthPage = () => {
             : error.message || 'Signup failed';
           toast({ title: msg, variant: 'destructive' });
         } else {
+          // Save profile to DB after successful signup
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            await supabase.from('profiles').insert({
+              user_id: session.user.id,
+              owner_name: ownerName.trim(),
+              business_name: businessName.trim(),
+              mobile_number: cleaned,
+              is_setup_complete: true,
+            });
+          }
+          // Also save to localStorage for offline support
+          localStorage.setItem('relax-salon-setup', JSON.stringify({
+            ownerName: ownerName.trim(),
+            businessName: businessName.trim(),
+            mobileNumber: cleaned,
+            isSetupComplete: true,
+          }));
+          localStorage.setItem('relax-parlor-profile', JSON.stringify({
+            ownerName: ownerName.trim(),
+            businessName: businessName.trim(),
+          }));
           toast({ title: 'Account created! You are now signed in.' });
         }
       }
@@ -81,20 +117,45 @@ const AuthPage = () => {
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h1>
           <p className="text-sm text-muted-foreground text-center">
-            {isLogin ? 'Sign in to manage your salon' : 'Sign up to get started'}
+            {isLogin ? 'Sign in to manage your salon' : 'Set up your salon in seconds'}
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Your name"
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                  className="h-12 pl-11"
+                  autoFocus
+                />
+              </div>
+              <div className="relative">
+                <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Shop name"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  className="h-12 pl-11"
+                />
+              </div>
+            </>
+          )}
+
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="tel"
               placeholder="Mobile number"
               value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
+              onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
               className="h-12 pl-11"
+              maxLength={10}
             />
           </div>
 

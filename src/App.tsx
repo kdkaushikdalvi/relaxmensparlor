@@ -12,7 +12,6 @@ import { MessageTemplateProvider } from "@/contexts/MessageTemplateContext";
 import { ServicesProvider } from "@/contexts/ServicesContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { FirstTimeSetup } from "@/components/FirstTimeSetup";
 import Index from "./pages/Index";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
 import CustomerFormPage from "./pages/CustomerFormPage";
@@ -29,9 +28,9 @@ const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
   const { user, isLoading } = useAuth();
-  const { isSetupComplete } = useSetup();
+  const { isLoading: setupLoading } = useSetup();
 
-  if (isLoading) {
+  if (isLoading || setupLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -41,10 +40,6 @@ function ProtectedRoutes() {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
-  }
-
-  if (!isSetupComplete) {
-    return <FirstTimeSetup />;
   }
 
   return (

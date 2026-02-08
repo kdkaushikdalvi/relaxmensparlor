@@ -3,16 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Store, Phone, Check, Database } from "lucide-react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSetup } from "@/contexts/SetupContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
 const ProfileSettingsPage = () => {
   const navigate = useNavigate();
   const { profile, updateProfile } = useProfile();
   const { setupData, completeSetup } = useSetup();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [ownerName, setOwnerName] = useState(profile.ownerName || setupData.ownerName);
@@ -52,6 +53,13 @@ const ProfileSettingsPage = () => {
     if (checked) {
       setIsMigrating(true);
       try {
+        const userId = user?.id;
+        if (!userId) {
+          toast({ title: "You must be logged in to migrate data", variant: "destructive" });
+          setIsMigrating(false);
+          return;
+        }
+
         // Migrate customers
         const customersRaw = localStorage.getItem('relax-salon-customers');
         if (customersRaw) {
@@ -68,6 +76,7 @@ const ProfileSettingsPage = () => {
               reminder_interval: c.reminderInterval || 'none',
               reminder_date: c.reminderDate || null,
               reminder_sent_dates: c.reminderSentDates || [],
+              user_id: userId,
             });
             if (error) console.error('Customer migration error:', error);
 
@@ -78,6 +87,7 @@ const ProfileSettingsPage = () => {
                   customer_id: c.id,
                   sent_at: rh.sentAt,
                   message: rh.message,
+                  user_id: userId,
                 });
               }
             }
@@ -97,6 +107,7 @@ const ProfileSettingsPage = () => {
               icon: s.icon || 'Star',
               status: s.status || 'active',
               sort_order: i,
+              user_id: userId,
             });
           }
         }
@@ -108,6 +119,7 @@ const ProfileSettingsPage = () => {
           business_name: businessName.trim() || setupData.businessName,
           mobile_number: mobileNumber.trim() || setupData.mobileNumber,
           is_setup_complete: setupData.isSetupComplete,
+          user_id: userId,
         };
         if (existingProfiles && existingProfiles.length > 0) {
           await supabase.from('profiles').update(profileData).eq('id', existingProfiles[0].id);

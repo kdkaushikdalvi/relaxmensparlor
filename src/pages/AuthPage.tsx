@@ -4,15 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, LogIn, UserPlus, Loader2 } from 'lucide-react';
+import { Phone, Lock, LogIn, UserPlus, Loader2 } from 'lucide-react';
 import brandLogo from '@/assets/brand-logo-transparent.png';
 
 const AuthPage = () => {
-  const { user, isLoading: authLoading } = useAuth();
-  const { signIn, signUp } = useAuth();
+  const { user, isLoading: authLoading, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,11 +27,14 @@ const AuthPage = () => {
     return <Navigate to="/" replace />;
   }
 
+  const toEmail = (phone: string) => `${phone.replace(/\D/g, '')}@relaxsalon.app`;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.trim() || !password.trim()) {
-      toast({ title: 'Please fill in all fields', variant: 'destructive' });
+    const cleaned = mobile.replace(/\D/g, '');
+    if (!cleaned || cleaned.length < 10) {
+      toast({ title: 'Please enter a valid mobile number (min 10 digits)', variant: 'destructive' });
       return;
     }
 
@@ -42,12 +44,14 @@ const AuthPage = () => {
     }
 
     setIsSubmitting(true);
+    const email = toEmail(mobile);
+
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
           const msg = error.message?.includes('Invalid login')
-            ? 'Invalid email or password'
+            ? 'Invalid mobile number or password'
             : error.message || 'Login failed';
           toast({ title: msg, variant: 'destructive' });
         }
@@ -55,11 +59,11 @@ const AuthPage = () => {
         const { error } = await signUp(email, password);
         if (error) {
           const msg = error.message?.includes('already registered')
-            ? 'This email is already registered. Please sign in.'
+            ? 'This mobile number is already registered. Please sign in.'
             : error.message || 'Signup failed';
           toast({ title: msg, variant: 'destructive' });
         } else {
-          toast({ title: 'Account created! Please check your email to verify your account.' });
+          toast({ title: 'Account created! You are now signed in.' });
         }
       }
     } finally {
@@ -84,12 +88,12 @@ const AuthPage = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="tel"
+              placeholder="Mobile number"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
               className="h-12 pl-11"
             />
           </div>

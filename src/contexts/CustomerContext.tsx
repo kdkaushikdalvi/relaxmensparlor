@@ -7,52 +7,21 @@ import {
   ReactNode,
 } from "react";
 import { Customer, CustomerFormData } from "@/types/customer";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSetup } from "@/contexts/SetupContext";
 
 const STORAGE_KEY = "relax-salon-customers";
-const SETUP_KEY = "relax-salon-setup";
 
 const generateId = () =>
   Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-// Get sample customer using signup data
-const getSampleCustomer = (): Customer => {
-  let ownerName = "Sample Customer";
-  let mobileNumber = "9999999999";
-
-  try {
-    const setupData = localStorage.getItem(SETUP_KEY);
-    if (setupData) {
-      const parsed = JSON.parse(setupData);
-      if (parsed.ownerName) ownerName = parsed.ownerName;
-      if (parsed.mobileNumber) mobileNumber = parsed.mobileNumber;
-    }
-  } catch {
-    // Use defaults
-  }
-
-  return {
-    id: "sample-customer-1",
-    customerId: 1,
-    fullName: ownerName,
-    mobileNumber: mobileNumber,
-    interest: ["Haircut", "Facial"],
-    preferences: "Prefers appointments in evening",
-    visitingDate: new Date().toISOString().split("T")[0],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    reminderInterval: "1week",
-    reminderDate: new Date().toISOString().split("T")[0],
-    reminderSentDates: [],
-    reminderHistory: [],
-  };
-};
-
 interface CustomerContextType {
   customers: Customer[];
   isLoading: boolean;
-  addCustomer: (data: CustomerFormData) => Customer;
-  updateCustomer: (id: string, data: Partial<Customer>) => Customer | null;
-  deleteCustomer: (id: string) => boolean;
+  addCustomer: (data: CustomerFormData) => Promise<Customer>;
+  updateCustomer: (id: string, data: Partial<Customer>) => Promise<Customer | null>;
+  deleteCustomer: (id: string) => Promise<boolean>;
   getCustomer: (id: string) => Customer | undefined;
   searchCustomers: (query: string) => Customer[];
 }
@@ -60,38 +29,70 @@ interface CustomerContextType {
 const CustomerContext = createContext<CustomerContextType | null>(null);
 
 export function CustomerProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const { isOfflineMode } = useSetup();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load customers from localStorage on mount
+  // Load customers from DB or localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setCustomers(parsed);
-      } catch (error) {
-        console.error("Failed to parse customers from localStorage:", error);
-        // If no customers, add sample using signup data
-        // setCustomers([getSampleCustomer()]);
-      }
-    } else {
-      // First time user - add sample customer using signup data
-      // setCustomers([getSampleCustomer()]);
-    }
-    setIsLoading(false);
-  }, []);
+    const load = async () => {
+      if (!isOfflineMode && user) {
+        try {
+          const { data, error } = await supabase
+            .from('customers')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
 
-  // Save customers to localStorage whenever they change
+          if (!error && data) {
+            const mapped: Customer[] = data.map((r) => ({
+              id: r.id,
+              customerId: r.customer_id,
+              fullName: r.full_name,
+              mobileNumber: r.mobile_number,
+              interest: r.interest || [],
+              preferences: r.preferences || '',
+              visitingDate: r.visiting_date || '',
+              createdAt: r.created_at,
+              updatedAt: r.updated_at,
+              reminderInterval: (r.reminder_interval as any) || 'none',
+              reminderDate: r.reminder_date || undefined,
+              reminderSentDates: r.reminder_sent_dates || [],
+              reminderHistory: [],
+            }));
+            setCustomers(mapped);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+            setIsLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Failed to load customers from DB:', err);
+        }
+      }
+
+      // Fallback to localStorage
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          setCustomers(JSON.parse(stored));
+        } catch { /* ignore */ }
+      }
+      setIsLoading(false);
+    };
+
+    load();
+  }, [user, isOfflineMode]);
+
+  // Save to localStorage when offline
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && isOfflineMode) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
     }
-  }, [customers, isLoading]);
+  }, [customers, isLoading, isOfflineMode]);
 
-  const addCustomer = useCallback((data: CustomerFormData): Customer => {
+  const addCustomer = useCallback(async (data: CustomerFormData): Promise<Customer> => {
     const now = new Date().toISOString();
-    // Calculate next customer ID (max existing + 1, or 1 if no customers)
     const maxCustomerId = customers.reduce((max, c) => Math.max(max, c.customerId || 0), 0);
     const newCustomer: Customer = {
       ...data,
@@ -102,32 +103,69 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       reminderSentDates: [],
       reminderHistory: [],
     };
+
+    if (!isOfflineMode && user) {
+      try {
+        await supabase.from('customers').insert({
+          id: newCustomer.id,
+          user_id: user.id,
+          full_name: newCustomer.fullName,
+          mobile_number: newCustomer.mobileNumber,
+          interest: newCustomer.interest,
+          preferences: newCustomer.preferences,
+          visiting_date: newCustomer.visitingDate,
+          reminder_interval: newCustomer.reminderInterval || 'none',
+          reminder_date: newCustomer.reminderDate || null,
+          reminder_sent_dates: newCustomer.reminderSentDates || [],
+          customer_id: newCustomer.customerId,
+        });
+      } catch (err) {
+        console.error('Failed to save customer to DB:', err);
+      }
+    }
+
     setCustomers((prev) => [newCustomer, ...prev]);
     return newCustomer;
-  }, [customers]);
+  }, [customers, user, isOfflineMode]);
 
   const updateCustomer = useCallback(
-    (id: string, data: Partial<Customer>): Customer | null => {
+    async (id: string, data: Partial<Customer>): Promise<Customer | null> => {
       let updatedCustomer: Customer | null = null;
       setCustomers((prev) =>
         prev.map((customer) => {
           if (customer.id === id) {
-            updatedCustomer = {
-              ...customer,
-              ...data,
-              updatedAt: new Date().toISOString(),
-            };
+            updatedCustomer = { ...customer, ...data, updatedAt: new Date().toISOString() };
             return updatedCustomer;
           }
           return customer;
         })
       );
+
+      if (!isOfflineMode && user && updatedCustomer) {
+        const c = updatedCustomer as Customer;
+        try {
+          await supabase.from('customers').update({
+            full_name: c.fullName,
+            mobile_number: c.mobileNumber,
+            interest: c.interest,
+            preferences: c.preferences,
+            visiting_date: c.visitingDate,
+            reminder_interval: c.reminderInterval || 'none',
+            reminder_date: c.reminderDate || null,
+            reminder_sent_dates: c.reminderSentDates || [],
+            updated_at: c.updatedAt,
+          }).eq('id', id);
+        } catch (err) {
+          console.error('Failed to update customer in DB:', err);
+        }
+      }
+
       return updatedCustomer;
     },
-    []
+    [user, isOfflineMode]
   );
 
-  const deleteCustomer = useCallback((id: string): boolean => {
+  const deleteCustomer = useCallback(async (id: string): Promise<boolean> => {
     let deleted = false;
     setCustomers((prev) => {
       const index = prev.findIndex((c) => c.id === id);
@@ -137,13 +175,20 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       }
       return prev;
     });
+
+    if (deleted && !isOfflineMode && user) {
+      try {
+        await supabase.from('customers').delete().eq('id', id);
+      } catch (err) {
+        console.error('Failed to delete customer from DB:', err);
+      }
+    }
+
     return deleted;
-  }, []);
+  }, [user, isOfflineMode]);
 
   const getCustomer = useCallback(
-    (id: string): Customer | undefined => {
-      return customers.find((c) => c.id === id);
-    },
+    (id: string): Customer | undefined => customers.find((c) => c.id === id),
     [customers]
   );
 
@@ -162,15 +207,7 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
 
   return (
     <CustomerContext.Provider
-      value={{
-        customers,
-        isLoading,
-        addCustomer,
-        updateCustomer,
-        deleteCustomer,
-        getCustomer,
-        searchCustomers,
-      }}
+      value={{ customers, isLoading, addCustomer, updateCustomer, deleteCustomer, getCustomer, searchCustomers }}
     >
       {children}
     </CustomerContext.Provider>

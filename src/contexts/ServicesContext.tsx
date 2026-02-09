@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Scissors, Sparkles, Palette, Hand, Smile, Droplets, Heart, Star, Zap, Eye } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSetup } from '@/contexts/SetupContext';
 
 export interface Service {
   id: string;
@@ -7,6 +10,7 @@ export interface Service {
   description: string;
   icon: string;
   status: 'active' | 'inactive';
+  sortOrder?: number;
 }
 
 const DEFAULT_SERVICES: Service[] = [
@@ -23,18 +27,8 @@ const DEFAULT_SERVICES: Service[] = [
   { id: '11', name: 'थ्रेडिंग', description: 'Eyebrow and facial threading', icon: 'Eye', status: 'active' },
 ];
 
-// Icon mapping for rendering
 export const SERVICE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  Scissors,
-  Sparkles,
-  Palette,
-  Hand,
-  Smile,
-  Droplets,
-  Heart,
-  Star,
-  Zap,
-  Eye,
+  Scissors, Sparkles, Palette, Hand, Smile, Droplets, Heart, Star, Zap, Eye,
 };
 
 interface ServicesContextType {
@@ -49,28 +43,86 @@ interface ServicesContextType {
 }
 
 const ServicesContext = createContext<ServicesContextType | undefined>(undefined);
-
 const STORAGE_KEY = 'relax-salon-services-v2';
 
 export function ServicesProvider({ children }: { children: ReactNode }) {
-  const [services, setServices] = useState<Service[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
-          return parsed;
-        }
-      } catch {
-        // Fall through to defaults
-      }
-    }
-    return DEFAULT_SERVICES;
-  });
+  const { user } = useAuth();
+  const { isOfflineMode } = useSetup();
+  const [services, setServices] = useState<Service[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
+  // Load from DB or localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
-  }, [services]);
+    const load = async () => {
+      if (!isOfflineMode && user) {
+        try {
+          const { data, error } = await supabase
+            .from('services')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('sort_order', { ascending: true });
+
+          if (!error && data && data.length > 0) {
+            const mapped: Service[] = data.map((r) => ({
+              id: r.id,
+              name: r.name,
+              description: r.description || 'New service',
+              icon: r.icon || 'Star',
+              status: (r.status as 'active' | 'inactive') || 'active',
+              sortOrder: r.sort_order,
+            }));
+            setServices(mapped);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+            setLoaded(true);
+            return;
+          }
+        } catch (err) {
+          console.error('Failed to load services from DB:', err);
+        }
+      }
+
+      // Fallback to localStorage
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
+            setServices(parsed);
+            setLoaded(true);
+            return;
+          }
+        } catch { /* ignore */ }
+      }
+      setServices(DEFAULT_SERVICES);
+      setLoaded(true);
+    };
+
+    load();
+  }, [user, isOfflineMode]);
+
+  // Save to localStorage when offline
+  useEffect(() => {
+    if (loaded && isOfflineMode) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
+    }
+  }, [services, loaded, isOfflineMode]);
+
+  const syncServiceToDB = async (service: Service, index: number) => {
+    if (isOfflineMode || !user) return;
+    try {
+      await supabase.from('services').upsert({
+        id: service.id,
+        user_id: user.id,
+        name: service.name,
+        description: service.description,
+        icon: service.icon,
+        status: service.status,
+        sort_order: index,
+      });
+    } catch (err) {
+      console.error('Failed to sync service:', err);
+    }
+  };
 
   const addService = (name: string) => {
     const newService: Service = {
@@ -80,59 +132,68 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       icon: 'Star',
       status: 'active',
     };
-    setServices(prev => [...prev, newService]);
+    setServices(prev => {
+      const next = [...prev, newService];
+      syncServiceToDB(newService, next.length - 1);
+      return next;
+    });
   };
 
   const updateService = (id: string, updates: Partial<Service>) => {
-    setServices(prev =>
-      prev.map(s => (s.id === id ? { ...s, ...updates } : s))
-    );
+    setServices(prev => {
+      const next = prev.map((s, i) => {
+        if (s.id === id) {
+          const updated = { ...s, ...updates };
+          syncServiceToDB(updated, i);
+          return updated;
+        }
+        return s;
+      });
+      return next;
+    });
   };
 
   const deleteService = (id: string) => {
     setServices(prev => prev.filter(s => s.id !== id));
+    if (!isOfflineMode && user) {
+      supabase.from('services').delete().eq('id', id).then();
+    }
   };
 
   const reorderServices = (activeId: string, overId: string) => {
     setServices(prev => {
       const oldIndex = prev.findIndex(s => s.id === activeId);
       const newIndex = prev.findIndex(s => s.id === overId);
-      
       if (oldIndex === -1 || newIndex === -1) return prev;
-      
-      const newServices = [...prev];
-      const [removed] = newServices.splice(oldIndex, 1);
-      newServices.splice(newIndex, 0, removed);
-      
-      return newServices;
+      const next = [...prev];
+      const [removed] = next.splice(oldIndex, 1);
+      next.splice(newIndex, 0, removed);
+      // Sync all sort orders
+      if (!isOfflineMode && user) {
+        next.forEach((s, i) => syncServiceToDB(s, i));
+      }
+      return next;
     });
   };
 
   const toggleServiceStatus = (id: string) => {
-    setServices(prev => 
-      prev.map(s => s.id === id ? { ...s, status: s.status === 'active' ? 'inactive' : 'active' } : s)
-    );
+    updateService(id, { status: services.find(s => s.id === id)?.status === 'active' ? 'inactive' : 'active' });
   };
 
   const resetToDefaults = () => {
     setServices(DEFAULT_SERVICES);
+    if (!isOfflineMode && user) {
+      // Delete all and re-insert defaults
+      supabase.from('services').delete().eq('user_id', user.id).then(() => {
+        DEFAULT_SERVICES.forEach((s, i) => syncServiceToDB(s, i));
+      });
+    }
   };
 
-  const getServiceNames = () => {
-    return services.filter(s => s.status === 'active').map(s => s.name);
-  };
+  const getServiceNames = () => services.filter(s => s.status === 'active').map(s => s.name);
 
   return (
-    <ServicesContext.Provider value={{ 
-      services, 
-      addService,
-      updateService,
-      deleteService,
-      reorderServices, 
-      toggleServiceStatus, 
-      resetToDefaults,
-      getServiceNames 
-    }}>
+    <ServicesContext.Provider value={{ services, addService, updateService, deleteService, reorderServices, toggleServiceStatus, resetToDefaults, getServiceNames }}>
       {children}
     </ServicesContext.Provider>
   );

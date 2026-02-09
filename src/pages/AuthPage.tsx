@@ -89,17 +89,6 @@ const AuthPage = () => {
               is_setup_complete: true,
             });
           }
-          // Also save to localStorage for offline support
-          localStorage.setItem('relax-salon-setup', JSON.stringify({
-            ownerName: ownerName.trim(),
-            businessName: businessName.trim(),
-            mobileNumber: cleaned,
-            isSetupComplete: true,
-          }));
-          localStorage.setItem('relax-parlor-profile', JSON.stringify({
-            ownerName: ownerName.trim(),
-            businessName: businessName.trim(),
-          }));
           toast({ title: 'Account created! You are now signed in.' });
         }
       }
@@ -128,81 +117,42 @@ const AuthPage = () => {
             <>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="Your name"
-                  value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                  className="h-12 pl-11"
-                  autoFocus
-                />
+                <Input placeholder="Your name" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} className="h-12 pl-11" autoFocus />
               </div>
               <div className="relative">
                 <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="Shop name"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className="h-12 pl-11"
-                />
+                <Input placeholder="Shop name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="h-12 pl-11" />
               </div>
             </>
           )}
 
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              type="tel"
-              placeholder="Mobile number"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-              className="h-12 pl-11"
-              maxLength={10}
-            />
+            <Input type="tel" placeholder="Mobile number" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))} className="h-12 pl-11" maxLength={10} />
           </div>
 
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 pl-11"
-              minLength={6}
-            />
+            <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 pl-11" minLength={6} />
           </div>
 
           <Button type="submit" className="w-full h-12 gap-2 text-base" disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : isLogin ? (
-              <>
-                <LogIn className="w-5 h-5" />
-                Sign In
-              </>
+              <><LogIn className="w-5 h-5" /> Sign In</>
             ) : (
-              <>
-                <UserPlus className="w-5 h-5" />
-                Sign Up
-              </>
+              <><UserPlus className="w-5 h-5" /> Sign Up</>
             )}
           </Button>
         </form>
 
         {/* Toggle */}
         <div className="text-center space-y-2">
-          {isLogin && (
-            <div>
-              <ForgotPasswordDialog />
-            </div>
-          )}
+          {isLogin && <div><ForgotPasswordDialog /></div>}
           <p className="text-sm text-muted-foreground">
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary font-medium hover:underline"
-            >
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">
               {isLogin ? 'Sign Up' : 'Sign In'}
             </button>
           </p>

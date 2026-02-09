@@ -46,7 +46,7 @@ import {
 
 export function AppSidebar() {
   const navigate = useNavigate();
-  const { resetSetup, resetAll, setupData } = useSetup();
+  const { resetAll } = useSetup();
   const { signOut } = useAuth();
   const { toggleSidebar } = useSidebar();
 
@@ -62,35 +62,6 @@ export function AppSidebar() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  const resetProfile = () => {
-    localStorage.removeItem("relax-salon-setup");
-    localStorage.removeItem("relax-parlor-profile");
-    resetSetup();
-    window.location.reload();
-  };
-
-  const resetCustomers = () => {
-    const defaultCustomer = {
-      id: crypto.randomUUID(),
-      fullName: setupData.ownerName || "New Customer",
-      mobileNumber: setupData.mobileNumber || "9999999999",
-      visitingDate: new Date().toISOString().split("T")[0],
-      interest: ["Haircut"],
-      preferences: "",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      reminderInterval: "1week" as const,
-      reminderDate: new Date().toISOString().split("T")[0],
-      reminderSentDates: [],
-      reminderHistory: [],
-    };
-    localStorage.setItem(
-      "relax-salon-customers",
-      JSON.stringify([defaultCustomer])
-    );
-    window.location.reload();
-  };
-
   const handleInstallPWA = async () => {
     if (!installPrompt) return;
     installPrompt.prompt();
@@ -99,7 +70,6 @@ export function AppSidebar() {
   };
 
   const now = new Date();
-
   const day = now.toLocaleDateString("mr-IN", { weekday: "long" });
   const month = now.toLocaleDateString("mr-IN", { month: "long" });
   const dateNum = now.getDate();
@@ -118,10 +88,8 @@ export function AppSidebar() {
         <div className="w-full">
           <div className="w-full px-4 py-3 rounded-2xl border border-primary/30 bg-primary/5 shadow-sm flex items-center justify-between">
             <div className="relative">
-              {/* Glow */}
               <div className="absolute inset-0 rounded-full bg-primary/40 blur-lg animate-pulse" />
               <div className="absolute -inset-1 rounded-full border-2 border-dashed border-primary/50 animate-spin-slow" />
-              {/* Image */}
               <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-primary/60 shadow-lg bg-background">
                 <img src={brandLogo} className="w-full h-full object-cover" />
               </div>
@@ -135,55 +103,13 @@ export function AppSidebar() {
 
       <SidebarContent className="px-3 pb-6">
         <div className="space-y-2">
-          {/* Profile - navigates to page */}
-          <NavButton
-            icon={<UserCircle className="w-5 h-5 text-indigo-600" />}
-            label="Profile"
-            onClick={() => navigateTo("/profile")}
-          />
-
-          {/* Template - navigates to page */}
-          <NavButton
-            icon={<MessageSquare className="w-5 h-5 text-purple-600" />}
-            label="Template"
-            onClick={() => navigateTo("/message-templates")}
-          />
-
-          {/* History - navigates to page */}
-          <NavButton
-            icon={<History className="w-5 h-5 text-blue-600" />}
-            label="History"
-            onClick={() => navigateTo("/reminder-history")}
-          />
-
-          {/* Services - navigates to page */}
-          <NavButton
-            icon={<Scissors className="w-5 h-5 text-amber-600" />}
-            label="Services"
-            onClick={() => navigateTo("/services")}
-          />
-
-          {/* Share - navigates to page */}
-          <NavButton
-            icon={<Share2 className="w-5 h-5 text-sky-600" />}
-            label="Share"
-            onClick={() => navigateTo("/share")}
-          />
-
-          {/* Reset - opens sheet */}
-          <NavButton
-            icon={<RotateCcw className="w-5 h-5 text-red-500" />}
-            label="Reset"
-            onClick={() => setResetOpen(true)}
-            variant="danger"
-          />
-          {/* Install App (conditional) */}
-          <NavButton
-            icon={<Download className="w-5 h-5 text-green-600" />}
-            label="Install App"
-            onClick={handleInstallPWA}
-          />
-          {/* Sign Out */}
+          <NavButton icon={<UserCircle className="w-5 h-5 text-indigo-600" />} label="Profile" onClick={() => navigateTo("/profile")} />
+          <NavButton icon={<MessageSquare className="w-5 h-5 text-purple-600" />} label="Template" onClick={() => navigateTo("/message-templates")} />
+          <NavButton icon={<History className="w-5 h-5 text-blue-600" />} label="History" onClick={() => navigateTo("/reminder-history")} />
+          <NavButton icon={<Scissors className="w-5 h-5 text-amber-600" />} label="Services" onClick={() => navigateTo("/services")} />
+          <NavButton icon={<Share2 className="w-5 h-5 text-sky-600" />} label="Share" onClick={() => navigateTo("/share")} />
+          <NavButton icon={<RotateCcw className="w-5 h-5 text-red-500" />} label="Reset" onClick={() => setResetOpen(true)} variant="danger" />
+          <NavButton icon={<Download className="w-5 h-5 text-green-600" />} label="Install App" onClick={handleInstallPWA} />
           <NavButton
             icon={<LogOut className="w-5 h-5 text-gray-600" />}
             label="Sign Out"
@@ -206,8 +132,6 @@ export function AppSidebar() {
             <SheetDescription>These actions cannot be undone</SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-2">
-            <ConfirmReset label="Reset Profile" onConfirm={resetProfile} />
-            <ConfirmReset label="Reset Customers" onConfirm={resetCustomers} />
             <ConfirmReset
               label="Reset Everything"
               onConfirm={resetAll}
@@ -220,34 +144,20 @@ export function AppSidebar() {
   );
 }
 
-/* ============================= */
-
 function NavButton({
-  icon,
-  label,
-  onClick,
-  variant,
+  icon, label, onClick, variant,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  variant?: "danger";
+  icon: React.ReactNode; label: string; onClick: () => void; variant?: "danger";
 }) {
   return (
     <button
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
-        variant === "danger"
-          ? "bg-red-50 border-red-200 hover:bg-red-100"
-          : "bg-white hover:bg-gray-50"
+        variant === "danger" ? "bg-red-50 border-red-200 hover:bg-red-100" : "bg-white hover:bg-gray-50"
       }`}
     >
       {icon}
-      <span
-        className={`font-app font-medium ${
-          variant === "danger" ? "text-red-600" : "text-foreground"
-        }`}
-      >
+      <span className={`font-app font-medium ${variant === "danger" ? "text-red-600" : "text-foreground"}`}>
         {label}
       </span>
     </button>
@@ -258,21 +168,14 @@ function ConfirmReset({ label, onConfirm, destructive = false }: any) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          variant="outline"
-          className={`w-full justify-start ${
-            destructive ? "text-red-600 border-red-300" : ""
-          }`}
-        >
+        <Button variant="outline" className={`w-full justify-start ${destructive ? "text-red-600 border-red-300" : ""}`}>
           <Trash2 className="w-4 h-4 mr-2" /> {label}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone.
-          </AlertDialogDescription>
+          <AlertDialogDescription>This will delete all your data. This action cannot be undone.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>

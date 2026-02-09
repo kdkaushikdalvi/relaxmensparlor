@@ -1,20 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Store, Phone, Check, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, User, Store, Phone, Check } from "lucide-react";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSetup } from "@/contexts/SetupContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const ProfileSettingsPage = () => {
   const navigate = useNavigate();
   const { profile, updateProfile } = useProfile();
-  const { setupData, completeSetup, isOfflineMode, setOfflineMode } = useSetup();
+  const { setupData, completeSetup } = useSetup();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -39,8 +38,8 @@ const ProfileSettingsPage = () => {
       mobileNumber: mobileNumber.trim(),
     });
 
-    // Save to DB if online
-    if (!isOfflineMode && user) {
+    // Save to DB
+    if (user) {
       try {
         const { data: existing } = await supabase
           .from('profiles')
@@ -68,16 +67,6 @@ const ProfileSettingsPage = () => {
 
     toast({ title: "Profile updated successfully" });
     navigate(-1);
-  };
-
-  const handleOfflineToggle = (checked: boolean) => {
-    setOfflineMode(checked);
-    toast({
-      title: checked ? "Offline mode enabled" : "Online mode enabled",
-      description: checked
-        ? "Data will be stored locally on this device only."
-        : "Data will be saved to the cloud database.",
-    });
   };
 
   return (
@@ -140,24 +129,6 @@ const ProfileSettingsPage = () => {
 
         {/* Change Password */}
         <ChangePasswordDialog />
-
-        {/* Offline Mode Toggle */}
-        <div className="bg-card rounded-xl border p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                {isOfflineMode ? <WifiOff className="w-5 h-5 text-amber-600" /> : <Wifi className="w-5 h-5 text-amber-600" />}
-              </div>
-              <div>
-                <label className="font-app block">Offline Mode</label>
-                <p className="text-xs text-muted-foreground">
-                  {isOfflineMode ? "Data stored locally only" : "Data synced to cloud"}
-                </p>
-              </div>
-            </div>
-            <Switch checked={isOfflineMode} onCheckedChange={handleOfflineToggle} />
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -9,9 +9,6 @@ import {
 import { Customer, CustomerFormData } from "@/types/customer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSetup } from "@/contexts/SetupContext";
-
-const STORAGE_KEY = "relax-salon-customers";
 
 const generateId = () =>
   Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -30,66 +27,51 @@ const CustomerContext = createContext<CustomerContextType | null>(null);
 
 export function CustomerProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { isOfflineMode } = useSetup();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load customers from DB or localStorage
+  // Load customers from Supabase
   useEffect(() => {
-    const load = async () => {
-      if (!isOfflineMode && user) {
-        try {
-          const { data, error } = await supabase
-            .from('customers')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-
-          if (!error && data) {
-            const mapped: Customer[] = data.map((r) => ({
-              id: r.id,
-              customerId: r.customer_id,
-              fullName: r.full_name,
-              mobileNumber: r.mobile_number,
-              interest: r.interest || [],
-              preferences: r.preferences || '',
-              visitingDate: r.visiting_date || '',
-              createdAt: r.created_at,
-              updatedAt: r.updated_at,
-              reminderInterval: (r.reminder_interval as any) || 'none',
-              reminderDate: r.reminder_date || undefined,
-              reminderSentDates: r.reminder_sent_dates || [],
-              reminderHistory: [],
-            }));
-            setCustomers(mapped);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-            setIsLoading(false);
-            return;
-          }
-        } catch (err) {
-          console.error('Failed to load customers from DB:', err);
-        }
-      }
-
-      // Fallback to localStorage
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          setCustomers(JSON.parse(stored));
-        } catch { /* ignore */ }
-      }
+    if (!user) {
+      setCustomers([]);
       setIsLoading(false);
+      return;
+    }
+
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          setCustomers(data.map((r) => ({
+            id: r.id,
+            customerId: r.customer_id,
+            fullName: r.full_name,
+            mobileNumber: r.mobile_number,
+            interest: r.interest || [],
+            preferences: r.preferences || '',
+            visitingDate: r.visiting_date || '',
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+            reminderInterval: (r.reminder_interval as any) || 'none',
+            reminderDate: r.reminder_date || undefined,
+            reminderSentDates: r.reminder_sent_dates || [],
+            reminderHistory: [],
+          })));
+        }
+      } catch (err) {
+        console.error('Failed to load customers:', err);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     load();
-  }, [user, isOfflineMode]);
-
-  // Save to localStorage when offline
-  useEffect(() => {
-    if (!isLoading && isOfflineMode) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
-    }
-  }, [customers, isLoading, isOfflineMode]);
+  }, [user]);
 
   const addCustomer = useCallback(async (data: CustomerFormData): Promise<Customer> => {
     const now = new Date().toISOString();
@@ -104,29 +86,26 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
       reminderHistory: [],
     };
 
-    if (!isOfflineMode && user) {
-      try {
-        await supabase.from('customers').insert({
-          id: newCustomer.id,
-          user_id: user.id,
-          full_name: newCustomer.fullName,
-          mobile_number: newCustomer.mobileNumber,
-          interest: newCustomer.interest,
-          preferences: newCustomer.preferences,
-          visiting_date: newCustomer.visitingDate,
-          reminder_interval: newCustomer.reminderInterval || 'none',
-          reminder_date: newCustomer.reminderDate || null,
-          reminder_sent_dates: newCustomer.reminderSentDates || [],
-          customer_id: newCustomer.customerId,
-        });
-      } catch (err) {
-        console.error('Failed to save customer to DB:', err);
-      }
+    if (user) {
+      const { error } = await supabase.from('customers').insert({
+        id: newCustomer.id,
+        user_id: user.id,
+        full_name: newCustomer.fullName,
+        mobile_number: newCustomer.mobileNumber,
+        interest: newCustomer.interest,
+        preferences: newCustomer.preferences,
+        visiting_date: newCustomer.visitingDate,
+        reminder_interval: newCustomer.reminderInterval || 'none',
+        reminder_date: newCustomer.reminderDate || null,
+        reminder_sent_dates: newCustomer.reminderSentDates || [],
+        customer_id: newCustomer.customerId,
+      });
+      if (error) console.error('Failed to save customer:', error);
     }
 
     setCustomers((prev) => [newCustomer, ...prev]);
     return newCustomer;
-  }, [customers, user, isOfflineMode]);
+  }, [customers, user]);
 
   const updateCustomer = useCallback(
     async (id: string, data: Partial<Customer>): Promise<Customer | null> => {
@@ -141,51 +120,39 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
         })
       );
 
-      if (!isOfflineMode && user && updatedCustomer) {
+      if (user && updatedCustomer) {
         const c = updatedCustomer as Customer;
-        try {
-          await supabase.from('customers').update({
-            full_name: c.fullName,
-            mobile_number: c.mobileNumber,
-            interest: c.interest,
-            preferences: c.preferences,
-            visiting_date: c.visitingDate,
-            reminder_interval: c.reminderInterval || 'none',
-            reminder_date: c.reminderDate || null,
-            reminder_sent_dates: c.reminderSentDates || [],
-            updated_at: c.updatedAt,
-          }).eq('id', id);
-        } catch (err) {
-          console.error('Failed to update customer in DB:', err);
-        }
+        await supabase.from('customers').update({
+          full_name: c.fullName,
+          mobile_number: c.mobileNumber,
+          interest: c.interest,
+          preferences: c.preferences,
+          visiting_date: c.visitingDate,
+          reminder_interval: c.reminderInterval || 'none',
+          reminder_date: c.reminderDate || null,
+          reminder_sent_dates: c.reminderSentDates || [],
+          updated_at: c.updatedAt,
+        }).eq('id', id);
       }
 
       return updatedCustomer;
     },
-    [user, isOfflineMode]
+    [user]
   );
 
   const deleteCustomer = useCallback(async (id: string): Promise<boolean> => {
-    let deleted = false;
-    setCustomers((prev) => {
-      const index = prev.findIndex((c) => c.id === id);
-      if (index !== -1) {
-        deleted = true;
-        return [...prev.slice(0, index), ...prev.slice(index + 1)];
-      }
-      return prev;
-    });
+    const exists = customers.some((c) => c.id === id);
+    if (!exists) return false;
 
-    if (deleted && !isOfflineMode && user) {
-      try {
-        await supabase.from('customers').delete().eq('id', id);
-      } catch (err) {
-        console.error('Failed to delete customer from DB:', err);
-      }
+    setCustomers((prev) => prev.filter((c) => c.id !== id));
+
+    if (user) {
+      const { error } = await supabase.from('customers').delete().eq('id', id);
+      if (error) console.error('Failed to delete customer:', error);
     }
 
-    return deleted;
-  }, [user, isOfflineMode]);
+    return true;
+  }, [customers, user]);
 
   const getCustomer = useCallback(
     (id: string): Customer | undefined => customers.find((c) => c.id === id),

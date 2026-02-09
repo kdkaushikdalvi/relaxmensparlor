@@ -12,16 +12,11 @@ interface SetupData {
 interface SetupContextType {
   setupData: SetupData;
   isSetupComplete: boolean;
-  isOfflineMode: boolean;
-  setOfflineMode: (offline: boolean) => void;
   completeSetup: (data: Omit<SetupData, 'isSetupComplete'>) => void;
   resetSetup: () => void;
   resetAll: () => void;
   isLoading: boolean;
 }
-
-const STORAGE_KEY = 'relax-salon-setup';
-const OFFLINE_KEY = 'relax-salon-offline-mode';
 
 const DEFAULT_SETUP: SetupData = {
   ownerName: '',
@@ -34,21 +29,13 @@ const SetupContext = createContext<SetupContextType | undefined>(undefined);
 
 export function SetupProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [setupData, setSetupData] = useState<SetupData>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try { return JSON.parse(stored); } catch { return DEFAULT_SETUP; }
-    }
-    return DEFAULT_SETUP;
-  });
-  const [isOfflineMode, setIsOfflineMode] = useState(() => {
-    return localStorage.getItem(OFFLINE_KEY) === 'true';
-  });
+  const [setupData, setSetupData] = useState<SetupData>(DEFAULT_SETUP);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load profile from DB when user is authenticated
   useEffect(() => {
     if (!user) {
+      setSetupData(DEFAULT_SETUP);
       setIsLoading(false);
       return;
     }
@@ -62,14 +49,12 @@ export function SetupProvider({ children }: { children: ReactNode }) {
           .maybeSingle();
 
         if (data) {
-          const dbSetup: SetupData = {
+          setSetupData({
             ownerName: data.owner_name,
             businessName: data.business_name,
             mobileNumber: data.mobile_number,
             isSetupComplete: data.is_setup_complete,
-          };
-          setSetupData(dbSetup);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(dbSetup));
+          });
         }
       } catch (err) {
         console.error('Failed to load profile:', err);
@@ -81,31 +66,24 @@ export function SetupProvider({ children }: { children: ReactNode }) {
     loadProfile();
   }, [user]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(setupData));
-  }, [setupData]);
-
-  const setOfflineMode = (offline: boolean) => {
-    setIsOfflineMode(offline);
-    localStorage.setItem(OFFLINE_KEY, offline ? 'true' : 'false');
-  };
-
   const completeSetup = (data: Omit<SetupData, 'isSetupComplete'>) => {
     setSetupData({ ...data, isSetupComplete: true });
   };
 
   const resetSetup = () => {
-    localStorage.removeItem(STORAGE_KEY);
     setSetupData(DEFAULT_SETUP);
   };
 
-  const resetAll = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('relax-parlor-profile');
-    localStorage.removeItem('relax-salon-customers');
-    localStorage.removeItem('message-templates');
-    localStorage.removeItem('relax-salon-message-templates');
-    localStorage.removeItem(OFFLINE_KEY);
+  const resetAll = async () => {
+    if (user) {
+      // Delete all user data from DB
+      await Promise.all([
+        supabase.from('customers').delete().eq('user_id', user.id),
+        supabase.from('services').delete().eq('user_id', user.id),
+        supabase.from('message_templates').delete().eq('user_id', user.id),
+        supabase.from('reminder_history').delete().eq('user_id', user.id),
+      ]);
+    }
     setSetupData(DEFAULT_SETUP);
     window.location.reload();
   };
@@ -115,8 +93,6 @@ export function SetupProvider({ children }: { children: ReactNode }) {
       value={{
         setupData,
         isSetupComplete: setupData.isSetupComplete,
-        isOfflineMode,
-        setOfflineMode,
         completeSetup,
         resetSetup,
         resetAll,
@@ -130,8 +106,6 @@ export function SetupProvider({ children }: { children: ReactNode }) {
 
 export function useSetup() {
   const context = useContext(SetupContext);
-  if (!context) {
-    throw new Error('useSetup must be used within a SetupProvider');
-  }
+  if (!context) throw new Error('useSetup must be used within a SetupProvider');
   return context;
 }

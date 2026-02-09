@@ -102,36 +102,7 @@ export function formatPhoneForWhatsApp(
   return `${countryCode}${digitsOnly}`;
 }
 
-/**
- * Get default template from localStorage
- */
-function getDefaultTemplateFromStorage(): MessageTemplate | null {
-  try {
-    const stored = localStorage.getItem("relax-salon-message-templates");
-    if (stored) {
-      const templates: MessageTemplate[] = JSON.parse(stored);
-      return templates.find((t) => t.isDefault) || templates[0] || null;
-    }
-  } catch {
-    // Fall through to return null
-  }
-  return null;
-}
 
-/**
- * Get profile data from localStorage
- */
-function getProfileFromStorage(): { ownerName: string; businessName: string } {
-  try {
-    const stored = localStorage.getItem("relax-parlor-profile");
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch {
-    // Fall through
-  }
-  return { ownerName: "", businessName: "" };
-}
 
 /**
  * Generate WhatsApp reminder message using template
@@ -140,26 +111,15 @@ export function generateReminderMessage(
   customer: Customer,
   businessName: string,
   offerText?: string,
-  template?: MessageTemplate
+  template?: MessageTemplate,
+  ownerName?: string
 ): string {
-  // Get template from storage if not provided
-  const activeTemplate = template || getDefaultTemplateFromStorage();
-  const profileData = getProfileFromStorage();
-
-  if (activeTemplate) {
-    // Replace all template variables
-    let message = activeTemplate.message;
-    
-    // Replace {CustomerName} - case insensitive
+  if (template) {
+    let message = template.message;
     message = message.replace(/\{CustomerName\}/gi, customer.fullName);
+    message = message.replace(/\{ShopName\}/gi, businessName || "our shop");
+    message = message.replace(/\{OwnerName\}/gi, ownerName || "");
     
-    // Replace {ShopName} - case insensitive
-    message = message.replace(/\{ShopName\}/gi, profileData.businessName || businessName || "our shop");
-    
-    // Replace {OwnerName} - case insensitive
-    message = message.replace(/\{OwnerName\}/gi, profileData.ownerName || "");
-    
-    // Replace {LastVisit} - case insensitive
     if (customer.visitingDate) {
       const visitDate = format(parseISO(customer.visitingDate), "dd MMM yyyy");
       message = message.replace(/\{LastVisit\}/gi, visitDate);

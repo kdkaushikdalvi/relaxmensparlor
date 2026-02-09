@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Profile {
   ownerName: string;
@@ -17,24 +19,38 @@ const DEFAULT_PROFILE: Profile = {
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-const PROFILE_KEY = 'relax-parlor-profile';
-
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<Profile>(() => {
-    const stored = localStorage.getItem(PROFILE_KEY);
-    if (stored) {
-      try {
-        return { ...DEFAULT_PROFILE, ...JSON.parse(stored) };
-      } catch {
-        return DEFAULT_PROFILE;
-      }
-    }
-    return DEFAULT_PROFILE;
-  });
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
 
+  // Load profile from Supabase
   useEffect(() => {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-  }, [profile]);
+    if (!user) {
+      setProfile(DEFAULT_PROFILE);
+      return;
+    }
+
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('owner_name, business_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (data) {
+          setProfile({
+            ownerName: data.owner_name,
+            businessName: data.business_name,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+      }
+    };
+
+    load();
+  }, [user]);
 
   const updateProfile = (updates: Partial<Profile>) => {
     setProfile(prev => ({ ...prev, ...updates }));
@@ -49,8 +65,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
 export function useProfile() {
   const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error('useProfile must be used within a ProfileProvider');
-  }
+  if (!context) throw new Error('useProfile must be used within a ProfileProvider');
   return context;
 }

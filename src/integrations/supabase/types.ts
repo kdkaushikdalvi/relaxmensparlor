@@ -62,6 +62,33 @@ export type Database = {
         }
         Relationships: []
       }
+      message_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          message: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          is_default?: boolean
+          message?: string
+          name?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          message?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_name: string

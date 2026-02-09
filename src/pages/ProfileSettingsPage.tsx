@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Store, Phone, Check, Wifi, WifiOff } from "lucide-react";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useSetup } from "@/contexts/SetupContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -136,6 +137,9 @@ const ProfileSettingsPage = () => {
           </div>
           <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Enter business name" className="h-12" />
         </div>
+
+        {/* Change Password */}
+        <ChangePasswordDialog />
 
         {/* Offline Mode Toggle */}
         <div className="bg-card rounded-xl border p-4 space-y-3">

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Phone, Lock, LogIn, UserPlus, Loader2, User, Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
 import brandLogo from '@/assets/brand-logo-transparent.png';
 
 const AuthPage = () => {
@@ -189,16 +190,23 @@ const AuthPage = () => {
         </form>
 
         {/* Toggle */}
-        <p className="text-center text-sm text-muted-foreground">
-          {isLogin ? "Don't have an account? " : 'Already have an account? '}
-          <button
-            type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-primary font-medium hover:underline"
-          >
-            {isLogin ? 'Sign Up' : 'Sign In'}
-          </button>
-        </p>
+        <div className="text-center space-y-2">
+          {isLogin && (
+            <div>
+              <ForgotPasswordDialog />
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground">
+            {isLogin ? "Don't have an account? " : 'Already have an account? '}
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-primary font-medium hover:underline"
+            >
+              {isLogin ? 'Sign Up' : 'Sign In'}
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

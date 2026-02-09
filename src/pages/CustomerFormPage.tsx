@@ -111,7 +111,7 @@ const CustomerFormPage = () => {
     setFormData((prev) => ({ ...prev, mobileNumber: digitsOnly }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (isEditing && customer) {
       // Include customerId in update if provided
       const updateData: any = { ...formData };
@@ -126,10 +126,10 @@ const CustomerFormPage = () => {
       navigate(`/customer/${customer.id}`);
     } else {
       // For new customers, pass customerId if provided
-      const newCustomer = addCustomer(formData);
+      const newCustomer = await addCustomer(formData);
       // Update with custom ID if provided
       if (customerId) {
-        updateCustomer(newCustomer.id, { customerId: parseInt(customerId, 10) });
+        await updateCustomer(newCustomer.id, { customerId: parseInt(customerId, 10) });
       }
       toast({
         title: "Customer added",

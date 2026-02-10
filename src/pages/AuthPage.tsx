@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, Lock, LogIn, UserPlus, Loader2, User, Store } from 'lucide-react';
+import { Phone, LogIn, UserPlus, Loader2, User, Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
 import brandLogo from '@/assets/brand-logo-transparent.png';
@@ -14,7 +14,7 @@ const AuthPage = () => {
   const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [mobile, setMobile] = useState('');
-  const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,8 +42,8 @@ const AuthPage = () => {
       return;
     }
 
-    if (password.length < 6) {
-      toast({ title: 'Password must be at least 6 characters', variant: 'destructive' });
+    if (!/^\d{4}$/.test(pin)) {
+      toast({ title: 'PIN must be exactly 4 digits', variant: 'destructive' });
       return;
     }
 
@@ -63,15 +63,15 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(email, pin);
         if (error) {
           const msg = error.message?.includes('Invalid login')
-            ? 'Invalid mobile number or password'
+            ? 'Invalid mobile number or PIN'
             : error.message || 'Login failed';
           toast({ title: msg, variant: 'destructive' });
         }
       } else {
-        const { error } = await signUp(email, password);
+        const { error } = await signUp(email, pin);
         if (error) {
           const msg = error.message?.includes('already registered')
             ? 'This mobile number is already registered. Please sign in.'
@@ -132,8 +132,15 @@ const AuthPage = () => {
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 pl-11" minLength={6} />
+            <Input
+              type="password"
+              inputMode="numeric"
+              placeholder="4-digit PIN"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              className="h-12 pl-4 text-center tracking-[0.5em] text-lg"
+              maxLength={4}
+            />
           </div>
 
           <Button type="submit" className="w-full h-12 gap-2 text-base" disabled={isSubmitting}>

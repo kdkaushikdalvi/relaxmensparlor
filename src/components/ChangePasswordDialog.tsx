@@ -9,32 +9,32 @@ import { supabase } from '@/integrations/supabase/client';
 export function ChangePasswordDialog() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (newPassword.length < 6) {
-      toast({ title: 'Password must be at least 6 characters', variant: 'destructive' });
+    if (!/^\d{4}$/.test(newPin)) {
+      toast({ title: 'PIN must be exactly 4 digits', variant: 'destructive' });
       return;
     }
-    if (newPassword !== confirmPassword) {
-      toast({ title: 'Passwords do not match', variant: 'destructive' });
+    if (newPin !== confirmPin) {
+      toast({ title: 'PINs do not match', variant: 'destructive' });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase.auth.updateUser({ password: newPin });
       if (error) {
-        toast({ title: error.message || 'Failed to change password', variant: 'destructive' });
+        toast({ title: error.message || 'Failed to change PIN', variant: 'destructive' });
       } else {
-        toast({ title: 'Password changed successfully' });
+        toast({ title: 'PIN changed successfully' });
         setOpen(false);
-        setNewPassword('');
-        setConfirmPassword('');
+        setNewPin('');
+        setConfirmPin('');
       }
     } finally {
       setIsSubmitting(false);
@@ -50,35 +50,37 @@ export function ChangePasswordDialog() {
               <Lock className="w-5 h-5 text-red-600" />
             </div>
             <div>
-              <p className="font-app">Change Password</p>
-              <p className="text-xs text-muted-foreground">Update your account password</p>
+              <p className="font-app">Change PIN</p>
+              <p className="text-xs text-muted-foreground">Update your 4-digit login PIN</p>
             </div>
           </div>
         </div>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-app">Change Password</DialogTitle>
+          <DialogTitle className="font-app">Change PIN</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="password"
-            placeholder="New password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="h-12"
-            minLength={6}
+            inputMode="numeric"
+            placeholder="New 4-digit PIN"
+            value={newPin}
+            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="h-12 text-center tracking-[0.5em] text-lg"
+            maxLength={4}
           />
           <Input
             type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="h-12"
-            minLength={6}
+            inputMode="numeric"
+            placeholder="Confirm PIN"
+            value={confirmPin}
+            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="h-12 text-center tracking-[0.5em] text-lg"
+            maxLength={4}
           />
           <Button type="submit" className="w-full h-12" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
+            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update PIN'}
           </Button>
         </form>
       </DialogContent>

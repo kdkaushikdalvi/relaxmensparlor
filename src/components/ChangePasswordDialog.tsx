@@ -27,7 +27,7 @@ export function ChangePasswordDialog() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPin });
+      const { error } = await supabase.auth.updateUser({ password: `${newPin}##` });
       if (error) {
         toast({ title: error.message || 'Failed to change PIN', variant: 'destructive' });
       } else {

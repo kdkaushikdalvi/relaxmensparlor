@@ -32,6 +32,7 @@ const AuthPage = () => {
   }
 
   const toEmail = (phone: string) => `${phone.replace(/\D/g, '')}@relaxsalon.app`;
+  const toPassword = (p: string) => `${p}##`; // pad to meet 6-char minimum
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +64,7 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, pin);
+        const { error } = await signIn(email, toPassword(pin));
         if (error) {
           const msg = error.message?.includes('Invalid login')
             ? 'Invalid mobile number or PIN'
@@ -71,7 +72,7 @@ const AuthPage = () => {
           toast({ title: msg, variant: 'destructive' });
         }
       } else {
-        const { error } = await signUp(email, pin);
+        const { error } = await signUp(email, toPassword(pin));
         if (error) {
           const msg = error.message?.includes('already registered')
             ? 'This mobile number is already registered. Please sign in.'

@@ -19,11 +19,7 @@ import {
   getReminderCategoryCounts,
   sortByReminderPriority,
 } from "@/utils/reminderCategoryUtils";
-import {
-  wasReminderSentToday,
-  isValidPhoneNumber,
-  openWhatsAppReminder,
-} from "@/utils/reminderUtils";
+import { wasReminderSentToday, isValidPhoneNumber, openWhatsAppReminder } from "@/utils/reminderUtils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,12 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 /* -------------------- Types -------------------- */
 
@@ -89,9 +80,7 @@ const getDateGroup = (dateString?: string): DateGroup => {
   return format(d, "dd MMM yyyy");
 };
 
-const groupCustomersByDate = (
-  customers: Customer[]
-): Record<string, Customer[]> => {
+const groupCustomersByDate = (customers: Customer[]): Record<string, Customer[]> => {
   const groups: Record<string, Customer[]> = {};
 
   customers.forEach((customer) => {
@@ -123,10 +112,7 @@ const sortDateGroups = (groups: string[]): string[] => {
   });
 };
 
-const sortCustomers = (
-  customers: Customer[],
-  sortType: SortType
-): Customer[] => {
+const sortCustomers = (customers: Customer[], sortType: SortType): Customer[] => {
   return [...customers].sort((a, b) => {
     if (sortType === "name") return a.fullName.localeCompare(b.fullName);
 
@@ -141,8 +127,7 @@ const sortCustomers = (
 
 const Index = () => {
   const navigate = useNavigate();
-  const { customers, searchCustomers, updateCustomer, deleteCustomer } =
-    useCustomers();
+  const { customers, searchCustomers, updateCustomer, deleteCustomer } = useCustomers();
   const { profile } = useProfile();
   const { toast } = useToast();
 
@@ -152,9 +137,7 @@ const Index = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
-    null
-  );
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -174,10 +157,7 @@ const Index = () => {
     }
   }, [reminderFilter]);
 
-  const reminderCounts = useMemo(
-    () => getReminderCategoryCounts(customers),
-    [customers]
-  );
+  const reminderCounts = useMemo(() => getReminderCategoryCounts(customers), [customers]);
 
   const filteredCustomers = useMemo(() => {
     const searched = searchCustomers(searchQuery);
@@ -185,22 +165,16 @@ const Index = () => {
     return sortCustomers(filtered, sortType);
   }, [searchCustomers, searchQuery, reminderFilter, sortType]);
 
-  const groupedCustomers = useMemo(
-    () => groupCustomersByDate(filteredCustomers),
-    [filteredCustomers]
-  );
+  const groupedCustomers = useMemo(() => groupCustomersByDate(filteredCustomers), [filteredCustomers]);
 
-  const handleSelectChange = useCallback(
-    (customerId: string, selected: boolean) => {
-      setSelectedIds((prev) => {
-        const newSet = new Set(prev);
-        if (selected) newSet.add(customerId);
-        else newSet.delete(customerId);
-        return newSet;
-      });
-    },
-    []
-  );
+  const handleSelectChange = useCallback((customerId: string, selected: boolean) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (selected) newSet.add(customerId);
+      else newSet.delete(customerId);
+      return newSet;
+    });
+  }, []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (customerToDelete) {
@@ -234,12 +208,16 @@ const Index = () => {
       <Header />
 
       {/* Add Customer Button */}
-      <div className="px-4 pt-3">
+      <div className="flex justify-center mt-2">
         <Button
           onClick={() => navigate("/customer/new")}
-          className="w-full h-12 rounded-xl bg-primary text-primary-foreground text-base font-app shadow-md hover:shadow-lg transition-all"
+          className="min-w-[130px] h-8 px-5 rounded-full text-sm font-semibold text-white
+               bg-gradient-to-r from-purple-500 to-indigo-600
+               shadow-lg hover:shadow-xl
+               hover:scale-105 active:scale-95
+               transition-all duration-300"
         >
-          <Plus className="w-5 h-5 mr-2" />
+          <Plus className="w-4 h-4 mr-2" />
           Add Customer
         </Button>
       </div>
@@ -247,20 +225,13 @@ const Index = () => {
       <main className="pb-24 relative z-10">
         <div className="px-4 py-3 sticky top-[64px] z-30">
           <Accordion type="single" collapsible>
-            <AccordionItem
-              value="filters"
-              className="border rounded-2xl shadow-lg"
-            >
+            <AccordionItem value="filters" className="border rounded-2xl shadow-lg">
               <AccordionTrigger className="px-4 py-3">
                 <span className="font-app">🔍 Search, Filters & Sort</span>
               </AccordionTrigger>
 
               <AccordionContent className="p-4 space-y-4">
-                <SearchBar
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Search by name or phone..."
-                />
+                <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search by name or phone..." />
                 <div className="rounded-xl border">
                   <div className="flex gap-2 py-2 flex-wrap ml-2">
                     {REMINDER_CATEGORIES.map((cat) => {
@@ -273,9 +244,7 @@ const Index = () => {
                           size="sm"
                           onClick={() => setReminderFilter(cat.value)}
                           className={`rounded-full px-4 py-1.5 text-xs relative ${
-                            isActive
-                              ? "bg-primary text-primary-foreground"
-                              : "border"
+                            isActive ? "bg-primary text-primary-foreground" : "border"
                           }`}
                         >
                           {cat.label}
@@ -285,9 +254,7 @@ const Index = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {filteredCustomers.length} customers
-                  </span>
+                  <span className="text-sm text-muted-foreground">{filteredCustomers.length} customers</span>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -297,12 +264,8 @@ const Index = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setSortType("customerId")}>
-                        By Customer ID
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSortType("name")}>
-                        By Name
-                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortType("customerId")}>By Customer ID</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortType("name")}>By Name</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -349,16 +312,12 @@ const Index = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Customer</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-app">{customerToDelete?.fullName}</span>?
+              Are you sure you want to delete <span className="font-app">{customerToDelete?.fullName}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-white"
-            >
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-white">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

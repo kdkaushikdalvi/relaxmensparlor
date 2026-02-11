@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpDown, History } from "lucide-react";
+import { ArrowUpDown, Plus } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCustomers } from "@/hooks/useCustomers";
 import { Header } from "@/components/Header";
@@ -232,6 +232,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
       <Header />
+
+      {/* Add Customer Button */}
+      <div className="px-4 pt-3">
+        <Button
+          onClick={() => navigate("/customer/new")}
+          className="w-full h-12 rounded-xl bg-primary text-primary-foreground text-base font-app shadow-md hover:shadow-lg transition-all"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Add Customer
+        </Button>
+      </div>
 
       <main className="pb-24 relative z-10">
         <div className="px-4 py-3 sticky top-[64px] z-30">

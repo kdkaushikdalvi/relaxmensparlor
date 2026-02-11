@@ -45,18 +45,10 @@ export function WhatsAppReviewDialog({
 
         {/* Actions */}
         <div className="flex flex-col gap-2 p-4 pt-2 border-t">
-          <button
-            onClick={onSubmit}
-            className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] shadow-lg"
-            style={{
-              background: "linear-gradient(135deg, #25D366, #128C7E)",
-              boxShadow: "0 4px 14px rgba(37, 211, 102, 0.4)",
-            }}
-          >
+          <Button onClick={onSubmit} className="w-full gap-2 h-11">
             <Send className="w-4 h-4" />
             Submit
-            <span className="ml-auto text-lg opacity-80">»</span>
-          </button>
+          </Button>
           <Button
             variant="outline"
             className="w-full gap-2 h-11"

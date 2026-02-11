@@ -45,9 +45,7 @@ export function Header() {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4 p-6 rounded-2xl bg-white/90 shadow-xl">
             <RefreshCw className="w-10 h-10 text-purple-600 animate-spin" />
-            <p className="text-sm font-semibold text-gray-700">
-              Refreshing app...
-            </p>
+            <p className="text-sm font-semibold text-gray-700">Refreshing app...</p>
           </div>
         </div>
       )}
@@ -61,7 +59,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               onClick={toggleSidebar}
-              className="w-11 h-11 rounded-xl border border-border/40 bg-background/60 shadow-sm hover:shadow-md transition-all active:scale-95"
+              className="w-11 h-11 rounded-xl border border-border/40 bg-background/60 shadow-sm"
             >
               <Menu className="w-5 h-5 text-primary" />
             </Button>
@@ -94,8 +92,7 @@ export function Header() {
     transition-all duration-300 active:scale-90 hover:-translate-y-0.5
     ${isRefreshing ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
               style={{
-                background:
-                  "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
+                background: "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
                 boxShadow: "0 8px 20px hsla(269.8, 70.3%, 55.1%, 0.45)",
                 pointerEvents: isRefreshing ? "none" : "auto",
               }}
@@ -107,13 +104,8 @@ export function Header() {
               <div className="absolute inset-0 bg-white/10" />
 
               {/* Icon */}
-              <RefreshCw
-                className={`w-4 h-4 text-white relative z-10 ${
-                  isRefreshing ? "animate-spin" : ""
-                }`}
-              />
+              <RefreshCw className={`w-4 h-4 text-white relative z-10 ${isRefreshing ? "animate-spin" : ""}`} />
             </div>
-
           </div>
         </div>
       </header>

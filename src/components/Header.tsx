@@ -114,26 +114,6 @@ export function Header() {
               />
             </div>
 
-            {/* Add Button */}
-            {isHomePage && (
-              <div
-                onClick={() => navigate("/customer/new")}
-                title="Add Customer"
-                className="w-8 h-8 rounded-lg relative overflow-hidden cursor-pointer flex items-center justify-center
-                         transition-all duration-200 active:scale-90 hover:-translate-y-0.5"
-                style={{
-                  background:
-                    "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
-                  boxShadow: "0 4px 10px hsla(269.8, 70.3%, 55.1%, 0.4)",
-                }}
-              >
-                {/* Glow */}
-                <div className="absolute inset-0 rounded-lg bg-[hsl(269.8,70.3%,55.1%)] blur-sm opacity-50" />
-
-                {/* Icon */}
-                <Plus className="w-3.5 h-3.5 relative z-10 text-white pointer-events-none" />
-              </div>
-            )}
           </div>
         </div>
       </header>

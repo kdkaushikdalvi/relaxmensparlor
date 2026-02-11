@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpDown, History } from "lucide-react";
+import { ArrowUpDown, History, Plus } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { useCustomers } from "@/hooks/useCustomers";
 import { Header } from "@/components/Header";
@@ -234,6 +234,21 @@ const Index = () => {
       <Header />
 
       <main className="pb-24 relative z-10">
+        {/* Add Customer Button */}
+        <div className="px-4 pt-3">
+          <button
+            onClick={() => navigate("/customer/new")}
+            className="w-full h-12 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] shadow-lg"
+            style={{
+              background: "linear-gradient(135deg, hsl(269.8, 70.3%, 60%), hsl(269.8, 70.3%, 48%))",
+              boxShadow: "0 6px 16px hsla(269.8, 70.3%, 55.1%, 0.35)",
+            }}
+          >
+            <Plus className="w-5 h-5" />
+            Add New Customer
+          </button>
+        </div>
+
         <div className="px-4 py-3 sticky top-[64px] z-30">
           <Accordion type="single" collapsible>
             <AccordionItem

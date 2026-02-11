@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import {
   Phone,
@@ -18,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
   isValidPhoneNumber,
-  openWhatsAppReminder,
+  generateReminderMessage,
 } from "@/utils/reminderUtils";
 import {
   getReminderStatus,
@@ -30,6 +31,9 @@ import { getAvatarGradient, getAvatarTextColor } from "@/utils/avatarColors";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useToast } from "@/hooks/use-toast";
+import { useMessageTemplates } from "@/contexts/MessageTemplateContext";
+import { WhatsAppReviewDialog } from "@/components/WhatsAppReviewDialog";
+import { formatPhoneForWhatsApp } from "@/utils/reminderUtils";
 
 interface CustomerCardProps {
   customer: Customer;
@@ -87,6 +91,9 @@ export function CustomerCard({
   const { profile } = useProfile();
   const { updateCustomer } = useCustomers();
   const { toast } = useToast();
+  const { getDefaultTemplate } = useMessageTemplates();
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
 
   const formattedDate = customer.visitingDate
     ? format(new Date(customer.visitingDate), "MMM d, yyyy")
@@ -122,6 +129,22 @@ export function CustomerCard({
       return;
     }
 
+    // Generate preview message and show review dialog
+    const template = getDefaultTemplate();
+    const msg = generateReminderMessage(
+      customer,
+      profile.businessName,
+      undefined,
+      template,
+      profile.ownerName
+    );
+    setReviewMessage(msg);
+    setReviewOpen(true);
+  };
+
+  const handleConfirmSend = () => {
+    setReviewOpen(false);
+
     const today = format(new Date(), "yyyy-MM-dd");
     const sentDates = customer.reminderSentDates || [];
 
@@ -133,7 +156,9 @@ export function CustomerCard({
       ],
     });
 
-    openWhatsAppReminder(customer, profile.businessName);
+    const phone = formatPhoneForWhatsApp(customer.mobileNumber);
+    const encodedMessage = encodeURIComponent(reviewMessage);
+    window.open(`https://wa.me/${phone}?text=${encodedMessage}`, "_blank");
 
     toast({
       title: "WhatsApp opened",
@@ -335,6 +360,14 @@ export function CustomerCard({
           </div>
         </div>
       </button>
+
+      <WhatsAppReviewDialog
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        onSubmit={handleConfirmSend}
+        message={reviewMessage}
+        customerName={customer.fullName}
+      />
     </div>
   );
 }

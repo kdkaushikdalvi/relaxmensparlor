@@ -11,16 +11,14 @@ import {
   Pencil,
   Trash2,
   History,
+  ArrowRight,
 } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import {
-  isValidPhoneNumber,
-  generateReminderMessage,
-} from "@/utils/reminderUtils";
+import { isValidPhoneNumber, generateReminderMessage } from "@/utils/reminderUtils";
 import {
   getReminderStatus,
   ReminderStatus,
@@ -48,10 +46,7 @@ interface CustomerCardProps {
   onSelectChange?: (selected: boolean) => void;
 }
 
-const statusConfig: Record<
-  ReminderStatus,
-  { label: string; className: string; icon: React.ElementType }
-> = {
+const statusConfig: Record<ReminderStatus, { label: string; className: string; icon: React.ElementType }> = {
   pending: {
     label: "Pending",
     className: "bg-primary/10 text-primary border-primary/30",
@@ -59,8 +54,7 @@ const statusConfig: Record<
   },
   "sent-today": {
     label: "Sent Today",
-    className:
-      "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30",
+    className: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30",
     icon: CheckCircle,
   },
   overdue: {
@@ -95,9 +89,7 @@ export function CustomerCard({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewMessage, setReviewMessage] = useState("");
 
-  const formattedDate = customer.visitingDate
-    ? format(new Date(customer.visitingDate), "MMM d, yyyy")
-    : "No date set";
+  const formattedDate = customer.visitingDate ? format(new Date(customer.visitingDate), "MMM d, yyyy") : "No date set";
 
   const hasValidPhone = isValidPhoneNumber(customer.mobileNumber);
   const reminderStatus = getReminderStatus(customer);
@@ -122,8 +114,7 @@ export function CustomerCard({
     if (!hasValidPhone) {
       toast({
         title: "Invalid phone number",
-        description:
-          "Please update the customer's phone number to send a reminder.",
+        description: "Please update the customer's phone number to send a reminder.",
         variant: "destructive",
       });
       return;
@@ -131,13 +122,7 @@ export function CustomerCard({
 
     // Generate preview message and show review dialog
     const template = getDefaultTemplate();
-    const msg = generateReminderMessage(
-      customer,
-      profile.businessName,
-      undefined,
-      template,
-      profile.ownerName
-    );
+    const msg = generateReminderMessage(customer, profile.businessName, undefined, template, profile.ownerName);
     setReviewMessage(msg);
     setReviewOpen(true);
   };
@@ -170,8 +155,7 @@ export function CustomerCard({
     e.stopPropagation();
   };
 
-  const isHighlighted =
-    reminderStatus === "overdue" || reminderStatus === "pending";
+  const isHighlighted = reminderStatus === "overdue" || reminderStatus === "pending";
 
   return (
     <div
@@ -180,13 +164,12 @@ export function CustomerCard({
         "gradient-card shadow-card",
         "transition-all duration-300 hover:shadow-elevated",
         "animate-slide-up group",
-        isNewCustomer &&
-          "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
+        isNewCustomer && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
         !isNewCustomer && isHighlighted
           ? "border-primary/50 bg-primary/5"
           : !isNewCustomer && "border-border/30 hover:border-primary/40",
         selected && "ring-2 ring-primary border-primary",
-        className
+        className,
       )}
       style={style}
     >
@@ -229,27 +212,20 @@ export function CustomerCard({
           {/* Checkbox for bulk selection */}
           {selectable && (
             <div className="flex-shrink-0 pt-1" onClick={handleCheckboxChange}>
-              <Checkbox
-                checked={selected}
-                onCheckedChange={(checked) => onSelectChange?.(!!checked)}
-              />
+              <Checkbox checked={selected} onCheckedChange={(checked) => onSelectChange?.(!!checked)} />
             </div>
           )}
 
           <div
             className={cn(
               "flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300",
-              reminderStatus === "overdue"
-                ? "bg-destructive/20"
-                : getAvatarGradient(customer.fullName)
+              reminderStatus === "overdue" ? "bg-destructive/20" : getAvatarGradient(customer.fullName),
             )}
           >
             <span
               className={cn(
                 "text-base sm:text-lg font-display font-app",
-                reminderStatus === "overdue"
-                  ? "text-destructive"
-                  : getAvatarTextColor(customer.fullName)
+                reminderStatus === "overdue" ? "text-destructive" : getAvatarTextColor(customer.fullName),
               )}
             >
               {displayId ?? customer.customerId ?? "-"}
@@ -276,19 +252,12 @@ export function CustomerCard({
             {customer?.interest?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {customer?.interest?.slice(0, 2)?.map((interest) => (
-                  <Badge
-                    key={interest}
-                    variant="soft"
-                    className="text-[10px] sm:text-xs px-2 py-0.5"
-                  >
+                  <Badge key={interest} variant="soft" className="text-[10px] sm:text-xs px-2 py-0.5">
                     {interest}
                   </Badge>
                 ))}
                 {customer.interest.length > 2 && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] sm:text-xs px-2 py-0.5"
-                  >
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5">
                     +{customer.interest.length - 2}
                   </Badge>
                 )}
@@ -305,55 +274,38 @@ export function CustomerCard({
               </div>
             )}
 
-            {/* Reminder Status & Button */}
-            <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border/30">
-              <div
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+              {/* WhatsApp CTA */}
+              <button
                 onClick={hasValidPhone ? handleSendReminder : undefined}
-                className={`inline-flex shrink-0 items-center justify-center gap-1.5 h-7 px-3 rounded-full border text-[11px] sm:text-xs font-medium transition-all duration-200 select-none
-    focus:outline-none focus:ring-2 focus:ring-offset-1
-    ${
-      hasValidPhone
-        ? "cursor-pointer bg-green-500 text-white border-green-200 hover:bg-green-100 hover:shadow-sm hover:ring-2 hover:ring-green-200 active:bg-green-200"
-        : "cursor-not-allowed bg-gray-100 text-gray-400 border-gray-200 opacity-70"
-    }`}
+                disabled={!hasValidPhone}
+                className={`group inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+      ${
+        hasValidPhone
+          ? "text-purple-600 border border-purple-600 hover:bg-purple-600 hover:text-white"
+          : "text-gray-400 border border-gray-200 cursor-not-allowed"
+      }`}
               >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span className="leading-none">WhatsApp</span>
+                Send Reminder
+                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </button>
 
-                {/* Pulse dot */}
-                {hasValidPhone && (
-                  <span className="relative flex h-2 w-2 ml-1">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 min-w-0">
+              {/* Right Side Info */}
+              <div className="flex items-center gap-2">
                 {sentCount > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="text-[11px] px-1.5 py-0 shrink-0"
-                  >
-                    {sentCount} Sent
-                  </Badge>
+                  <span className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground">{sentCount} Sent</span>
                 )}
 
                 {customer.reminderDate && reminderStatus !== "none" && (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-[10px] sm:text-xs gap-1 border w-fit shrink-0",
-                      statusInfo.className
-                    )}
+                  <span
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border ${statusInfo.className}`}
                   >
                     <statusInfo.icon className="w-3 h-3" />
                     {statusInfo.label}
                     {reminderStatus === "upcoming" && (
-                      <span className="ml-1">
-                        {format(new Date(customer.reminderDate), "dd MMM")}
-                      </span>
+                      <span className="ml-1">{format(new Date(customer.reminderDate), "dd MMM")}</span>
                     )}
-                  </Badge>
+                  </span>
                 )}
               </div>
             </div>

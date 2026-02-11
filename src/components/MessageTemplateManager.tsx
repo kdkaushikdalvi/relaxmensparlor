@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Check, Star, X, ArrowLeft, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, Star, X, ArrowLeft, Eye, Sparkles } from "lucide-react";
 import {
   useMessageTemplates,
   MessageTemplate,
@@ -49,6 +49,54 @@ const TEMPLATE_VARIABLES: TemplateVariable[] = [
 ];
 
 type ViewMode = "list" | "edit" | "create";
+
+interface SuggestedTemplate {
+  name: string;
+  message: string;
+}
+
+const SUGGESTED_TEMPLATES: SuggestedTemplate[] = [
+  {
+    name: "🪔 Diwali Greeting",
+    message: `🪔 Happy Diwali, {CustomerName}!\n\nWishing you a sparkling Diwali full of joy & prosperity! ✨\n\nLook your best this festive season — visit {ShopName} for a fresh new look!\n\nWarm regards,\n{OwnerName} 🙏`,
+  },
+  {
+    name: "🎉 New Year Greeting",
+    message: `🎉 Happy New Year, {CustomerName}!\n\nStart the new year looking sharp & confident! 💈\n\nVisit {ShopName} for a stylish makeover.\n\nBest wishes,\n{OwnerName} 🥳`,
+  },
+  {
+    name: "🕉️ Ganesh Chaturthi",
+    message: `🕉️ गणपती बाप्पा मोरया, {CustomerName}!\n\nगणेशोत्सवाच्या हार्दिक शुभेच्छा! 🌺\n\nसणासाठी fresh look हवा असेल तर {ShopName} ला भेट द्या!\n\n{OwnerName} 🙏`,
+  },
+  {
+    name: "🌙 Eid Greeting",
+    message: `🌙 Eid Mubarak, {CustomerName}!\n\nWishing you joy, peace & happiness on this blessed day! ✨\n\nCelebrate in style — visit {ShopName} for a festive grooming session.\n\nWarm regards,\n{OwnerName} 🙏`,
+  },
+  {
+    name: "🎊 Holi Greeting",
+    message: `🎊 Happy Holi, {CustomerName}!\n\nMay your life be filled with vibrant colors! 🌈\n\nAfter the celebrations, visit {ShopName} for a refreshing cleanup & new look!\n\nBest wishes,\n{OwnerName} 🙏`,
+  },
+  {
+    name: "🏏 Independence Day",
+    message: `🇮🇳 Happy Independence Day, {CustomerName}!\n\nJai Hind! 🫡 Celebrate freedom with a fresh style.\n\nVisit {ShopName} today for a special festive look!\n\nRegards,\n{OwnerName} 🙏`,
+  },
+  {
+    name: "🌟 Navratri Greeting",
+    message: `🌟 Happy Navratri, {CustomerName}!\n\nनवरात्रीच्या हार्दिक शुभेच्छा! 🙏\n\nDandiya nights are here — get a dashing look at {ShopName}!\n\nBest wishes,\n{OwnerName} ✨`,
+  },
+  {
+    name: "🎄 Christmas Greeting",
+    message: `🎄 Merry Christmas, {CustomerName}!\n\nWishing you a joyful holiday season! 🎅\n\nLook festive-ready with a fresh grooming session at {ShopName}.\n\nHappy holidays,\n{OwnerName} 🎁`,
+  },
+  {
+    name: "🙏 Makar Sankranti",
+    message: `🙏 Happy Makar Sankranti, {CustomerName}!\n\nतिळगुळ घ्या, गोड गोड बोला! 🌾\n\nसणासाठी smart look हवा असेल तर {ShopName} ला या!\n\n{OwnerName} 🪁`,
+  },
+  {
+    name: "💈 Regular Reminder",
+    message: `नमस्कार {CustomerName},\n\nतुमची last visit {LastVisit} ला होती.\n\nआता fresh look साठी {ShopName} ला भेट द्या! 💈\n\nCall or reply to book.\n\n{OwnerName} 🙏`,
+  },
+];
 
 export function MessageTemplateManager() {
   const navigate = useNavigate();
@@ -422,6 +470,32 @@ export function MessageTemplateManager() {
             ))}
           </div>
         </ScrollArea>
+
+        {/* Suggested Festival Templates */}
+        <div className="space-y-3 mt-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-app font-semibold">Suggested Templates</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">Tap to add festival greetings & reminders</p>
+          <div className="grid grid-cols-2 gap-2">
+            {SUGGESTED_TEMPLATES.filter(
+              (s) => !templates.some((t) => t.name === s.name)
+            ).map((suggestion) => (
+              <button
+                key={suggestion.name}
+                onClick={() => {
+                  addTemplate(suggestion.name, suggestion.message);
+                  toast({ title: `"${suggestion.name}" added!` });
+                }}
+                className="text-left p-3 rounded-xl border bg-card hover:bg-primary/5 hover:border-primary/30 transition-all text-sm"
+              >
+                <span className="font-app line-clamp-1">{suggestion.name}</span>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{suggestion.message}</p>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <PreviewDialog />

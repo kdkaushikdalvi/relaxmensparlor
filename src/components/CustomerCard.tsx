@@ -1,24 +1,11 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import {
-  Phone,
-  Calendar,
-  Bell,
-  MessageCircle,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Pencil,
-  Trash2,
-  History,
-  ArrowRight,
-} from "lucide-react";
+import { Phone, Bell, CheckCircle, AlertTriangle, Clock, History, Send, Eye } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { isValidPhoneNumber, generateReminderMessage } from "@/utils/reminderUtils";
+import { isValidPhoneNumber, generateReminderMessage, formatPhoneForWhatsApp } from "@/utils/reminderUtils";
 import {
   getReminderStatus,
   ReminderStatus,
@@ -31,14 +18,11 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { useToast } from "@/hooks/use-toast";
 import { useMessageTemplates } from "@/contexts/MessageTemplateContext";
 import { WhatsAppReviewDialog } from "@/components/WhatsAppReviewDialog";
-import { formatPhoneForWhatsApp } from "@/utils/reminderUtils";
 
 interface CustomerCardProps {
   customer: Customer;
-  displayId?: number; // Display ID for the card
+  displayId?: number;
   onClick: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
   className?: string;
   style?: React.CSSProperties;
   selectable?: boolean;
@@ -46,81 +30,65 @@ interface CustomerCardProps {
   onSelectChange?: (selected: boolean) => void;
 }
 
-const statusConfig: Record<ReminderStatus, { label: string; className: string; icon: React.ElementType }> = {
+const statusConfig: Record<ReminderStatus, { label: string; color: string; icon: React.ElementType }> = {
   pending: {
     label: "Pending",
-    className: "bg-primary/10 text-primary border-primary/30",
+    color: "text-amber-600 dark:text-amber-400",
     icon: Clock,
   },
   "sent-today": {
     label: "Sent Today",
-    className: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30",
+    color: "text-emerald-600 dark:text-emerald-400",
     icon: CheckCircle,
   },
   overdue: {
     label: "Overdue",
-    className: "bg-destructive/10 text-destructive border-destructive/30",
+    color: "text-rose-600 dark:text-rose-400",
     icon: AlertTriangle,
   },
   upcoming: {
     label: "Upcoming",
-    className: "bg-muted text-muted-foreground border-border",
+    color: "text-blue-600 dark:text-blue-400",
     icon: Bell,
   },
-  none: { label: "", className: "", icon: Bell },
+  none: { label: "", color: "hidden", icon: Bell },
 };
 
 export function CustomerCard({
   customer,
   displayId,
   onClick,
-  onEdit,
-  onDelete,
-  className,
-  style,
   selectable = false,
   selected = false,
   onSelectChange,
+  className,
+  style,
 }: CustomerCardProps) {
   const { profile } = useProfile();
   const { updateCustomer } = useCustomers();
   const { toast } = useToast();
   const { getDefaultTemplate } = useMessageTemplates();
+
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewMessage, setReviewMessage] = useState("");
-
-  const formattedDate = customer.visitingDate ? format(new Date(customer.visitingDate), "MMM d, yyyy") : "No date set";
 
   const hasValidPhone = isValidPhoneNumber(customer.mobileNumber);
   const reminderStatus = getReminderStatus(customer);
   const statusInfo = statusConfig[reminderStatus];
-  const lastReminderTimeAgo = getLastReminderTimeAgo(customer);
+  const lastReminder = getLastReminderTimeAgo(customer);
   const sentCount = getSentRemindersCount(customer);
-
-  // Check if customer was added in the last 1 hour
-  const isRecentlyAdded = () => {
-    if (!customer.createdAt) return false;
-    const createdTime = new Date(customer.createdAt).getTime();
-    const now = Date.now();
-    const oneHourInMs = 60 * 60 * 1000;
-    return now - createdTime < oneHourInMs;
-  };
-
-  const isNewCustomer = isRecentlyAdded();
 
   const handleSendReminder = (e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (!hasValidPhone) {
       toast({
         title: "Invalid phone number",
-        description: "Please update the customer's phone number to send a reminder.",
+        description: "Please update the phone number to send reminders.",
         variant: "destructive",
       });
       return;
     }
 
-    // Generate preview message and show review dialog
     const template = getDefaultTemplate();
     const msg = generateReminderMessage(customer, profile.businessName, undefined, template, profile.ownerName);
     setReviewMessage(msg);
@@ -129,189 +97,147 @@ export function CustomerCard({
 
   const handleConfirmSend = () => {
     setReviewOpen(false);
-
     const today = format(new Date(), "yyyy-MM-dd");
-    const sentDates = customer.reminderSentDates || [];
 
     updateCustomer(customer.id, {
-      reminderSentDates: [...sentDates, today],
+      reminderSentDates: [...(customer.reminderSentDates || []), today],
       reminderHistory: [
         ...(customer.reminderHistory || []),
-        { sentAt: new Date().toISOString(), message: `WhatsApp reminder sent` },
+        { sentAt: new Date().toISOString(), message: "WhatsApp reminder sent" },
       ],
     });
 
     const phone = formatPhoneForWhatsApp(customer.mobileNumber);
-    const encodedMessage = encodeURIComponent(reviewMessage);
-    window.open(`https://wa.me/${phone}?text=${encodedMessage}`, "_blank");
-
-    toast({
-      title: "WhatsApp opened",
-      description: "Edit the message if needed and send it to the customer.",
-    });
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(reviewMessage)}`, "_blank");
   };
-
-  const handleCheckboxChange = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
-  const isHighlighted = reminderStatus === "overdue" || reminderStatus === "pending";
 
   return (
     <div
+      style={style}
       className={cn(
-        "w-full text-left p-3 sm:p-4 rounded-xl glass border relative",
-        "gradient-card shadow-card",
-        "transition-all duration-300 hover:shadow-elevated",
-        "animate-slide-up group",
-        isNewCustomer && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
-        !isNewCustomer && isHighlighted
-          ? "border-primary/50 bg-primary/5"
-          : !isNewCustomer && "border-border/30 hover:border-primary/40",
-        selected && "ring-2 ring-primary border-primary",
+        "font-app group relative overflow-hidden rounded-xl border transition-all duration-200",
+        "bg-white dark:bg-slate-900/50 backdrop-blur-sm",
+        "hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700",
+        selected ? "ring-2 ring-primary border-transparent" : "border-slate-200 dark:border-slate-800",
         className,
       )}
-      style={style}
     >
-      {/* Action Icons - Top Right */}
-      {!selectable && (onEdit || onDelete) && (
-        <div className="absolute top-2 right-2 flex gap-1 z-10">
-          {onEdit && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 bg-primary/10 hover:bg-primary/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4 text-primary" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 bg-destructive/10 hover:bg-destructive/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </Button>
-          )}
-        </div>
-      )}
+      {/* Status indicator (Left side) */}
+      <div
+        className={cn(
+          "absolute top-0 left-0 w-1 h-full transition-colors duration-300",
+          reminderStatus === "overdue"
+            ? "bg-rose-500"
+            : reminderStatus === "sent-today"
+              ? "bg-emerald-500"
+              : reminderStatus === "pending"
+                ? "bg-amber-500"
+                : "bg-transparent",
+        )}
+      />
 
-      <button onClick={onClick} className="w-full text-left focus:outline-none">
+      {/* Floating Action (Hover only) */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-all duration-200 z-10"
+      >
+        <Eye className="w-3.5 h-3.5" />
+      </button>
+
+      <div className="p-3.5">
         <div className="flex items-start gap-3">
-          {/* Checkbox for bulk selection */}
-          {selectable && (
-            <div className="flex-shrink-0 pt-1" onClick={handleCheckboxChange}>
-              <Checkbox checked={selected} onCheckedChange={(checked) => onSelectChange?.(!!checked)} />
-            </div>
-          )}
-
-          <div
-            className={cn(
-              "flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300",
-              reminderStatus === "overdue" ? "bg-destructive/20" : getAvatarGradient(customer.fullName),
-            )}
-          >
-            <span
+          {/* Avatar Container */}
+          <div className="relative flex-shrink-0">
+            <div
               className={cn(
-                "text-base sm:text-lg font-display font-app",
-                reminderStatus === "overdue" ? "text-destructive" : getAvatarTextColor(customer.fullName),
+                "h-12 w-12 rounded-xl flex items-center justify-center text-lg font-bold shadow-sm",
+                getAvatarGradient(customer.fullName),
               )}
             >
-              {displayId ?? customer.customerId ?? "-"}
-            </span>
+              <span className={getAvatarTextColor(customer.fullName)}>{displayId ?? customer.customerId ?? "?"}</span>
+            </div>
+            {selectable && (
+              <div
+                className="absolute -top-1.5 -left-1.5 bg-white dark:bg-slate-950 rounded-md p-0.5 shadow-md border"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Checkbox checked={selected} onCheckedChange={(checked) => onSelectChange?.(!!checked)} />
+              </div>
+            )}
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0 pr-16">
-            <h3
-              className="font-display font-app text-base sm:text-lg text-foreground truncate"
-              style={{ fontFamily: "inherit" }}
-            >
-              {customer.fullName}
-            </h3>
-
-            {/* Phone & Date - Stacked on mobile */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mt-1 text-xs sm:text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5" />
-                <span className="text-green-700">{customer.mobileNumber}</span>
-              </span>
+          {/* Core Content */}
+          <div className="flex-1 min-w-0" onClick={onClick} role="button">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-display font-app text-base sm:text-lg text-foreground truncate">
+                {customer.fullName}
+              </h3>
+              {reminderStatus !== "none" && (
+                <div
+                  className={cn(
+                    "flex items-center text-[10px] font-bold uppercase tracking-wider whitespace-nowrap",
+                    statusInfo.color,
+                  )}
+                >
+                  <statusInfo.icon className="w-3 h-3 mr-1" />
+                  {statusInfo.label}
+                </div>
+              )}
             </div>
-            {/* Interests */}
-            {customer?.interest?.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {customer?.interest?.slice(0, 2)?.map((interest) => (
-                  <Badge key={interest} variant="soft" className="text-[10px] sm:text-xs px-2 py-0.5">
-                    {interest}
-                  </Badge>
-                ))}
-                {customer.interest.length > 2 && (
-                  <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5">
-                    +{customer.interest.length - 2}
-                  </Badge>
-                )}
-              </div>
-            )}
-            {/* Last Reminder Sent */}
-            {lastReminderTimeAgo && (
-              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
-                <History className="w-3.5 h-3.5" />
-                <span className="text-orange-400">
-                  Last reminder: &nbsp;
-                  <span className="text-red-800">{lastReminderTimeAgo}</span>
-                </span>
-              </div>
-            )}
 
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-              {/* WhatsApp CTA */}
-              <button
-                onClick={hasValidPhone ? handleSendReminder : undefined}
-                disabled={!hasValidPhone}
-                className={`group inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-      ${
-        hasValidPhone
-          ? "text-purple-600 border border-purple-600 hover:bg-purple-600 hover:text-white"
-          : "text-gray-400 border border-gray-200 cursor-not-allowed"
-      }`}
-              >
-                Send Reminder
-                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </button>
-
-              {/* Right Side Info */}
-              <div className="flex items-center gap-2">
-                {sentCount > 0 && (
-                  <span className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground">{sentCount} Sent</span>
-                )}
-
-                {customer.reminderDate && reminderStatus !== "none" && (
-                  <span
-                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border ${statusInfo.className}`}
-                  >
-                    <statusInfo.icon className="w-3 h-3" />
-                    {statusInfo.label}
-                    {reminderStatus === "upcoming" && (
-                      <span className="ml-1">{format(new Date(customer.reminderDate), "dd MMM")}</span>
-                    )}
-                  </span>
-                )}
+            {/* Meta Info Row */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+              <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                <Phone className="w-3 h-3 text-emerald-600" />
+                {customer.mobileNumber}
               </div>
+              {lastReminder && (
+                <div className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400/80">
+                  <History className="w-3 h-3" />
+                  <span>{lastReminder}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </button>
+
+        {/* Footer Action Area */}
+        <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            {customer.interest?.slice(0, 2).map((tag) => (
+              <span
+                key={tag}
+                className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-500 dark:text-slate-400"
+              >
+                {tag}
+              </span>
+            ))}
+            {customer.interest && customer.interest.length > 2 && (
+              <span className="text-[10px] text-slate-400">+{customer.interest.length - 2}</span>
+            )}
+            {sentCount > 0 && customer.interest?.length === 0 && (
+              <span className="text-[10px] text-slate-400 italic">{sentCount} reminders sent</span>
+            )}
+          </div>
+
+          <button
+            onClick={handleSendReminder}
+            disabled={!hasValidPhone}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95",
+              hasValidPhone
+                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white"
+                : "text-slate-300 dark:text-slate-700 cursor-not-allowed",
+            )}
+          >
+            <Send className="w-3.5 h-3.5" />
+            Remind
+          </button>
+        </div>
+      </div>
 
       <WhatsAppReviewDialog
         open={reviewOpen}

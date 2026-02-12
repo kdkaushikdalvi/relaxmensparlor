@@ -295,8 +295,6 @@ const Index = () => {
                         customer={customer}
                         displayId={customer.customerId}
                         onClick={() => handleViewCustomer(customer)}
-                        onEdit={() => handleEditCustomer(customer)}
-                        onDelete={() => handleDeleteCustomer(customer)}
                       />
                     ))}
                   </div>

@@ -96,6 +96,14 @@ const SUGGESTED_TEMPLATES: SuggestedTemplate[] = [
     name: "💈 Regular Reminder",
     message: `नमस्कार {CustomerName},\n\nतुमची last visit {LastVisit} ला होती.\n\nआता fresh look साठी {ShopName} ला भेट द्या! 💈\n\nCall or reply to book.\n\n{OwnerName} 🙏`,
   },
+  {
+    name: "🪢 Raksha Bandhan",
+    message: `🪢 Happy Raksha Bandhan, {CustomerName}!\n\nCelebrate the bond of love with a fresh & stylish look! 💈✨\n\nVisit {ShopName} before the festivities & look your best for your sister!\n\nWarm wishes,\n{OwnerName} 🙏`,
+  },
+  {
+    name: "🚩 Gudi Padwa",
+    message: `🚩 गुढीपाडव्याच्या हार्दिक शुभेच्छा, {CustomerName}!\n\nनवीन वर्षाची सुरुवात fresh look ने करा! 🌟\n\n{ShopName} ला भेट द्या आणि नवीन style मिळवा!\n\n{OwnerName} 🙏`,
+  },
 ];
 
 export function MessageTemplateManager() {

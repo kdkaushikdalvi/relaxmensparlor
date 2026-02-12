@@ -161,7 +161,7 @@ export function CustomerCard({
     <div
       className={cn(
         "w-full text-left p-3 sm:p-4 rounded-xl glass border relative",
-        "gradient-card shadow-card",
+        "gradient-card shadow-card border border-border",
         "transition-all duration-300 hover:shadow-elevated",
         "animate-slide-up group",
         isNewCustomer && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
@@ -173,40 +173,6 @@ export function CustomerCard({
       )}
       style={style}
     >
-      {/* Action Icons - Top Right */}
-      {!selectable && (onEdit || onDelete) && (
-        <div className="absolute top-2 right-2 flex gap-1 z-10">
-          {onEdit && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 bg-primary/10 hover:bg-primary/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-            >
-              <Pencil className="w-4 h-4 text-primary" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 bg-destructive/10 hover:bg-destructive/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </Button>
-          )}
-        </div>
-      )}
-
       <button onClick={onClick} className="w-full text-left focus:outline-none">
         <div className="flex items-start gap-3">
           {/* Checkbox for bulk selection */}
@@ -233,7 +199,7 @@ export function CustomerCard({
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0 pr-16">
+          <div className="flex-1 min-w-0">
             <h3
               className="font-display font-app text-base sm:text-lg text-foreground truncate"
               style={{ fontFamily: "inherit" }}

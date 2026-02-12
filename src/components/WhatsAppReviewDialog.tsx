@@ -22,7 +22,7 @@ export function WhatsAppReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-sm mx-auto rounded-2xl p-0 gap-0 [&>button]:hidden">
+      <DialogContent className="max-w-sm mx-auto rounded-2xl p-0 gap-0 [&>button]:hidden w-full h-full sm:w-auto sm:h-auto sm:max-h-[85vh] max-sm:rounded-none max-sm:max-w-full">
         {/* Header */}
         <DialogHeader className="flex flex-row items-center justify-between p-4 pb-2">
           <DialogTitle className="text-base">Review Message</DialogTitle>

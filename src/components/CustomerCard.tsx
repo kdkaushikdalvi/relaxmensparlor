@@ -18,7 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { isValidPhoneNumber, generateReminderMessage } from "@/utils/reminderUtils";
+import {
+  isValidPhoneNumber,
+  generateReminderMessage,
+} from "@/utils/reminderUtils";
 import {
   getReminderStatus,
   ReminderStatus,
@@ -46,7 +49,10 @@ interface CustomerCardProps {
   onSelectChange?: (selected: boolean) => void;
 }
 
-const statusConfig: Record<ReminderStatus, { label: string; className: string; icon: React.ElementType }> = {
+const statusConfig: Record<
+  ReminderStatus,
+  { label: string; className: string; icon: React.ElementType }
+> = {
   pending: {
     label: "Pending",
     className: "bg-primary/10 text-primary border-primary/30",
@@ -54,7 +60,8 @@ const statusConfig: Record<ReminderStatus, { label: string; className: string; i
   },
   "sent-today": {
     label: "Sent Today",
-    className: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30",
+    className:
+      "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30",
     icon: CheckCircle,
   },
   overdue: {
@@ -89,7 +96,9 @@ export function CustomerCard({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewMessage, setReviewMessage] = useState("");
 
-  const formattedDate = customer.visitingDate ? format(new Date(customer.visitingDate), "MMM d, yyyy") : "No date set";
+  const formattedDate = customer.visitingDate
+    ? format(new Date(customer.visitingDate), "MMM d, yyyy")
+    : "No date set";
 
   const hasValidPhone = isValidPhoneNumber(customer.mobileNumber);
   const reminderStatus = getReminderStatus(customer);
@@ -114,7 +123,8 @@ export function CustomerCard({
     if (!hasValidPhone) {
       toast({
         title: "Invalid phone number",
-        description: "Please update the customer's phone number to send a reminder.",
+        description:
+          "Please update the customer's phone number to send a reminder.",
         variant: "destructive",
       });
       return;
@@ -122,7 +132,13 @@ export function CustomerCard({
 
     // Generate preview message and show review dialog
     const template = getDefaultTemplate();
-    const msg = generateReminderMessage(customer, profile.businessName, undefined, template, profile.ownerName);
+    const msg = generateReminderMessage(
+      customer,
+      profile.businessName,
+      undefined,
+      template,
+      profile.ownerName
+    );
     setReviewMessage(msg);
     setReviewOpen(true);
   };
@@ -155,21 +171,23 @@ export function CustomerCard({
     e.stopPropagation();
   };
 
-  const isHighlighted = reminderStatus === "overdue" || reminderStatus === "pending";
+  const isHighlighted =
+    reminderStatus === "overdue" || reminderStatus === "pending";
 
   return (
     <div
       className={cn(
-        "w-full text-left p-3 sm:p-4 rounded-xl glass border relative",
+        "w-full text-left p-2 sm:p-3 rounded-xl glass border relative",
         "gradient-card shadow-card border border-border",
         "transition-all duration-300 hover:shadow-elevated",
         "animate-slide-up group",
-        isNewCustomer && "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
+        isNewCustomer &&
+          "ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20 border-green-400",
         !isNewCustomer && isHighlighted
           ? "border-primary/50 bg-primary/5"
           : !isNewCustomer && "border-border/30 hover:border-primary/40",
         selected && "ring-2 ring-primary border-primary",
-        className,
+        className
       )}
       style={style}
     >
@@ -178,20 +196,27 @@ export function CustomerCard({
           {/* Checkbox for bulk selection */}
           {selectable && (
             <div className="flex-shrink-0 pt-1" onClick={handleCheckboxChange}>
-              <Checkbox checked={selected} onCheckedChange={(checked) => onSelectChange?.(!!checked)} />
+              <Checkbox
+                checked={selected}
+                onCheckedChange={(checked) => onSelectChange?.(!!checked)}
+              />
             </div>
           )}
 
           <div
             className={cn(
               "flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-glow transition-all duration-300",
-              reminderStatus === "overdue" ? "bg-destructive/20" : getAvatarGradient(customer.fullName),
+              reminderStatus === "overdue"
+                ? "bg-destructive/20"
+                : getAvatarGradient(customer.fullName)
             )}
           >
             <span
               className={cn(
                 "text-base sm:text-lg font-display font-app",
-                reminderStatus === "overdue" ? "text-destructive" : getAvatarTextColor(customer.fullName),
+                reminderStatus === "overdue"
+                  ? "text-destructive"
+                  : getAvatarTextColor(customer.fullName)
               )}
             >
               {displayId ?? customer.customerId ?? "-"}
@@ -218,12 +243,19 @@ export function CustomerCard({
             {customer?.interest?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {customer?.interest?.slice(0, 2)?.map((interest) => (
-                  <Badge key={interest} variant="soft" className="text-[10px] sm:text-xs px-2 py-0.5">
+                  <Badge
+                    key={interest}
+                    variant="soft"
+                    className="text-[10px] sm:text-xs px-2 py-0.5"
+                  >
                     {interest}
                   </Badge>
                 ))}
                 {customer.interest.length > 2 && (
-                  <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5">
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] sm:text-xs px-2 py-0.5"
+                  >
                     +{customer.interest.length - 2}
                   </Badge>
                 )}
@@ -245,12 +277,12 @@ export function CustomerCard({
               <button
                 onClick={hasValidPhone ? handleSendReminder : undefined}
                 disabled={!hasValidPhone}
-                className={`group inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-      ${
-        hasValidPhone
-          ? "text-purple-600 border border-purple-600 hover:bg-purple-600 hover:text-white"
-          : "text-gray-400 border border-gray-200 cursor-not-allowed"
-      }`}
+                className={`group inline-flex items-center gap-2 px-4 py-1 rounded-lg text-sm font-medium transition-all duration-200
+              ${
+                hasValidPhone
+                  ? "text-purple-600 border border-purple-600 hover:bg-purple-600 hover:text-white"
+                  : "text-gray-400 border border-gray-200 cursor-not-allowed"
+              }`}
               >
                 Send Reminder
                 <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
@@ -259,7 +291,9 @@ export function CustomerCard({
               {/* Right Side Info */}
               <div className="flex items-center gap-2">
                 {sentCount > 0 && (
-                  <span className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground">{sentCount} Sent</span>
+                  <span className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground">
+                    {sentCount} Sent
+                  </span>
                 )}
 
                 {customer.reminderDate && reminderStatus !== "none" && (
@@ -269,7 +303,9 @@ export function CustomerCard({
                     <statusInfo.icon className="w-3 h-3" />
                     {statusInfo.label}
                     {reminderStatus === "upcoming" && (
-                      <span className="ml-1">{format(new Date(customer.reminderDate), "dd MMM")}</span>
+                      <span className="ml-1">
+                        {format(new Date(customer.reminderDate), "dd MMM")}
+                      </span>
                     )}
                   </span>
                 )}

@@ -129,7 +129,9 @@ const CustomerFormPage = () => {
       const newCustomer = await addCustomer(formData);
       // Update with custom ID if provided
       if (customerId) {
-        await updateCustomer(newCustomer.id, { customerId: parseInt(customerId, 10) });
+        await updateCustomer(newCustomer.id, {
+          customerId: parseInt(customerId, 10),
+        });
       }
       toast({
         title: "Customer added",
@@ -169,19 +171,31 @@ const CustomerFormPage = () => {
         return (
           <div className="space-y-4">
             {/* Customer ID - Editable, max 4 digits */}
-            <div className="flex items-center gap-3">
-              <div className="w-16 h-14 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  value={customerId}
-                  onChange={(e) => handleCustomerIdChange(e.target.value)}
-                  placeholder="#"
-                  maxLength={4}
-                  className="h-12 text-lg font-bold text-center border-0 bg-transparent p-0 w-full"
-                />
-              </div>
-              <span className="text-sm text-muted-foreground">Customer ID (optional, max 4 digits)</span>
+            <div className="relative w-44">
+              <label className="mb-1 block text-sm font-bold text-purple-800">
+                Customer ID
+              </label>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                value={customerId}
+                onChange={(e) => handleCustomerIdChange(e.target.value)}
+                maxLength={4}
+                placeholder="0"
+                className="w-full rounded-md border-2 border-purple-700 
+               bg-purple-50 px-3 py-2 text-lg font-bold text-purple-900
+               shadow-[4px_4px_0px_0px_rgba(126,34,206,1)]
+               transition-all
+               focus:-translate-x-[1px] focus:-translate-y-[1px]
+               focus:outline-none
+               focus:bg-white
+               focus:shadow-[6px_6px_0px_0px_rgba(126,34,206,1)]"
+              />
+
+              <span className="mt-1 block text-[10px] uppercase tracking-wider text-purple-400">
+                Optional
+              </span>
             </div>
 
             <Input
@@ -228,10 +242,11 @@ const CustomerFormPage = () => {
                 </button>
               ))}
             </div>
-            
+
             {serviceNames.length === 0 && (
               <p className="text-center text-muted-foreground">
-                No active services available. Enable services in Settings → Services.
+                No active services available. Enable services in Settings →
+                Services.
               </p>
             )}
           </div>
@@ -264,7 +279,12 @@ const CustomerFormPage = () => {
           </div>
 
           {!stepConfig.required && (
-            <Button variant="ghost" size="sm" onClick={handleSkip} className="h-12 w-12 rounded-full bg-primary/20 hover:bg-primary/20 text-white">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkip}
+              className="h-12 w-12 rounded-full bg-primary/20 hover:bg-primary/20 text-white"
+            >
               Skip
             </Button>
           )}

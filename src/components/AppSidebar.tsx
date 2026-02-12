@@ -108,7 +108,7 @@ export function AppSidebar() {
           <NavButton icon={<History className="w-5 h-5 text-blue-600" />} label="History" onClick={() => navigateTo("/reminder-history")} />
           <NavButton icon={<Scissors className="w-5 h-5 text-amber-600" />} label="Services" onClick={() => navigateTo("/services")} />
           <NavButton icon={<Share2 className="w-5 h-5 text-sky-600" />} label="Share" onClick={() => navigateTo("/share")} />
-          <NavButton icon={<RotateCcw className="w-5 h-5 text-red-500" />} label="Reset" onClick={() => setResetOpen(true)} variant="danger" />
+          <NavButton icon={<RotateCcw className="w-5 h-5 text-red-500" />} label="Reset" onClick={() => setResetOpen(true)} />
           <NavButton icon={<Download className="w-5 h-5 text-green-600" />} label="Install App" onClick={handleInstallPWA} />
           <NavButton
             icon={<LogOut className="w-5 h-5 text-gray-600" />}

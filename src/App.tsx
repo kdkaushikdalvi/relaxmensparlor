@@ -12,6 +12,7 @@ import { MessageTemplateProvider } from "@/contexts/MessageTemplateContext";
 import { ServicesProvider } from "@/contexts/ServicesContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { GlobalLoader } from "@/components/GlobalLoader";
 import Index from "./pages/Index";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
 import CustomerFormPage from "./pages/CustomerFormPage";
@@ -75,6 +76,7 @@ const App = () => (
               <ServicesProvider>
                 <CustomerProvider>
                   <MessageTemplateProvider>
+                    <GlobalLoader />
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>

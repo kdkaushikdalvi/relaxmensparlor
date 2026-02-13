@@ -140,22 +140,6 @@ const AuthPage = () => {
       <div className="w-full max-w-md z-10">
         {/* Glass Card */}
         <div className="bg-white/70 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl p-8 space-y-8 transition-all duration-500 hover:shadow-primary/20 hover:shadow-2xl">
-          {/* Logo */}
-          <div
-            onClick={handleForceRefresh}
-            className=" 
-    w-8 h-8 rounded-lg
-    flex items-center justify-center
-    bg-violet-600 hover:bg-violet-700
-    text-white
-    transition-all duration-200
-    hover:scale-105 active:scale-95
-    cursor-pointer
-  "
-          >
-            <RefreshCw className="w-4 h-4" />
-          </div>
-
           <div className="flex flex-col items-center gap-4">
             <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center shadow-inner transition-transform duration-500 hover:rotate-6">
               <img
@@ -164,7 +148,6 @@ const AuthPage = () => {
                 className="w-14 h-14 object-contain"
               />
             </div>
-
             <div className="text-center transition-all duration-300">
               <h1 className="text-3xl font-app tracking-tight">
                 {isLogin ? "Welcome" : "Create Account"}
@@ -277,6 +260,12 @@ const AuthPage = () => {
                 {isLogin ? "Sign Up" : "Sign In"}
               </button>
             </p>
+          </div>
+          <div
+            onClick={handleForceRefresh}
+            className="flex w-full justify-center items-center px-3 py-1 text-xs font-semibold text-purple-500 border border-purple-400 rounded-full cursor-pointer hover:bg-purple-50 transition"
+          >
+            Refresh App
           </div>
         </div>
       </div>

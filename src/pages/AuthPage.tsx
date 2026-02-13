@@ -4,7 +4,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, LogIn, UserPlus, Loader2, User, Store } from "lucide-react";
+import {
+  Phone,
+  LogIn,
+  UserPlus,
+  Loader2,
+  User,
+  Store,
+  RefreshCw,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import brandLogo from "@/assets/brand-logo-transparent.png";
@@ -30,7 +38,8 @@ const AuthPage = () => {
 
   if (user) return <Navigate to="/" replace />;
 
-  const toEmail = (phone: string) => `${phone.replace(/\D/g, "")}@relaxsalon.app`;
+  const toEmail = (phone: string) =>
+    `${phone.replace(/\D/g, "")}@relaxsalon.app`;
 
   const toPassword = (p: string) => `${p}##`;
 
@@ -109,6 +118,19 @@ const AuthPage = () => {
     }
   };
 
+  const handleForceRefresh = async () => {
+    await new Promise((res) => setTimeout(res, 500));
+    if ("caches" in window) {
+      const names = await caches.keys();
+      await Promise.all(names.map((name) => caches.delete(name)));
+    }
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((r) => r.unregister()));
+    }
+    window.location.reload();
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary/10 px-4">
       {/* Floating Background Blobs */}
@@ -119,25 +141,53 @@ const AuthPage = () => {
         {/* Glass Card */}
         <div className="bg-white/70 backdrop-blur-xl border border-white/30 shadow-2xl rounded-3xl p-8 space-y-8 transition-all duration-500 hover:shadow-primary/20 hover:shadow-2xl">
           {/* Logo */}
+          <div
+            onClick={handleForceRefresh}
+            className=" 
+    w-8 h-8 rounded-lg
+    flex items-center justify-center
+    bg-violet-600 hover:bg-violet-700
+    text-white
+    transition-all duration-200
+    hover:scale-105 active:scale-95
+    cursor-pointer
+  "
+          >
+            <RefreshCw className="w-4 h-4" />
+          </div>
+
           <div className="flex flex-col items-center gap-4">
             <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center shadow-inner transition-transform duration-500 hover:rotate-6">
-              <img src={brandLogo} alt="Logo" className="w-14 h-14 object-contain" />
+              <img
+                src={brandLogo}
+                alt="Logo"
+                className="w-14 h-14 object-contain"
+              />
             </div>
 
             <div className="text-center transition-all duration-300">
-              <h1 className="text-3xl font-bold tracking-tight">{isLogin ? "Welcome Back" : "Create Account"}</h1>
+              <h1 className="text-3xl font-app tracking-tight">
+                {isLogin ? "Welcome" : "Create Account"}
+              </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {isLogin ? "Sign in to manage your salon" : "Set up your salon in seconds"}
+                {isLogin
+                  ? "Sign in to manage your salon"
+                  : "Set up your salon in seconds"}
               </p>
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5 transition-all duration-500 ease-in-out">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5 transition-all duration-500 ease-in-out"
+          >
             {/* Animated Signup Fields */}
             <div
               className={`transition-all duration-500 overflow-hidden ${
-                isLogin ? "max-h-0 opacity-0 -translate-y-2" : "max-h-40 opacity-100 translate-y-0"
+                isLogin
+                  ? "max-h-0 opacity-0 -translate-y-2"
+                  : "max-h-40 opacity-100 translate-y-0"
               }`}
             >
               {!isLogin && (
@@ -184,7 +234,9 @@ const AuthPage = () => {
               inputMode="numeric"
               placeholder="••••"
               value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              onChange={(e) =>
+                setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
+              }
               className="h-12 text-center tracking-[0.6em] text-xl rounded-xl transition-all duration-300 focus:ring-2 focus:ring-primary/40 focus:scale-[1.02]"
               maxLength={4}
             />
